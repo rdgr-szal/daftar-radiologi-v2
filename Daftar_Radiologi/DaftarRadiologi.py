@@ -674,14 +674,19 @@ def api_dashboard_data():
     
     # Objek data agregat
     data = {
-        "daily_cases": [0] * 31,
-        "exam_types": {},
-        "categories": {"WALK-IN": 0, "WHEELCHAIR": 0, "TROLLEY": 0},
-        "races": {},
-        "citizens": {"YA": 0, "TIDAK": 0},
-        "consumables": {"CD": 0, "FILEM 14X17": 0, "FILEM 10X12": 0},
-        "clinics": {},
-        "total_patients": 0
+      "daily_cases": [0] * 31,
+      "exam_types": {},
+      "exam_parts": {},
+      "cases_genders": {"LELAKI": 0, "PEREMPUAN": 0},
+      "cases_races": {},
+      "cases_citizens": {"YA": 0, "TIDAK": 0},
+      "patients_genders": {"LELAKI": 0, "PEREMPUAN": 0},
+      "patients_races": {},
+      "patients_citizens": {"YA": 0, "TIDAK": 0},
+      "consumables": {"CD": 0, "FILEM 14X17": 0, "FILEM 10X12": 0},
+      "clinics": {},
+      "total_patients": 0,
+      "total_cases": 0
     }
     
     if not filepath or not os.path.exists(filepath):
@@ -690,6 +695,7 @@ def api_dashboard_data():
     try:
         # Guna data_only=True untuk membaca nilai sebenar daripada formula Excel
         wb = openpyxl.load_workbook(filepath, data_only=True)
+        unique_patients = {}
         
         for sheetname in wb.sheetnames:
             if sheetname.isdigit():
@@ -701,7 +707,49 @@ def api_dashboard_data():
                     xray_no = sheet.cell(row=r_idx, column=3).value
                     if xray_no is not None:
                         data["daily_cases"][day_idx] += 1
-                        data["total_patients"] += 1
+                        data["total_cases"] += 1
+                        
+                        # Dapatkan ID dan Nama untuk penentu unik pesakit
+                        id_number = sheet.cell(row=r_idx, column=4).value or ""
+                        name = sheet.cell(row=r_idx, column=5).value or ""
+                        patient_key = (str(id_number).strip(), str(name).strip().upper())
+                        
+                        # Jantina (Col G)
+                        gender_val = sheet.cell(row=r_idx, column=7).value
+                        g_str = ""
+                        if gender_val:
+                            g_str = str(gender_val).strip().upper()
+                        if not g_str or g_str.startswith("="):
+                            parsed = parse_mykad_py(str(id_number))
+                            if parsed:
+                                g_str = "L" if parsed["is_male"] else "P"
+                        
+                        gender_clean = "LELAKI" if g_str in ["M", "L", "LELAKI", "MALE"] else ("PEREMPUAN" if g_str in ["F", "P", "PEREMPUAN", "FEMALE"] else "TIADA")
+                        
+                        # Bangsa (Col J)
+                        bangsa_val = sheet.cell(row=r_idx, column=10).value
+                        race_clean = str(bangsa_val).strip().upper() if bangsa_val else "TIADA"
+                        
+                        # Warganegara (Col H)
+                        citizen_val = sheet.cell(row=r_idx, column=8).value
+                        citizen_clean = str(citizen_val).strip().upper() if citizen_val else "YA"
+                        if citizen_clean not in ["YA", "TIDAK"]:
+                            citizen_clean = "YA"
+                        
+                        # Increment case counters
+                        if gender_clean != "TIADA":
+                            data["cases_genders"][gender_clean] += 1
+                        if race_clean != "TIADA":
+                            data["cases_races"][race_clean] = data["cases_races"].get(race_clean, 0) + 1
+                        data["cases_citizens"][citizen_clean] += 1
+                        
+                        # Store in unique patients dictionary
+                        if patient_key not in unique_patients:
+                            unique_patients[patient_key] = {
+                                "gender": gender_clean,
+                                "race": race_clean,
+                                "citizen": citizen_clean
+                            }
                         
                         # Jenis Pemeriksaan (Col L)
                         j_val = sheet.cell(row=r_idx, column=12).value
@@ -711,31 +759,12 @@ def api_dashboard_data():
                             j_clean = j_val_str.replace(" REF", "").replace(" KK LUAR", "")
                             data["exam_types"][j_clean] = data["exam_types"].get(j_clean, 0) + 1
                             
-                        # Kategori Kedatangan (Col P)
-                        kat_val = sheet.cell(row=r_idx, column=16).value
-                        if kat_val:
-                            kat_str = str(kat_val).strip().upper()
-                            if kat_str in data["categories"]:
-                                data["categories"][kat_str] += 1
-                            else:
-                                # Defaultkan ke walk-in jika tidak dikenali
-                                data["categories"]["WALK-IN"] += 1
-                        else:
-                            data["categories"]["WALK-IN"] += 1
+                        # Bahagian Pemeriksaan (Col M)
+                        part_val = sheet.cell(row=r_idx, column=13).value
+                        if part_val:
+                            part_str = str(part_val).strip().upper()
+                            data["exam_parts"][part_str] = data["exam_parts"].get(part_str, 0) + 1
                             
-                        # Bangsa (Col J)
-                        bangsa_val = sheet.cell(row=r_idx, column=10).value
-                        if bangsa_val:
-                            b_str = str(bangsa_val).strip().upper()
-                            data["races"][b_str] = data["races"].get(b_str, 0) + 1
-                            
-                        # Warganegara (Col H)
-                        c_val = sheet.cell(row=r_idx, column=8).value
-                        if c_val:
-                            c_str = str(c_val).strip().upper()
-                            if c_str in data["citizens"]:
-                                data["citizens"][c_str] += 1
-                                
                         # Klinik Rujukan (Col O)
                         klinik_val = sheet.cell(row=r_idx, column=15).value
                         if klinik_val:
@@ -759,6 +788,19 @@ def api_dashboard_data():
                                 count = 2 if "[2]" in cons_str else 1
                                 data["consumables"]["FILEM 10X12"] += count
                                 
+        # Populate patient counters from unique_patients dictionary
+        for p_info in unique_patients.values():
+            g = p_info["gender"]
+            r = p_info["race"]
+            c = p_info["citizen"]
+            
+            if g != "TIADA":
+                data["patients_genders"][g] += 1
+            if r != "TIADA":
+                data["patients_races"][r] = data["patients_races"].get(r, 0) + 1
+            data["patients_citizens"][c] += 1
+            
+        data["total_patients"] = len(unique_patients)
         wb.close()
     except Exception as e:
         print(f"Error generating dashboard data: {e}")
@@ -1075,7 +1117,8 @@ def data_penuh():
                            selected_year=selected_year,
                            available_years=available_years,
                            months=MONTH_MAP,
-                           klinik_asal=config.get("klinik_asal", "KK RAWANG PERDANA"))
+                           klinik_asal=config.get("klinik_asal", "KK BANDAR BARU SELAYANG"),
+                           singkatan_klinik=config.get("singkatan_klinik", "KKBBS"))
 
 @app.route("/api/shutdown", methods=["POST"])
 def shutdown():

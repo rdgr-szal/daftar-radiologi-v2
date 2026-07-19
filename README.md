@@ -1,20 +1,20 @@
 # Sistem Input Buku Daftar Radiologi & Penjanaan Reten PHRIS (PER.SS-RA 101 Compliance)
 
-Aplikasi berasaskan web tempatan (localhost offline) yang direka khas untuk Unit Radiologi Klinik Kesihatan (KKM). Sistem ini membantu staf mendaftarkan pesakit secara digital dan menjana reten statistik PHRIS secara automatik daripada pangkalan data fail Excel rasmi tanpa memerlukan sambungan internet.
+Aplikasi berasaskan local web (localhost offline) yang direka khas untuk Unit Radiologi Klinik Kesihatan (KKM). Sistem ini membantu staf Radiologi mendaftarkan pesakit secara digital dan menjana reten statistik dalam format PHRIS secara automatik daripada pangkalan data fail Excel rasmi tanpa memerlukan sambungan internet.
 
 ---
 
-## 1. Konsep Asas Aplikasi (Bagaimana Ia Berfungsi)
+## 1. Konsep Asas Aplikasi
 
-Sistem ini dibina berasaskan konsep **"Excel as a Database"** bagi memenuhi syarat audit keselamatan KKM yang melarang penyimpanan data PII pesakit di atas awan (Cloud).
+Sistem ini dibina berasaskan konsep **"Excel as a Database"** bagi memenuhi syarat audit keselamatan KKM yang melarang penyimpanan data pesakit di dalam cloud.
 
 ```
 [Borang Web (HTML/JS)] ➔ [Flask Backend (Python)] ➔ [openpyxl] ➔ [Fail Excel Tempatan (.xlsx)]
 ```
 
 * **Penyimpanan Terus (Write-Through):** Tiada penggunaan cache memori (memory caching) atau pangkalan data kompleks (SQL). Setiap kali data pesakit dihantar, Python terus menulis baris baharu ke dalam helaian Excel harian (`1` hingga `31`) mengikut tarikh semasa, kemudian menyimpan (`save`) dan menutup fail tersebut serta-merta. Ini menjadikannya **kalis blackout**; jika bekalan elektrik terputus, data sebelum blackout dijamin selamat di cakera keras.
-* **Auto-Increment Pintar:** Nombor X-ray seterusnya dikesan secara dinamik. Apabila borang dibuka, Python akan mengimbas helaian harian terkini dari bawah ke atas untuk mencari rekod terakhir dan melakukan operasi `Nombor Terakhir + 1`. Jika staf mengisi Excel secara manual semasa sistem ditutup, sistem akan mengesan baris manual tersebut dan menyambung nombor rujukan dengan betul apabila dibuka semula.
-* **Mesra Audit (Self-Contained Audit):** Sistem menyegerakan nama klinik asal dan rujukan terus ke dalam helaian `"Masterlist"`, `"Data Penuh"`, `"BIL PT"`, dan `"Reten Harian"` di dalam fail Excel. Jadi, jika pihak auditor membuka fail Excel secara manual tanpa menggunakan aplikasi ini, semua format, formula, dropdown, dan rumusan Excel tetap berfungsi dengan sempurna.
+* **Auto-Increment Pintar:** Nombor X-ray seterusnya dikesan secara dinamik. Apabila borang dibuka, Python akan mengimbas helaian harian terkini dari bawah ke atas untuk mencari rekod terakhir dan melakukan operasi `Nombor Terakhir + 1`. Jika staf mengisi Excel secara manual semasa sistem ditutup, sistem akan mengesan baris manual tersebut dan menyambung reference dengan betul apabila dibuka semula.
+* **Mesra Audit (Self-Contained Audit):** Sistem sync nama klinik asal dan rujukan terus ke dalam sheet `"Masterlist"`, `"Data Penuh"`, `"BIL PT"`, dan `"Reten Harian"` di dalam Excel. Jadi, jika pihak auditor membuka fail Excel secara manual tanpa menggunakan aplikasi ini, semua format, formula, dropdown, dan rumusan Excel tetap berfungsi dengan sempurna.
 
 ---
 
@@ -42,10 +42,10 @@ Sistem ini dibina berasaskan konsep **"Excel as a Database"** bagi memenuhi syar
 
 ### Keperluan Pembangunan:
 * **Python 3.10+**
-* Library utama: `Flask` (Pelayan web), `openpyxl` (Manipulasi fail Excel), `pyinstaller` (Kompilasi exe/app).
+* Library utama: `Flask` (Web Server), `openpyxl` (Manipulasi fail Excel), `pyinstaller` (compile as exe/app).
 
 ### Cara Menjalankan Mod Pembangunan (Dev Mode):
-1. Bina Virtual Environment & Pasang Dependensi:
+1. Bina Virtual Environment & Install dependacies:
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
@@ -56,10 +56,10 @@ Sistem ini dibina berasaskan konsep **"Excel as a Database"** bagi memenuhi syar
    cd Daftar_Radiologi
    python3 DaftarRadiologi.py
    ```
-3. Buka pelayar web ke alamat: `http://localhost:5005`
+3. Buka browser: `http://localhost:5005`
 
 ### Logik Utama di Dalam [DaftarRadiologi.py](file:///Users/SZAL/Documents/Business/Web%20Dev/RADIOLOGY/Kesihatan%20Awam/OFFLINE%20BUKU%20DAFTAR/Daftar_Radiologi/DaftarRadiologi.py):
-* `load_config()` & `save_config()`: Membaca/menulis fail `config.json` tempatan untuk menukar nama klinik dan senarai klinik rujukan secara dinamik tanpa ubah suai kod.
-* `sync_excel_masterlists()`: Melakukan penyusunan semula fail Excel apabila nama/singkatan klinik diubah, termasuk menamakan semula nama fail di dalam disk dan menulis data konfigurasi ke dalam sel-sel Excel spesifik (`A13`, `A26`, `D2`, `H2` dll).
-* `get_next_xray_no()`: Logik carian nombor X-ray terakhir berasaskan imbasan lajur C (Nombor X-ray) helaian harian ke belakang.
+* `load_config()` & `save_config()`: Read/write local file `config.json` untuk tukar nama klinik dan senarai klinik rujukan secara dinamik tanpa ubah suai kod.
+* `sync_excel_masterlists()`: Melakukan penyusunan semula fail Excel apabila nama/singkatan klinik diubah, termasuk menamakan semula nama fail di dalam disk dan menulis data konfigurasi ke dalam sel-sel Excel (`A13`, `A26`, `D2`, `H2` dll).
+* `get_next_xray_no()`: Logik carian nombor X-ray terakhir berasaskan imbasan lajur C (Nombor X-ray) daily sheet terakhir.
 * `/api/dashboard-data`: Agregasi dinamik data pesakit daripada fail Excel harian untuk diplotkan ke graf Chart.js di halaman utama dan halaman Analisis Rujukan.

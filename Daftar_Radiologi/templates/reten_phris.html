@@ -22,10 +22,10 @@
         closeShutdownModal();
         return;
       }
-      
+
       closeShutdownModal();
       document.getElementById('win11ShutdownScreen').style.display = 'flex';
-      
+
       fetch('/api/shutdown', { method: 'POST' })
         .then(res => res.json())
         .catch(err => console.log(err));
@@ -33,7 +33,7 @@
       setTimeout(() => {
         window.open('', '_self', '');
         window.close();
-        
+
         setTimeout(() => {
           const textEl = document.querySelector('.win11-shutdown-text');
           const subEl = document.querySelector('.win11-shutdown-subtext');
@@ -49,7 +49,7 @@
   <div class="container">
     <header>
       <div class="logo-section">
-        <h1>DAFTAR RADIOLOGI</h1>
+        <h1>RETEN</h1>
         <p>Reten Format RMS/PHRIS</p>
       </div>
       <nav>
@@ -72,7 +72,8 @@
           </svg>
         </button>
         <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
             <line x1="12" y1="2" x2="12" y2="12"></line>
           </svg>
@@ -139,7 +140,8 @@
         </table>
       </div>
     </div>
-    <footer style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+    <footer
+      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
       rdgr.szal.kkbbs
     </footer>
   </div>
@@ -338,7 +340,8 @@
   <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
     <div class="shutdown-modal">
       <div class="shutdown-modal-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
           <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
           <line x1="12" y1="2" x2="12" y2="12"></line>
         </svg>
@@ -347,7 +350,8 @@
       <div class="shutdown-modal-body">
         <div class="shutdown-modal-prompt">
           <div class="shutdown-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>

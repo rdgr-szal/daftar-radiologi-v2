@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analisis Rujukan & Data Penuh - Buku Daftar Offline</title>
+  <title>Analisis Kes Rujukan - Buku Daftar Offline</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <!-- Chart.js local file -->
@@ -24,10 +24,10 @@
         closeShutdownModal();
         return;
       }
-      
+
       closeShutdownModal();
       document.getElementById('win11ShutdownScreen').style.display = 'flex';
-      
+
       fetch('/api/shutdown', { method: 'POST' })
         .then(res => res.json())
         .catch(err => console.log(err));
@@ -35,7 +35,7 @@
       setTimeout(() => {
         window.open('', '_self', '');
         window.close();
-        
+
         setTimeout(() => {
           const textEl = document.querySelector('.win11-shutdown-text');
           const subEl = document.querySelector('.win11-shutdown-subtext');
@@ -79,8 +79,8 @@
   <div class="container">
     <header>
       <div class="logo-section">
-        <h1>DAFTAR RADIOLOGI</h1>
-        <p>Analisis Rujukan & Data Penuh</p>
+        <h1>ANALISIS REFERRALS</h1>
+        <p>Analisis Kes Rujukan</p>
       </div>
       <nav>
         <a href="/" class="nav-link">DAFTAR</a>
@@ -102,7 +102,8 @@
           </svg>
         </button>
         <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
             <line x1="12" y1="2" x2="12" y2="12"></line>
           </svg>
@@ -136,135 +137,342 @@
     </div>
 
     <!-- Stat counter boxes -->
-    <div class="stat-summary-row">
-      <div class="stat-box">
-        <span class="title">Jumlah Kes</span>
-        <span id="stat-total-patients" class="value">0</span>
+    <div class="stat-summary-row" style="margin-bottom: 24px; gap: 20px;">
+      <div class="stat-box" style="flex: 1; text-align: center; padding: 20px;">
+        <span class="title"
+          style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary);">Pesakit
+        </span>
+        <span class="value" style="font-size: 1.8rem; font-weight: 800; display: block; margin-top: 8px;">
+          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-patients"
+            style="color: var(--text-primary);">0</span>
+          <span style="color: var(--text-secondary); font-weight: 400; font-size: 1.3rem; margin: 0 12px;">|</span>
+          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-patients"
+            style="color: var(--accent-color);">0</span>
+        </span>
       </div>
-      <div class="stat-box">
-        <span class="title">{{ klinik_asal }}</span>
-        <span id="stat-own-cases" class="value">0</span>
-      </div>
-      <div class="stat-box">
-        <span class="title">Rujukan Luar (Referrals)</span>
-        <span id="stat-ref-cases" class="value">0</span>
-      </div>
-      <div class="stat-box">
-        <span class="title">Kadar Rujukan (%)</span>
-        <span id="stat-ref-percent" class="kpi-percent">0%</span>
-      </div>
-    </div>
-
-    <!-- First row grid: Referral analysis -->
-    <div class="dashboard-grid-2">
-      <!-- Nisbah Kes Sendiri vs Kes Rujukan (Donut Chart) -->
-      <div class="dashboard-card card">
-        <h2 class="card-title">Nisbah Kes Sendiri vs Rujukan</h2>
-        <div class="chart-container-flex">
-          <canvas id="referralRatioChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Breakdown Klinik Rujukan (Horizontal Bar Chart) -->
-      <div class="dashboard-card card">
-        <h2 class="card-title">Kes Mengikut Klinik</h2>
-        <div class="chart-container-flex">
-          <canvas id="clinicsBreakdownChart"></canvas>
-        </div>
+      <div class="stat-box" style="flex: 1; text-align: center; padding: 20px;">
+        <span class="title"
+          style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary);">Kes
+        </span>
+        <span class="value" style="font-size: 1.8rem; font-weight: 800; display: block; margin-top: 8px;">
+          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-cases"
+            style="color: var(--text-primary);">0</span>
+          <span style="color: var(--text-secondary); font-weight: 400; font-size: 1.3rem; margin: 0 12px;">|</span>
+          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-cases"
+            style="color: var(--accent-color);">0</span>
+        </span>
       </div>
     </div>
 
-    <!-- Second row grid: Data Penuh breakdown -->
+    <!-- Section 1: Perbandingan Rujukan vs Klinik Asal -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2v20" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+      Pecahan {{ singkatan_klinik }} vs Rujukan
+    </h3>
     <div class="dashboard-grid">
-      <!-- Pecahan Jenis Pemeriksaan AM -->
-      <div class="dashboard-card card">
+      <!-- Pecahan Pesakit -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Pesakit ({{ singkatan_klinik }} vs Rujukan)</h2>
+        <div class="chart-container-flex">
+          <canvas id="ratioPatientsChart"></canvas>
+        </div>
+      </div>
+      <!-- Nisbah Kes -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kes ({{ singkatan_klinik }} vs Rujukan)</h2>
+        <div class="chart-container-flex">
+          <canvas id="ratioCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Rujukan Mengikut Klinik Pengirim -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        <path d="M2 12h20" />
+      </svg>
+      Rujukan Mengikut Klinik Pengirim (Klinik Luar)
+    </h3>
+    <div class="dashboard-grid">
+      <!-- Pesakit mengikut klinik -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Jumlah Pesakit mengikut Klinik</h2>
+        <div class="chart-container-flex">
+          <canvas id="clinicPatientsChart"></canvas>
+        </div>
+      </div>
+      <!-- Kes mengikut klinik -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Jumlah Kes mengikut Klinik</h2>
+        <div class="chart-container-flex">
+          <canvas id="clinicCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Jenis & Bahagian Pemeriksaan (Klinik Luar Sahaja) -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+      Jenis & Bahagian Pemeriksaan (Klinik Luar Sahaja)
+    </h3>
+    <div class="dashboard-grid">
+      <!-- Jenis pemeriksaan kes -->
+      <div class="dashboard-card col-6 card">
         <h2 class="card-title">Jenis Pemeriksaan</h2>
         <div class="chart-container-flex">
-          <canvas id="examTypesChart"></canvas>
+          <canvas id="examCasesChart"></canvas>
         </div>
       </div>
-
-      <!-- Pecahan Bangsa / Kaum -->
-      <div class="dashboard-card card">
-        <h2 class="card-title">Kaum</h2>
+      <!-- Bahagian pemeriksaan kes -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Bahagian Pemeriksaan</h2>
         <div class="chart-container-flex">
-          <canvas id="racesChart"></canvas>
+          <canvas id="examPartCasesChart"></canvas>
         </div>
       </div>
     </div>
-    <footer style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+
+    <!-- Section 4: Pecahan Kaum & Bangsa (Klinik Luar Sahaja) -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      Kaum (Klinik Luar Sahaja)
+    </h3>
+    <div class="dashboard-grid">
+      <!-- Kaum pesakit -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kaum (Pesakit)</h2>
+        <div class="chart-container-flex">
+          <canvas id="racePatientsChart"></canvas>
+        </div>
+      </div>
+      <!-- Kaum kes -->
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kaum (Kes)</h2>
+        <div class="chart-container-flex">
+          <canvas id="raceCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer
+      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
       rdgr.szal.kkbbs
     </footer>
   </div>
 
+  <style>
+    /* Styling for Section Titles inside Referrals page */
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--accent-color);
+      margin: 40px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--panel-border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent-color);
+    }
+
+    .dashboard-grid {
+      margin-bottom: 32px;
+    }
+  </style>
+
   <script>
     // Variables for Chart.js instances
-    let ratioChart = null;
-    let clinicsChart = null;
-    let examChart = null;
-    let racesChartObj = null;
+    let ratioPatientsChart, ratioCasesChart;
+    let clinicPatientsChart, clinicCasesChart;
+    let examCasesChart, examPartCasesChart;
+    let racePatientsChart, raceCasesChart;
 
     const currentMonth = Number('{{ selected_month }}');
     const currentYear = Number('{{ selected_year }}');
     const klinikAsal = "{{ klinik_asal }}".toUpperCase();
 
+    // Helper to get active theme settings
+    function getThemeSettings() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      if (theme === 'dark') {
+        return {
+          textColor: '#a1a1aa',
+          borderColor: '#2e2e33',
+          accentColor: '#2dd4bf',
+          accentGlow: 'rgba(45, 212, 191, 0.1)',
+          ratioPalette: ['#3b82f6', '#fbbf24'],
+          chartPalette: ['#2dd4bf', '#34d399', '#60a5fa', '#f87171', '#a78bfa', '#fbbf24', '#f472b6']
+        };
+      } else {
+        return {
+          textColor: '#57534e',
+          borderColor: '#e4e2d9',
+          accentColor: '#0f766e',
+          accentGlow: 'rgba(15, 118, 110, 0.08)',
+          ratioPalette: ['#2563eb', '#d97706'],
+          chartPalette: ['#0f766e', '#16a34a', '#2563eb', '#dc2626', '#7c3aed', '#d97706', '#db2777']
+        };
+      }
+    }
+
+    // Apply global Chart.js defaults
+    function applyChartDefaults(settings) {
+      Chart.defaults.color = settings.textColor;
+      Chart.defaults.borderColor = settings.borderColor;
+      Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.font.weight = '500';
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
-      fetch(`/api/dashboard-data?month=${currentMonth}&year=${currentYear}`)
+      // Find start and end date for selected month
+      const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      const lastDay = new Date(currentYear, currentMonth, 0).getDate();
+      const endDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      fetch(`/api/patients?start_date=${startDate}&end_date=${endDate}`)
         .then(res => res.json())
-        .then(data => {
-          updateStatistics(data);
-          renderCharts(data);
+        .then(patients => {
+          processAndRender(patients);
         })
         .catch(err => {
-          console.error("Gagal mendapatkan data dashboard:", err);
+          console.error("Gagal mendapatkan data pesakit:", err);
         });
     });
 
-    function updateStatistics(data) {
-      const total = data.total_patients || 0;
-      let ownCases = 0;
-      let refCases = 0;
+    function processAndRender(patients) {
+      const settings = getThemeSettings();
+      applyChartDefaults(settings);
 
-      // Kira kes sendiri dan kes rujukan
-      Object.keys(data.clinics || {}).forEach(clinic => {
-        if (clinic === klinikAsal) {
-          ownCases = data.clinics[clinic];
+      // Unique identifier helpers
+      // Unique patient by combination of Name and ID
+      let ownCasesCount = 0;
+      let ownPatientsSet = new Set();
+
+      let refCasesCount = 0;
+      let refPatientsSet = new Set();
+
+      // Groupers
+      const clinicCases = {};
+      const clinicPatients = {}; // clinic -> Set of names
+
+      const examCases = {};
+      const examPartCases = {}; // exam_part -> count (clinic luar only)
+
+      const raceCases = {};
+      const racePatients = {}; // race -> Set of names
+
+      patients.forEach(p => {
+        const clinicName = (p.clinic || "TIADA").trim().toUpperCase();
+        const pKey = `${(p.name || "").trim().toUpperCase()}_${(p.id_number || "").trim()}`;
+
+        if (clinicName === klinikAsal) {
+          ownCasesCount++;
+          ownPatientsSet.add(pKey);
         } else {
-          refCases += data.clinics[clinic];
+          refCasesCount++;
+          refPatientsSet.add(pKey);
+
+          // Clinics grouping
+          clinicCases[clinicName] = (clinicCases[clinicName] || 0) + 1;
+          if (!clinicPatients[clinicName]) {
+            clinicPatients[clinicName] = new Set();
+          }
+          clinicPatients[clinicName].add(pKey);
+
+          // Exam Types grouping (clinic luar only)
+          const examType = (p.exam_type || "TIADA").trim().toUpperCase();
+          examCases[examType] = (examCases[examType] || 0) + 1;
+
+          // Exam Parts grouping (clinic luar only)
+          const examPart = (p.exam_part || "TIADA").trim().toUpperCase();
+          examPartCases[examPart] = (examPartCases[examPart] || 0) + 1;
+
+          // Races grouping (clinic luar only)
+          const race = (p.race || "TIADA").trim().toUpperCase();
+          raceCases[race] = (raceCases[race] || 0) + 1;
+          if (!racePatients[race]) {
+            racePatients[race] = new Set();
+          }
+          racePatients[race].add(pKey);
         }
       });
 
-      document.getElementById("stat-total-patients").textContent = total;
-      document.getElementById("stat-own-cases").textContent = ownCases;
-      document.getElementById("stat-ref-cases").textContent = refCases;
+      // Update Top Summary Boxes
+      document.getElementById("stat-ref-patients").textContent = refPatientsSet.size;
+      document.getElementById("stat-ref-cases").textContent = refCasesCount;
+      document.getElementById("stat-own-patients").textContent = ownPatientsSet.size;
+      document.getElementById("stat-own-cases").textContent = ownCasesCount;
 
-      const refPercent = total > 0 ? ((refCases / total) * 100).toFixed(1) : 0;
-      document.getElementById("stat-ref-percent").textContent = refPercent + "%";
+      // 1. Ratio charts (Compare with own clinic)
+      renderDoughnutChart("ratioPatientsChart", ratioPatientsChart, ['{{ singkatan_klinik }}', 'Rujukan'], [ownPatientsSet.size, refPatientsSet.size], settings.ratioPalette, instance => ratioPatientsChart = instance);
+      renderDoughnutChart("ratioCasesChart", ratioCasesChart, ['{{ singkatan_klinik }}', 'Rujukan'], [ownCasesCount, refCasesCount], settings.ratioPalette, instance => ratioCasesChart = instance);
+
+      // 2. Clinics breakdown (Horizontal Bar Charts)
+      const clinicPatientsData = Object.entries(clinicPatients).map(([c, set]) => [c, set.size]).sort((a, b) => b[1] - a[1]);
+      const clinicCasesData = Object.entries(clinicCases).sort((a, b) => b[1] - a[1]);
+
+      renderHorizontalBarChart("clinicPatientsChart", clinicPatientsChart, clinicPatientsData.map(x => x[0]), clinicPatientsData.map(x => x[1]), settings.accentColor, instance => clinicPatientsChart = instance);
+      renderHorizontalBarChart("clinicCasesChart", clinicCasesChart, clinicCasesData.map(x => x[0]), clinicCasesData.map(x => x[1]), settings.accentColor, instance => clinicCasesChart = instance);
+
+      // 3. Exam types & parts breakdown (Bar Charts)
+      const examCasesData = Object.entries(examCases).sort((a, b) => b[1] - a[1]);
+      const examPartCasesData = Object.entries(examPartCases).sort((a, b) => b[1] - a[1]).slice(0, 15);
+
+      renderBarChart("examCasesChart", examCasesChart, examCasesData.map(x => x[0]), examCasesData.map(x => x[1]), settings.chartPalette[0], instance => examCasesChart = instance);
+      renderHorizontalBarChart("examPartCasesChart", examPartCasesChart, examPartCasesData.map(x => x[0]), examPartCasesData.map(x => x[1]), settings.chartPalette[1], instance => examPartCasesChart = instance);
+
+      // 4. Races breakdown (Pie/Doughnut Charts)
+      const racePatientsData = Object.entries(racePatients).map(([r, set]) => [r, set.size]);
+      const raceCasesData = Object.entries(raceCases);
+
+      renderDoughnutChart("racePatientsChart", racePatientsChart, racePatientsData.map(x => x[0]), racePatientsData.map(x => x[1]), settings.chartPalette, instance => racePatientsChart = instance);
+      renderDoughnutChart("raceCasesChart", raceCasesChart, raceCasesData.map(x => x[0]), raceCasesData.map(x => x[1]), settings.chartPalette, instance => raceCasesChart = instance);
     }
 
-    function renderCharts(data) {
-      const total = data.total_patients || 0;
-      let ownCases = 0;
-      let refCases = 0;
+    // Chart draw helper functions
+    function renderDoughnutChart(canvasId, chartInstance, labels, data, colors, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      if (chartInstance) chartInstance.destroy();
 
-      Object.keys(data.clinics || {}).forEach(clinic => {
-        if (clinic === klinikAsal) {
-          ownCases = data.clinics[clinic];
-        } else {
-          refCases += data.clinics[clinic];
-        }
-      });
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (data.length === 0) data.push(0);
 
-      // 1. Donut Chart - Nisbah Kes
-      const ctxRatio = document.getElementById("referralRatioChart").getContext("2d");
-      ratioChart = new Chart(ctxRatio, {
+      const newInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Kes Sendiri', 'Kes Rujukan Luar'],
+          labels: labels,
           datasets: [{
-            data: [ownCases, refCases],
-            backgroundColor: ['#3b82f6', '#f59e0b'],
-            borderWidth: 1
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
           }]
         },
         options: {
@@ -272,29 +480,32 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'bottom'
+              position: 'right',
+              labels: { boxWidth: 12, padding: 8 }
             }
-          }
+          },
+          cutout: '65%'
         }
       });
+      setInstanceCb(newInstance);
+    }
 
-      // 2. Horizontal Bar Chart - Pengirim Kes
-      const sortedClinics = Object.entries(data.clinics || {})
-        .sort((a, b) => b[1] - a[1]); // Susun tinggi ke rendah
+    function renderHorizontalBarChart(canvasId, chartInstance, labels, data, color, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      if (chartInstance) chartInstance.destroy();
 
-      const clinicLabels = sortedClinics.map(item => item[0]);
-      const clinicValues = sortedClinics.map(item => item[1]);
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (data.length === 0) data.push(0);
 
-      const ctxClinics = document.getElementById("clinicsBreakdownChart").getContext("2d");
-      clinicsChart = new Chart(ctxClinics, {
+      const newInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: clinicLabels,
+          labels: labels,
           datasets: [{
-            label: 'Jumlah Kes',
-            data: clinicValues,
-            backgroundColor: clinicLabels.map(label => label === klinikAsal ? '#3b82f6' : '#10b981'),
-            borderWidth: 1
+            data: data,
+            backgroundColor: color,
+            borderRadius: 4,
+            barThickness: 16
           }]
         },
         options: {
@@ -302,97 +513,72 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: {
-              display: false
-            }
+            legend: { display: false }
           },
           scales: {
             x: {
               beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
-
-      // 3. Bar Chart - Jenis Pemeriksaan AM
-      const examLabels = Object.keys(data.exam_types || {});
-      const examValues = Object.values(data.exam_types || {});
-
-      const ctxExam = document.getElementById("examTypesChart").getContext("2d");
-      examChart = new Chart(ctxExam, {
-        type: 'bar',
-        data: {
-          labels: examLabels,
-          datasets: [{
-            label: 'Jumlah Pemeriksaan',
-            data: examValues,
-            backgroundColor: '#8b5cf6',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
+              ticks: { stepSize: 1 }
+            },
             y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
+              grid: { display: false }
             }
           }
         }
       });
-
-      // 4. Bar Chart - Demografi Bangsa
-      const raceLabels = Object.keys(data.races || {});
-      const raceValues = Object.values(data.races || {});
-
-      const ctxRaces = document.getElementById("racesChart").getContext("2d");
-      racesChartObj = new Chart(ctxRaces, {
-        type: 'bar',
-        data: {
-          labels: raceLabels,
-          datasets: [{
-            label: 'Bil. Pesakit',
-            data: raceValues,
-            backgroundColor: ['#ec4899', '#06b6d4', '#eab308', '#f43f5e', '#a855f7', '#6b7280'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
+      setInstanceCb(newInstance);
     }
+
+    function renderBarChart(canvasId, chartInstance, labels, data, color, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (data.length === 0) data.push(0);
+
+      const newInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: color,
+            borderRadius: 4,
+            barThickness: 24
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+      setInstanceCb(newInstance);
+    }
+
+    // Listen for custom theme switch event
+    window.addEventListener('theme-changed', () => {
+      // Reload page state to update charts theme
+      location.reload();
+    });
   </script>
   <!-- Windows 11 Shutdown Modal Overlay -->
   <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
     <div class="shutdown-modal">
       <div class="shutdown-modal-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
           <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
           <line x1="12" y1="2" x2="12" y2="12"></line>
         </svg>
@@ -401,7 +587,8 @@
       <div class="shutdown-modal-body">
         <div class="shutdown-modal-prompt">
           <div class="shutdown-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>

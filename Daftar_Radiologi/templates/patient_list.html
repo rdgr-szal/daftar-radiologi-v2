@@ -312,6 +312,63 @@
         background-position: 0 50%;
       }
     }
+
+    /* Pagination CSS */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background-color: var(--table-header-bg);
+      border-top: 1px solid var(--panel-border);
+      font-size: 0.85rem;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .page-btn {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--transition-speed);
+    }
+
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-select-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    .page-select {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      outline: none;
+      height: 34px;
+    }
   </style>
 </head>
 
@@ -319,7 +376,7 @@
   <div class="container">
     <header>
       <div class="logo-section">
-        <h1>DAFTAR RADIOLOGI</h1>
+        <h1>PATIENT LIST</h1>
         <p>Senarai Pendaftaran Pesakit & Pemeriksaan</p>
       </div>
       <nav>
@@ -396,6 +453,21 @@
 
     <!-- Accordion Patient List Table -->
     <div class="list-card">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--panel-border); background-color: var(--table-header-bg); border-top-left-radius: 12px; border-top-right-radius: 12px; flex-wrap: wrap; gap: 10px;">
+        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Senarai Rekod Pemeriksaan</span>
+        <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600;">
+          <div
+            style="background-color: var(--input-bg); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--panel-border); color: var(--text-secondary);">
+            Jumlah Pesakit: <span id="summaryTotalPatients"
+              style="color: var(--accent-color); font-weight: 700;">0</span>
+          </div>
+          <div
+            style="background-color: var(--input-bg); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--panel-border); color: var(--text-secondary);">
+            Jumlah Kes: <span id="summaryTotalCases" style="color: var(--accent-color); font-weight: 700;">0</span>
+          </div>
+        </div>
+      </div>
       <table class="patient-table">
         <thead>
           <tr id="tableHeaders">
@@ -413,6 +485,27 @@
           <!-- Data dinamik diisi di sini -->
         </tbody>
       </table>
+
+      <!-- Pagination Container -->
+      <div class="pagination-container" id="paginationBar">
+        <div class="page-select-container">
+          <span>Baris setiap halaman:</span>
+          <select id="pageSizeSelect" class="page-select">
+            <option value="10">10</option>
+            <option value="15" selected>15</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" id="btnPrevPage" disabled>Prev</button>
+          <span id="pageInfo" style="font-weight: 600; color: var(--text-secondary); margin: 0 8px;">Halaman 1 dari
+            1</span>
+          <button type="button" class="page-btn" id="btnNextPage" disabled>Next</button>
+        </div>
+      </div>
+
       <div id="noRecords" class="no-records" style="display: none;">
         Tiada rekod ditemui bagi tempoh tarikh dan carian yang dipilih.
       </div>
@@ -480,6 +573,8 @@
     let rawPatients = [];
     let sortColumn = 'xray_no';
     let sortAscending = true;
+    let currentPage = 1;
+    let pageSize = 15;
 
     // Date range helpers
     function getTodayISO() {
@@ -590,9 +685,37 @@
         return 0;
       });
 
-      // Calculate registration groupings to determine same colors
+      // Calculate and display total unique patients (by name) and total cases
+      const uniqueNames = new Set(filtered.map(p => p.name.trim().toUpperCase()));
+      document.getElementById('summaryTotalPatients').textContent = uniqueNames.size;
+      document.getElementById('summaryTotalCases').textContent = filtered.length;
+
+      // Calculate total pages based on filtered records
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+
+      // Update Pagination Controls UI
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('btnPrevPage').disabled = (currentPage === 1);
+      document.getElementById('btnNextPage').disabled = (currentPage === totalPages);
+
+      const pagBar = document.getElementById('paginationBar');
+      if (filtered.length === 0) {
+        pagBar.style.display = 'none';
+      } else {
+        pagBar.style.display = 'flex';
+      }
+
+      // Slice the dataset for active page view
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = startIdx + pageSize;
+      const paginatedList = filtered.slice(startIdx, endIdx);
+
+      // Calculate registration groupings only for the visible rows to determine colors
       const groupCounts = {};
-      filtered.forEach(p => {
+      paginatedList.forEach(p => {
         const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
         groupCounts[key] = (groupCounts[key] || 0) + 1;
       });
@@ -604,7 +727,7 @@
       }
       noRecords.style.display = 'none';
 
-      filtered.forEach((p, index) => {
+      paginatedList.forEach((p, index) => {
         const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
         const hasGrouping = groupCounts[key] > 1;
         const rowBgStyle = hasGrouping ? `style="background-color: ${getGroupColor(p.id_number, p.name, p.tarikh)}"` : '';
@@ -777,7 +900,10 @@
     });
 
     // Real-time search trigger
-    document.getElementById('searchInput').addEventListener('input', renderTable);
+    document.getElementById('searchInput').addEventListener('input', () => {
+      currentPage = 1;
+      renderTable();
+    });
 
     // Sorting headers trigger
     document.querySelectorAll('#tableHeaders th[data-sort]').forEach(th => {
@@ -838,6 +964,29 @@
       const todayISO = getTodayISO();
       startDateInput.value = todayISO;
       endDateInput.value = todayISO;
+
+      // Pagination Events registration
+      document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+        pageSize = parseInt(e.target.value, 10);
+        currentPage = 1;
+        renderTable();
+      });
+
+      document.getElementById('btnPrevPage').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+
+      document.getElementById('btnNextPage').addEventListener('click', () => {
+        const totalPages = Math.ceil(rawPatients.length / pageSize) || 1;
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      });
+
       loadPatients();
     });
   </script>
