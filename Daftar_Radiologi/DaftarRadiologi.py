@@ -132,6 +132,7 @@ def save_config(config_data):
 
 # Utiliti: Sinkronisasi senarai klinik rujukan ke helaian Masterlist semua fail Excel
 def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
+    import gc
     if not os.path.exists(PENDAFTARAN_DIR):
         return False
     
@@ -142,7 +143,6 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                 # Sokong DUA format nama fail:
                 # Lama (tanpa singkatan): "2026 1JAN PER.SS-RA 101.xlsx"
                 # Ada singkatan lama:     "2026 1JAN PER.SS-RA 101 KKRP.xlsx"
-                # Kedua-dua: split pada " PER.SS-RA 101" (tanpa trailing space)
                 prefix = file.split(" PER.SS-RA 101")[0]
                 new_filename = f"{prefix} PER.SS-RA 101 {singkatan_klinik}.xlsx"
                 if file != new_filename:
@@ -157,16 +157,8 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
     # 2. Kemas kini sel-sel di dalam semua fail Excel yang telah dinamakan semula
     updated_files = 0
     referrals_only = [c for c in referral_clinics if c != klinik_asal]
-    
-    # Load source template workbook
-    src_wb = None
-    src_sheet = None
-    if os.path.exists(TEMPLATE_FILE_PATH):
-        try:
-            src_wb = openpyxl.load_workbook(TEMPLATE_FILE_PATH)
-            src_sheet = src_wb['1']
-        except Exception as e:
-            print(f"Ralat memuat fail template: {e}")
+    num_ref = len(referrals_only)
+    ref_rows_count = max(8, num_ref)
     
     for root, dirs, files in os.walk(PENDAFTARAN_DIR):
         for file in files:
@@ -175,35 +167,46 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                 try:
                     wb = openpyxl.load_workbook(filepath)
                     
-                    # A. Kemas kini Masterlist
+                    # A. Kemas kini Masterlist (C4 dan ke bawah)
                     if "Masterlist" in wb.sheetnames:
                         sheet = wb["Masterlist"]
-                        for r_idx in range(4, 50):
+                        sheet.cell(row=3, column=3).value = "KLINIK"
+                        for r_idx in range(4, 100):
                             sheet.cell(row=r_idx, column=3).value = None
                         for idx, clinic_name in enumerate(referral_clinics):
-                            if idx < 46:
-                                sheet.cell(row=4 + idx, column=3).value = clinic_name
+                            sheet.cell(row=4 + idx, column=3).value = clinic_name
                                 
                     # B. Kemas kini Data Penuh
                     if "Data Penuh" in wb.sheetnames:
                         sheet = wb["Data Penuh"]
                         sheet.cell(row=13, column=1).value = "KLINIK KESIHATAN"
-                        for idx in range(8):
+                        
+                        # Kosongkan baris 14 hingga 50 untuk kolum A dahulu
+                        for r in range(14, 50):
+                            sheet.cell(row=r, column=1).value = None
+                            
+                        # Tulis senarai klinik rujukan luar
+                        for idx in range(ref_rows_count):
                             r_row = 14 + idx
-                            if idx < len(referrals_only):
+                            if idx < num_ref:
                                 sheet.cell(row=r_row, column=1).value = referrals_only[idx]
                             else:
                                 sheet.cell(row=r_row, column=1).value = ""
-                        sheet.cell(row=22, column=1).value = klinik_asal
-                        sheet.cell(row=26, column=1).value = singkatan_klinik
+                                
+                        row_klinik_asal = 14 + ref_rows_count
+                        sheet.cell(row=row_klinik_asal, column=1).value = klinik_asal
+                        sheet.cell(row=row_klinik_asal + 1, column=1).value = "JUMLAH PESAKIT"
                         
-                    # C. Kemas kini BIL PT
+                        row_singkatan = row_klinik_asal + 4
+                        sheet.cell(row=row_singkatan, column=1).value = singkatan_klinik
+                        
+                    # C. Kemas kini BIL PT (D2 & H2)
                     if "BIL PT" in wb.sheetnames:
                         sheet = wb["BIL PT"]
                         sheet.cell(row=2, column=4).value = singkatan_klinik
                         sheet.cell(row=2, column=8).value = singkatan_klinik
                         
-                    # D. Kemas kini Reten Harian
+                    # D. Kemas kini Reten Harian (A3)
                     if "Reten Harian" in wb.sheetnames:
                         sheet = wb["Reten Harian"]
                         sheet.cell(row=3, column=1).value = singkatan_klinik
@@ -213,29 +216,26 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                         if sheetname.isdigit():
                             sheet = wb[sheetname]
                             
-                            # 1. Salin kolum U (21) hingga AA (27) dari template.xlsx
-                            if src_sheet:
-                                for r in range(1, 45): # Salin baris 1 hingga 44
-                                    for c in range(21, 28): # Kolum U (21) hingga AA (27)
-                                        src_cell = src_sheet.cell(row=r, column=c)
-                                        val = src_cell.value
-                                        
-                                        # Jika cell mengandungi teks/formula, gantikan KKRP & KK RAWANG PERDANA
-                                        if val is not None:
-                                            if isinstance(val, str):
-                                                val = val.replace("KK RAWANG PERDANA", klinik_asal)
-                                                val = val.replace("KKRP", singkatan_klinik)
-                                        target_cell = sheet.cell(row=r, column=c)
-                                        if type(target_cell).__name__ != 'MergedCell':
-                                            target_cell.value = val
-                                        
-                            # 2. Kemas kini tajuk di sel A1
+                            # 1. Tajuk di sel A1
                             sheet.cell(row=1, column=1).value = f"BUKU DAFTAR RADIOLOGI {singkatan_klinik}"
                             
-                            # 3. Kemas kini senarai klinik luar (Kolum Z & AA) mengikut klinik rujukan baru
-                            for idx in range(8):
+                            # 2. Singkatan klinik & formula di Kolum U & V
+                            sheet.cell(row=25, column=21).value = singkatan_klinik  # U25
+                            sheet.cell(row=30, column=21).value = singkatan_klinik  # U30
+                            sheet.cell(row=38, column=21).value = singkatan_klinik  # U38
+                            sheet.cell(row=13, column=22).value = singkatan_klinik  # V13
+                            sheet.cell(row=14, column=22).value = f'=COUNTIFS(L9:L73, "DADA", M9:M73, "CXR", O9:O73, "{klinik_asal}")' # V14
+                            sheet.cell(row=25, column=22).value = f'=COUNTIF(O9:O73, "{klinik_asal}")' # V25
+                            
+                            # 3. Kosongkan senarai rujukan lama di Kolum Z & AA (14 hingga 50)
+                            for r in range(14, 50):
+                                sheet.cell(row=r, column=26).value = None
+                                sheet.cell(row=r, column=27).value = None
+                                
+                            # 4. Tulis senarai klinik luar (Kolum Z & AA)
+                            for idx in range(ref_rows_count):
                                 r_row = 14 + idx
-                                if idx < len(referrals_only):
+                                if idx < num_ref:
                                     c_name = referrals_only[idx]
                                     sheet.cell(row=r_row, column=26).value = c_name
                                     sheet.cell(row=r_row, column=27).value = f'=COUNTIF(O9:O73, "{c_name}")'
@@ -243,18 +243,23 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                                     sheet.cell(row=r_row, column=26).value = ""
                                     sheet.cell(row=r_row, column=27).value = 0
                                     
-                            # 4. Kemas kini Jumlah klinik asal
-                            sheet.cell(row=23, column=26).value = f"JUMLAH {singkatan_klinik}"
-                            sheet.cell(row=23, column=27).value = f'=COUNTIF(O9:O73, "{klinik_asal}")'
+                            # 5. Jumlah klinik luar & Jumlah klinik asal
+                            row_jumlah_luar = 14 + ref_rows_count
+                            sheet.cell(row=row_jumlah_luar, column=26).value = "JUMLAH KLINIK LUAR"
+                            sheet.cell(row=row_jumlah_luar, column=27).value = f'=SUM(AA14:AA{13+ref_rows_count})'
+                            
+                            row_jumlah_asal = row_jumlah_luar + 1
+                            sheet.cell(row=row_jumlah_asal, column=26).value = f"JUMLAH {singkatan_klinik}"
+                            sheet.cell(row=row_jumlah_asal, column=27).value = f'=COUNTIF(O9:O73, "{klinik_asal}")'
                             
                     wb.save(filepath)
                     wb.close()
+                    del wb
                     updated_files += 1
                 except Exception as e:
                     print(f"Ralat mengemas kini data di dalam {filepath}: {e}")
                     
-    if src_wb:
-        src_wb.close()
+    gc.collect()
     print(f"Selesai menyelaraskan Excel. {updated_files} fail dikemas kini.")
     return True
 
@@ -556,6 +561,12 @@ def submit_registration():
             sheet.cell(row=target_row, column=16).value = category # Col P: KATEGORI
             sheet.cell(row=target_row, column=17).value = lmp # Col Q: LMP
             sheet.cell(row=target_row, column=18).value = cd_filem # Col R: CD/FILEM
+            
+            # Semak jika klinik rujukan baru & kemas kini konfigurasi serta Excel secara automatik
+            if clinic and clinic not in config.get("klinik_rujukan", []):
+                config["klinik_rujukan"].append(clinic)
+                save_config(config)
+                threading.Thread(target=sync_excel_masterlists, args=(config["klinik_rujukan"], config.get("klinik_asal", ""), config.get("singkatan_klinik", "")), daemon=True).start()
             
             # Simpan dose (tanpa perpuluhan)
             try:
