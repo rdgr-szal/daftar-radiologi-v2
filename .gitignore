@@ -25,6 +25,8 @@ Thumbs.db
 **/Pendaftaran/config.json
 test_temp_registration.xlsx
 *.xlsx
+# Allow blank template to be tracked (must come AFTER *.xlsx rule)
+!Daftar_Radiologi/template.xlsx
 
 
 # UI UX Pro Max skills
