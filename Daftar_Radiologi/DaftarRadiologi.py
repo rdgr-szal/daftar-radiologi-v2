@@ -139,18 +139,20 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
     for root, dirs, files in os.walk(PENDAFTARAN_DIR):
         for file in files:
             if "PER.SS-RA 101" in file and file.endswith(".xlsx") and not file.startswith("~$"):
-                parts = file.split(" PER.SS-RA 101 ")
-                if len(parts) == 2:
-                    prefix = parts[0]
-                    new_filename = f"{prefix} PER.SS-RA 101 {singkatan_klinik}.xlsx"
-                    if file != new_filename:
-                        old_filepath = os.path.join(root, file)
-                        new_filepath = os.path.join(root, new_filename)
-                        try:
-                            os.rename(old_filepath, new_filepath)
-                            print(f"Menamakan semula: {file} -> {new_filename}")
-                        except Exception as e:
-                            print(f"Ralat menamakan semula {file}: {e}")
+                # Sokong DUA format nama fail:
+                # Lama (tanpa singkatan): "2026 1JAN PER.SS-RA 101.xlsx"
+                # Ada singkatan lama:     "2026 1JAN PER.SS-RA 101 KKRP.xlsx"
+                # Kedua-dua: split pada " PER.SS-RA 101" (tanpa trailing space)
+                prefix = file.split(" PER.SS-RA 101")[0]
+                new_filename = f"{prefix} PER.SS-RA 101 {singkatan_klinik}.xlsx"
+                if file != new_filename:
+                    old_filepath = os.path.join(root, file)
+                    new_filepath = os.path.join(root, new_filename)
+                    try:
+                        os.rename(old_filepath, new_filepath)
+                        print(f"Menamakan semula: {file} -> {new_filename}")
+                    except Exception as e:
+                        print(f"Ralat menamakan semula {file}: {e}")
                             
     # 2. Kemas kini sel-sel di dalam semua fail Excel yang telah dinamakan semula
     updated_files = 0
