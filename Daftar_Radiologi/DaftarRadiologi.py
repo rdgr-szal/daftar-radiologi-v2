@@ -502,6 +502,7 @@ def api_next_xray():
 # API: Simpan Data Pendaftaran Pesakit
 @app.route("/submit", methods=["POST"])
 def submit_registration():
+    config = load_config()
     try:
         # Mengambil input borang (sama ada JSON atau Form-data)
         if request.is_json:
