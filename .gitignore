@@ -27,6 +27,19 @@ test_temp_registration.xlsx
 *.xlsx
 # Allow blank template to be tracked (must come AFTER *.xlsx rule)
 !Daftar_Radiologi/template.xlsx
+# Allow blank 2026 starter database files (zero patient data, copy of template)
+!Daftar_Radiologi/Pendaftaran/2026/01_JAN/2026 1JAN PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/02_FEB/2026 2FEB PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/03_MAC/2026 3MAC PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/04_APR/2026 4APR PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/05_MEI/2026 5MEI PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/06_JUN/2026 6JUN PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/07_JUL/2026 7JUL PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/08_OGS/2026 8OGS PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/09_SEP/2026 9SEP PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/10_OKT/2026 10OKT PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/11_NOV/2026 11NOV PER.SS-RA 101.xlsx
+!Daftar_Radiologi/Pendaftaran/2026/12_DIS/2026 12DIS PER.SS-RA 101.xlsx
 
 
 # UI UX Pro Max skills
