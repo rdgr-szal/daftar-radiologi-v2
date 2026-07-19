@@ -181,8 +181,8 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                         sheet = wb["Data Penuh"]
                         sheet.cell(row=13, column=1).value = "KLINIK KESIHATAN"
                         
-                        # Kosongkan baris 14 hingga 50 untuk kolum A dahulu
-                        for r in range(14, 50):
+                        # Kosongkan baris 14 hingga 60 untuk kolum A dahulu
+                        for r in range(14, 60):
                             sheet.cell(row=r, column=1).value = None
                             
                         # Tulis senarai klinik rujukan luar
@@ -197,8 +197,75 @@ def sync_excel_masterlists(referral_clinics, klinik_asal, singkatan_klinik):
                         sheet.cell(row=row_klinik_asal, column=1).value = klinik_asal
                         sheet.cell(row=row_klinik_asal + 1, column=1).value = "JUMLAH PESAKIT"
                         
-                        row_singkatan = row_klinik_asal + 4
-                        sheet.cell(row=row_singkatan, column=1).value = singkatan_klinik
+                        # Tulis semua label tetap di bawah senarai klinik rujukan
+                        sheet.cell(row=row_klinik_asal + 3, column=1).value = "TB"
+                        sheet.cell(row=row_klinik_asal + 4, column=1).value = singkatan_klinik
+                        sheet.cell(row=row_klinik_asal + 5, column=1).value = "KLINIK LUAR"
+                        
+                        sheet.cell(row=row_klinik_asal + 9, column=1).value = "WHEELCHAIR"
+                        sheet.cell(row=row_klinik_asal + 10, column=1).value = "TROLLEY"
+                        
+                        sheet.cell(row=row_klinik_asal + 13, column=1).value = "JANTINA"
+                        sheet.cell(row=row_klinik_asal + 14, column=1).value = "LELAKI"
+                        sheet.cell(row=row_klinik_asal + 15, column=1).value = "PEREMPUAN"
+                        
+                        sheet.cell(row=row_klinik_asal + 18, column=1).value = "BANGSA"
+                        sheet.cell(row=row_klinik_asal + 19, column=1).value = "MELAYU"
+                        sheet.cell(row=row_klinik_asal + 20, column=1).value = "CINA"
+                        sheet.cell(row=row_klinik_asal + 21, column=1).value = "INDIA"
+                        sheet.cell(row=row_klinik_asal + 22, column=1).value = "BUMIPUTERA"
+                        sheet.cell(row=row_klinik_asal + 23, column=1).value = "WARGA ASING"
+                        
+                        sheet.cell(row=row_klinik_asal + 26, column=1).value = "BANGSA"
+                        sheet.cell(row=row_klinik_asal + 27, column=1).value = "CD [1]"
+                        sheet.cell(row=row_klinik_asal + 28, column=1).value = "CD [2]"
+                        sheet.cell(row=row_klinik_asal + 29, column=1).value = "FILEM 14X17 [1]"
+                        sheet.cell(row=row_klinik_asal + 30, column=1).value = "FILEM 14X17 [2]"
+                        sheet.cell(row=row_klinik_asal + 31, column=1).value = "FILEM 10X12 [1]"
+                        sheet.cell(row=row_klinik_asal + 32, column=1).value = "FILEM 10X12 [2]"
+                        
+                        # Kemas kini semua formula rujukan harian (Kolum B hingga AF / 2 hingga 32)
+                        for d in range(1, 32):
+                            col_idx = d + 1
+                            # Klinik Rujukan Luar
+                            for idx in range(ref_rows_count):
+                                r_row = 14 + idx
+                                sheet.cell(row=r_row, column=col_idx).value = f"=SUM('{d}'!AA{r_row})"
+                            
+                            # Klinik Asal (Pesakit)
+                            row_jumlah_asal_in_daily = 15 + ref_rows_count
+                            sheet.cell(row=row_klinik_asal, column=col_idx).value = f"=SUM('{d}'!AA{row_jumlah_asal_in_daily})"
+                            
+                            # Jumlah Pesakit
+                            col_letter = openpyxl.utils.get_column_letter(col_idx)
+                            sheet.cell(row=row_klinik_asal + 1, column=col_idx).value = f"=SUM({col_letter}14:{col_letter}{row_klinik_asal})"
+                            
+                            # TB singkatan_klinik & TB Klinik Luar
+                            sheet.cell(row=row_klinik_asal + 4, column=col_idx).value = f"=SUM('{d}'!V38)"
+                            sheet.cell(row=row_klinik_asal + 5, column=col_idx).value = f"=SUM('{d}'!V39)"
+                            
+                            # Wheelchair / Trolley
+                            sheet.cell(row=row_klinik_asal + 9, column=col_idx).value = f"=SUM('{d}'!V34)"
+                            sheet.cell(row=row_klinik_asal + 10, column=col_idx).value = f"=SUM('{d}'!V35)"
+                            
+                            # Jantina (Lelaki / Perempuan)
+                            sheet.cell(row=row_klinik_asal + 14, column=col_idx).value = f"=SUM('{d}'!V8)"
+                            sheet.cell(row=row_klinik_asal + 15, column=col_idx).value = f"=SUM('{d}'!V9)"
+                            
+                            # Bangsa
+                            sheet.cell(row=row_klinik_asal + 19, column=col_idx).value = f"=SUM('{d}'!Y6)"
+                            sheet.cell(row=row_klinik_asal + 20, column=col_idx).value = f"=SUM('{d}'!Y7)"
+                            sheet.cell(row=row_klinik_asal + 21, column=col_idx).value = f"=SUM('{d}'!Y8)"
+                            sheet.cell(row=row_klinik_asal + 22, column=col_idx).value = f"=SUM('{d}'!Y9)"
+                            sheet.cell(row=row_klinik_asal + 23, column=col_idx).value = f"=SUM('{d}'!Y10)"
+                            
+                            # Media / Consumables
+                            sheet.cell(row=row_klinik_asal + 27, column=col_idx).value = f"=SUM('{d}'!AA28)"
+                            sheet.cell(row=row_klinik_asal + 28, column=col_idx).value = f"=SUM('{d}'!AA31*2)"
+                            sheet.cell(row=row_klinik_asal + 29, column=col_idx).value = f"=SUM('{d}'!AA29)"
+                            sheet.cell(row=row_klinik_asal + 30, column=col_idx).value = f"=SUM('{d}'!AA32*2)"
+                            sheet.cell(row=row_klinik_asal + 31, column=col_idx).value = f"=SUM('{d}'!AA30)"
+                            sheet.cell(row=row_klinik_asal + 32, column=col_idx).value = f"=SUM('{d}'!AA33*2)"
                         
                     # C. Kemas kini BIL PT (D2 & H2)
                     if "BIL PT" in wb.sheetnames:
