@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup - Daftar Radiologi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 50% 0%, var(--bg-offset, #f9fafb) 0%, var(--bg-color, #f3f4f6) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .setup-wrapper {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .setup-container {
+      background-color: var(--card-bg, #ffffff);
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .setup-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color, #3b82f6), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+    }
+
+    .setup-icon-wrapper svg {
+      width: 30px;
+      height: 30px;
+      animation: spin 10s linear infinite;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .setup-header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-color, #1f2937);
+      letter-spacing: -0.5px;
+    }
+
+    .setup-header p {
+      margin: 8px 0 0 0;
+      font-size: 0.95rem;
+      color: var(--text-muted, #6b7280);
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-color, #374151);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border-color, #e5e7eb);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background-color: var(--card-bg, #ffffff);
+      color: var(--text-color, #1f2937);
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input[type="text"]:focus {
+      border-color: var(--primary-color, #3b82f6);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+      outline: none;
+    }
+
+    .add-clinic-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .add-clinic-group input {
+      flex: 1;
+    }
+
+    .btn-add-clinic {
+      background-color: var(--primary-color, #3b82f6);
+      color: white;
+      border: none;
+      padding: 0 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-add-clinic:hover {
+      background-color: var(--primary-hover, #2563eb);
+    }
+
+    .clinic-tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+      border: 1.5px dashed var(--border-color, #e5e7eb);
+      border-radius: 12px;
+      background-color: var(--bg-offset, #f9fafb);
+      min-height: 80px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 24px;
+      align-content: flex-start;
+    }
+
+    .clinic-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--card-bg, #ffffff);
+      border: 1px solid var(--border-color, #e5e7eb);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-color, #1f2937);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s ease;
+    }
+
+    .clinic-tag:hover {
+      border-color: #ef4444;
+      background-color: rgba(239, 68, 68, 0.04);
+    }
+
+    .btn-remove-tag {
+      background: none;
+      border: none;
+      color: var(--text-muted, #9ca3af);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease;
+    }
+
+    .btn-remove-tag:hover {
+      color: #ef4444;
+    }
+
+    .btn-save-setup {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-color, #3b82f6), #2563eb);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-save-setup:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px -8px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-save-setup:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="setup-wrapper">
+    <div class="setup-container">
+      <div class="setup-header">
+        <div class="setup-icon-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg>
+        </div>
+        <h1>Setup</h1>
+        <p>Sila tetapkan maklumat fasiliti sebelum memulakan sistem Daftar Radiologi</p>
+      </div>
+
+      <div class="form-group">
+        <label for="klinikAsal">Nama Fasiliti / Klinik Asal</label>
+        <input type="text" id="klinikAsal" placeholder="Contoh: KK BANDAR BARU SELAYANG"
+          value="{{ config.klinik_asal }}" required style="text-transform: uppercase;">
+      </div>
+
+      <div class="form-group">
+        <label for="singkatanKlinik">Singkatan Fasiliti</label>
+        <input type="text" id="singkatanKlinik" placeholder="Contoh: KKBBS" value="{{ config.singkatan_klinik or '' }}"
+          required style="text-transform: uppercase;">
+      </div>
+
+      <div class="form-group">
+        <label>Senarai Klinik Rujukan Terlibat</label>
+        <div class="add-clinic-group">
+          <input type="text" id="newClinicInput" placeholder="Masukkan nama klinik rujukan..."
+            style="text-transform: uppercase;">
+          <button type="button" class="btn-add-clinic" onclick="addClinic()">Tambah</button>
+        </div>
+      </div>
+
+      <div class="clinic-tags-container" id="clinicList">
+        <!-- Dynamic clinic tags will be rendered here -->
+      </div>
+
+      <button type="button" class="btn-save-setup" onclick="saveSetup()">Start Now</button>
+    </div>
+    <footer
+      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0;">
+      rdgr.szal.kkbbs
+    </footer>
+  </div>
+
+  <script>
+    let clinics = JSON.parse('{{ config.klinik_rujukan|tojson | safe }}');
+
+    function renderClinics() {
+      const container = document.getElementById("clinicList");
+      container.innerHTML = "";
+
+      clinics.forEach((clinic, idx) => {
+        const tag = document.createElement("div");
+        tag.className = "clinic-tag";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = clinic;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "btn-remove-tag";
+        deleteBtn.innerHTML = "&times;";
+        deleteBtn.title = "Padam";
+        deleteBtn.onclick = function () {
+          removeClinic(idx);
+        };
+
+        tag.appendChild(nameSpan);
+        tag.appendChild(deleteBtn);
+        container.appendChild(tag);
+      });
+    }
+
+    function addClinic() {
+      const input = document.getElementById("newClinicInput");
+      const clinicName = input.value.trim().toUpperCase();
+
+      if (!clinicName) {
+        alert("Sila masukkan nama klinik.");
+        return;
+      }
+
+      if (clinics.includes(clinicName)) {
+        alert("Nama klinik ini sudah ada dalam senarai.");
+        return;
+      }
+
+      clinics.push(clinicName);
+      input.value = "";
+      renderClinics();
+    }
+
+    function removeClinic(index) {
+      clinics.splice(index, 1);
+      renderClinics();
+    }
+
+    function saveSetup() {
+      const klinikAsal = document.getElementById("klinikAsal").value.trim().toUpperCase();
+      const singkatanKlinik = document.getElementById("singkatanKlinik").value.trim().toUpperCase();
+
+      if (!klinikAsal) {
+        alert("Nama Klinik Asal diperlukan!");
+        return;
+      }
+      if (!singkatanKlinik) {
+        alert("Singkatan Fasiliti diperlukan!");
+        return;
+      }
+
+      // Pastikan klinik asal dimasukkan dalam senarai klinik rujukan
+      if (!clinics.includes(klinikAsal)) {
+        clinics.unshift(klinikAsal);
+      }
+
+      const payload = {
+        klinik_asal: klinikAsal,
+        singkatan_klinik: singkatanKlinik,
+        klinik_rujukan: clinics
+      };
+
+      fetch("/api/setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert("Setup succesfully! Daftar Radiologi is starting.");
+            window.location.href = "/";
+          } else {
+            alert("Configuration failed: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error occured during configuration.");
+        });
+    }
+
+    // Initialize list on load
+    document.addEventListener("DOMContentLoaded", function () {
+      renderClinics();
+
+      // Allow enter key in input
+      document.getElementById("newClinicInput").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addClinic();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

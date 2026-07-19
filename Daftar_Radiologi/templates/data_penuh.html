@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analisis Rujukan & Data Penuh - Buku Daftar Offline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <!-- Chart.js local file -->
+  <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+  <script>
+    function shutdownServer() {
+      document.getElementById('shutdownModalOverlay').style.display = 'flex';
+    }
+
+    function closeShutdownModal() {
+      document.getElementById('shutdownModalOverlay').style.display = 'none';
+    }
+
+    function confirmShutdown() {
+      const action = document.getElementById('shutdownActionSelect').value;
+      if (action === 'cancel') {
+        closeShutdownModal();
+        return;
+      }
+      
+      closeShutdownModal();
+      document.getElementById('win11ShutdownScreen').style.display = 'flex';
+      
+      fetch('/api/shutdown', { method: 'POST' })
+        .then(res => res.json())
+        .catch(err => console.log(err));
+
+      setTimeout(() => {
+        window.open('', '_self', '');
+        window.close();
+        
+        setTimeout(() => {
+          const textEl = document.querySelector('.win11-shutdown-text');
+          const subEl = document.querySelector('.win11-shutdown-subtext');
+          if (textEl) textEl.textContent = "Aplikasi telah ditutup dengan selamat.";
+          if (subEl) subEl.textContent = "Anda boleh menutup tab pelayar ini sekarang.";
+        }, 1000);
+      }, 2000);
+    }
+  </script>
+  <style>
+    /* Tambahan stail khusus untuk halaman perbandingan rujukan */
+    .dashboard-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-container-flex {
+      display: flex;
+      flex-direction: column;
+      height: 350px;
+      position: relative;
+    }
+
+    .kpi-percent {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary-color, #3b82f6);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section">
+        <h1>DAFTAR RADIOLOGI</h1>
+        <p>Analisis Rujukan & Data Penuh</p>
+      </div>
+      <nav>
+        <a href="/" class="nav-link">DAFTAR</a>
+        <a href="/patient-list" class="nav-link">PATIENT LIST</a>
+        <a href="/dashboard" class="nav-link">DASHBOARD</a>
+        <a href="/data-penuh" class="nav-link active">ANALISIS REFERRALS</a>
+        <a href="/phris" class="nav-link">RETEN</a>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+            </path>
+          </svg>
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="card filter-bar">
+      <form id="filterForm" method="GET" action="/data-penuh" class="filter-form">
+        <div class="form-group filter-group">
+          <label for="month">Bulan</label>
+          <select id="month" name="month">
+            {% for m, info in months.items() %}
+            <option value="{{ m }}" {% if m==selected_month %}selected{% endif %}>{{ info[0].split('_')[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group filter-group">
+          <label for="year">Tahun</label>
+          <select id="year" name="year">
+            {% for y in available_years %}
+            <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn filter-btn">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Stat counter boxes -->
+    <div class="stat-summary-row">
+      <div class="stat-box">
+        <span class="title">Jumlah Kes</span>
+        <span id="stat-total-patients" class="value">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="title">{{ klinik_asal }}</span>
+        <span id="stat-own-cases" class="value">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="title">Rujukan Luar (Referrals)</span>
+        <span id="stat-ref-cases" class="value">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="title">Kadar Rujukan (%)</span>
+        <span id="stat-ref-percent" class="kpi-percent">0%</span>
+      </div>
+    </div>
+
+    <!-- First row grid: Referral analysis -->
+    <div class="dashboard-grid-2">
+      <!-- Nisbah Kes Sendiri vs Kes Rujukan (Donut Chart) -->
+      <div class="dashboard-card card">
+        <h2 class="card-title">Nisbah Kes Sendiri vs Rujukan</h2>
+        <div class="chart-container-flex">
+          <canvas id="referralRatioChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Breakdown Klinik Rujukan (Horizontal Bar Chart) -->
+      <div class="dashboard-card card">
+        <h2 class="card-title">Kes Mengikut Klinik</h2>
+        <div class="chart-container-flex">
+          <canvas id="clinicsBreakdownChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second row grid: Data Penuh breakdown -->
+    <div class="dashboard-grid">
+      <!-- Pecahan Jenis Pemeriksaan AM -->
+      <div class="dashboard-card card">
+        <h2 class="card-title">Jenis Pemeriksaan</h2>
+        <div class="chart-container-flex">
+          <canvas id="examTypesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Pecahan Bangsa / Kaum -->
+      <div class="dashboard-card card">
+        <h2 class="card-title">Kaum</h2>
+        <div class="chart-container-flex">
+          <canvas id="racesChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <footer style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+      rdgr.szal.kkbbs
+    </footer>
+  </div>
+
+  <script>
+    // Variables for Chart.js instances
+    let ratioChart = null;
+    let clinicsChart = null;
+    let examChart = null;
+    let racesChartObj = null;
+
+    const currentMonth = Number('{{ selected_month }}');
+    const currentYear = Number('{{ selected_year }}');
+    const klinikAsal = "{{ klinik_asal }}".toUpperCase();
+
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch(`/api/dashboard-data?month=${currentMonth}&year=${currentYear}`)
+        .then(res => res.json())
+        .then(data => {
+          updateStatistics(data);
+          renderCharts(data);
+        })
+        .catch(err => {
+          console.error("Gagal mendapatkan data dashboard:", err);
+        });
+    });
+
+    function updateStatistics(data) {
+      const total = data.total_patients || 0;
+      let ownCases = 0;
+      let refCases = 0;
+
+      // Kira kes sendiri dan kes rujukan
+      Object.keys(data.clinics || {}).forEach(clinic => {
+        if (clinic === klinikAsal) {
+          ownCases = data.clinics[clinic];
+        } else {
+          refCases += data.clinics[clinic];
+        }
+      });
+
+      document.getElementById("stat-total-patients").textContent = total;
+      document.getElementById("stat-own-cases").textContent = ownCases;
+      document.getElementById("stat-ref-cases").textContent = refCases;
+
+      const refPercent = total > 0 ? ((refCases / total) * 100).toFixed(1) : 0;
+      document.getElementById("stat-ref-percent").textContent = refPercent + "%";
+    }
+
+    function renderCharts(data) {
+      const total = data.total_patients || 0;
+      let ownCases = 0;
+      let refCases = 0;
+
+      Object.keys(data.clinics || {}).forEach(clinic => {
+        if (clinic === klinikAsal) {
+          ownCases = data.clinics[clinic];
+        } else {
+          refCases += data.clinics[clinic];
+        }
+      });
+
+      // 1. Donut Chart - Nisbah Kes
+      const ctxRatio = document.getElementById("referralRatioChart").getContext("2d");
+      ratioChart = new Chart(ctxRatio, {
+        type: 'doughnut',
+        data: {
+          labels: ['Kes Sendiri', 'Kes Rujukan Luar'],
+          datasets: [{
+            data: [ownCases, refCases],
+            backgroundColor: ['#3b82f6', '#f59e0b'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+
+      // 2. Horizontal Bar Chart - Pengirim Kes
+      const sortedClinics = Object.entries(data.clinics || {})
+        .sort((a, b) => b[1] - a[1]); // Susun tinggi ke rendah
+
+      const clinicLabels = sortedClinics.map(item => item[0]);
+      const clinicValues = sortedClinics.map(item => item[1]);
+
+      const ctxClinics = document.getElementById("clinicsBreakdownChart").getContext("2d");
+      clinicsChart = new Chart(ctxClinics, {
+        type: 'bar',
+        data: {
+          labels: clinicLabels,
+          datasets: [{
+            label: 'Jumlah Kes',
+            data: clinicValues,
+            backgroundColor: clinicLabels.map(label => label === klinikAsal ? '#3b82f6' : '#10b981'),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+
+      // 3. Bar Chart - Jenis Pemeriksaan AM
+      const examLabels = Object.keys(data.exam_types || {});
+      const examValues = Object.values(data.exam_types || {});
+
+      const ctxExam = document.getElementById("examTypesChart").getContext("2d");
+      examChart = new Chart(ctxExam, {
+        type: 'bar',
+        data: {
+          labels: examLabels,
+          datasets: [{
+            label: 'Jumlah Pemeriksaan',
+            data: examValues,
+            backgroundColor: '#8b5cf6',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+
+      // 4. Bar Chart - Demografi Bangsa
+      const raceLabels = Object.keys(data.races || {});
+      const raceValues = Object.values(data.races || {});
+
+      const ctxRaces = document.getElementById("racesChart").getContext("2d");
+      racesChartObj = new Chart(ctxRaces, {
+        type: 'bar',
+        data: {
+          labels: raceLabels,
+          datasets: [{
+            label: 'Bil. Pesakit',
+            data: raceValues,
+            backgroundColor: ['#ec4899', '#06b6d4', '#eab308', '#f43f5e', '#a855f7', '#6b7280'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+  <!-- Windows 11 Shutdown Modal Overlay -->
+  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
+    <div class="shutdown-modal">
+      <div class="shutdown-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+        <h3>Tutup Aplikasi</h3>
+      </div>
+      <div class="shutdown-modal-body">
+        <div class="shutdown-modal-prompt">
+          <div class="shutdown-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <p>Adakah anda pasti mahu menamatkan sesi Daftar Radiologi dan menutup pelayan (server) aplikasi?</p>
+        </div>
+        <div class="shutdown-dropdown-container">
+          <label for="shutdownActionSelect">Tindakan:</label>
+          <select id="shutdownActionSelect" class="shutdown-dropdown">
+            <option value="shutdown">Tutup Aplikasi & Pelayan (Shut Down)</option>
+            <option value="cancel">Batal</option>
+          </select>
+        </div>
+      </div>
+      <div class="shutdown-modal-footer">
+        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
+        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Windows 11 Shutdown Screen -->
+  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
+    <div class="win11-spinner-container">
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+    </div>
+    <div class="win11-shutdown-text">Menutup aplikasi...</div>
+    <div class="win11-shutdown-subtext">Sila tunggu sebentar sementara sistem ditutup dengan selamat.</div>
+  </div>
+</body>
+
+</html>

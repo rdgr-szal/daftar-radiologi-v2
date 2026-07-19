@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ms" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senarai Pesakit - Daftar Radiologi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    /* Custom style for Patient List */
+    .filter-card {
+      background-color: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1.5fr;
+      gap: 20px;
+      align-items: flex-end;
+    }
+
+    @media (max-width: 900px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .preset-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .preset-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Segmented Control for Presets */
+    .preset-segmented {
+      display: flex;
+      background-color: var(--table-header-bg);
+      border-radius: 8px;
+      padding: 3px;
+      border: 1px solid var(--panel-border);
+      gap: 4px;
+      height: 38px;
+      align-items: center;
+    }
+
+    .preset-btn {
+      flex: 1;
+      text-align: center;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      color: var(--text-secondary);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
+
+    .preset-btn:hover {
+      color: var(--text-primary);
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] .preset-btn:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .preset-btn.active {
+      background-color: var(--input-bg);
+      color: var(--accent-color);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--panel-border);
+    }
+
+    .custom-range-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .custom-range-container input {
+      flex: 1;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      height: 38px;
+    }
+
+    .search-container {
+      position: relative;
+    }
+
+    .search-container input {
+      width: 100%;
+      font-size: 0.85rem;
+      padding: 8px 36px 8px 12px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      height: 38px;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    /* Accordion Patient List */
+    .list-card {
+      background-color: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+
+    .patient-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .patient-table th {
+      background-color: var(--table-header-bg);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--panel-border);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color var(--transition-speed);
+    }
+
+    .patient-table th:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .patient-table th:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .patient-table th .sort-indicator {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .patient-row-header {
+      border-bottom: 1px solid var(--panel-border);
+      cursor: pointer;
+      transition: background-color var(--transition-speed);
+    }
+
+    .patient-row-header:hover {
+      background-color: var(--table-row-hover);
+    }
+
+    .patient-row-header td {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .patient-name-cell {
+      font-weight: 700 !important;
+      text-transform: uppercase;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition-speed);
+      width: 24px;
+      height: 24px;
+    }
+
+    .patient-row-header.open .expand-btn {
+      transform: rotate(180deg);
+    }
+
+    /* Accordion Detail Body */
+    .patient-row-detail {
+      display: none;
+      background-color: rgba(0, 0, 0, 0.01);
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    [data-theme="dark"] .patient-row-detail {
+      background-color: rgba(255, 255, 255, 0.005);
+    }
+
+    .patient-row-detail.show {
+      display: table-row;
+    }
+
+    .detail-container {
+      padding: 16px 24px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .detail-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-val {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Status indicator */
+    .no-records {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Skeleton Loader */
+    .skeleton-row td {
+      padding: 16px;
+    }
+
+    .skeleton-bar {
+      height: 14px;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.1) 37%, rgba(0, 0, 0, 0.05) 63%);
+      background-size: 400% 100%;
+      animation: skeleton-loading 1.4s ease infinite;
+      border-radius: 4px;
+    }
+
+    [data-theme="dark"] .skeleton-bar {
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 37%, rgba(255, 255, 255, 0.05) 63%);
+      background-size: 400% 100%;
+    }
+
+    @keyframes skeleton-loading {
+      0% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0 50%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section">
+        <h1>DAFTAR RADIOLOGI</h1>
+        <p>Senarai Pendaftaran Pesakit & Pemeriksaan</p>
+      </div>
+      <nav>
+        <a href="/" class="nav-link">DAFTAR</a>
+        <a href="/patient-list" class="nav-link active">PATIENT LIST</a>
+        <a href="/dashboard" class="nav-link">DASHBOARD</a>
+        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
+        <a href="/phris" class="nav-link">RETEN</a>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+            </path>
+          </svg>
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Shut Down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Tapisan Date Range Picker & Carian -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <!-- Preset Date Range Segmented Control -->
+        <div class="preset-container">
+          <span class="preset-label">Date</span>
+          <div class="preset-segmented">
+            <button type="button" class="preset-btn active" data-preset="today">Today</button>
+            <button type="button" class="preset-btn" data-preset="yesterday">Yesterday</button>
+            <button type="button" class="preset-btn" data-preset="week">Week</button>
+            <button type="button" class="preset-btn" data-preset="month">Month</button>
+            <button type="button" class="preset-btn" data-preset="year">Year</button>
+            <button type="button" class="preset-btn" data-preset="custom">Custom</button>
+          </div>
+        </div>
+
+        <!-- Custom Date Picker Fields -->
+        <div class="preset-container">
+          <span class="preset-label">Custom Range</span>
+          <div class="custom-range-container">
+            <input type="date" id="startDate" name="startDate">
+            <span style="color: var(--text-secondary); font-weight: bold;">-</span>
+            <input type="date" id="endDate" name="endDate">
+          </div>
+        </div>
+
+        <!-- Real-time Search Input -->
+        <div class="preset-container">
+          <span class="preset-label">Carian</span>
+          <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Cari Nama/ID/No. X-Ray (xxxx)">
+            <span class="search-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion Patient List Table -->
+    <div class="list-card">
+      <table class="patient-table">
+        <thead>
+          <tr id="tableHeaders">
+            <th style="width: 11%;" data-sort="tarikh">Tarikh <span class="sort-indicator"></span></th>
+            <th style="width: 14%;" data-sort="xray_no">No. X-Ray <span class="sort-indicator">▲</span></th>
+            <th style="width: 15%;" data-sort="id_number">ID <span class="sort-indicator"></span></th>
+            <th style="width: 25%;" data-sort="name">Nama <span class="sort-indicator"></span></th>
+            <th style="width: 8%;" data-sort="age">Umur <span class="sort-indicator"></span></th>
+            <th style="width: 10%;" data-sort="gender">Jantina <span class="sort-indicator"></span></th>
+            <th style="width: 12%;" data-sort="exam_part">Bahagian <span class="sort-indicator"></span></th>
+            <th style="width: 5%; text-align: center;">Info</th>
+          </tr>
+        </thead>
+        <tbody id="patientListBody">
+          <!-- Data dinamik diisi di sini -->
+        </tbody>
+      </table>
+      <div id="noRecords" class="no-records" style="display: none;">
+        Tiada rekod ditemui bagi tempoh tarikh dan carian yang dipilih.
+      </div>
+    </div>
+
+    <footer
+      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+      rdgr.szal.kkbbs
+    </footer>
+  </div>
+
+  <!-- Windows 11 Shutdown Modal Overlay -->
+  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
+    <div class="shutdown-modal">
+      <div class="shutdown-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+        <h3>Shut Down</h3>
+      </div>
+      <div class="shutdown-modal-body">
+        <div class="shutdown-modal-prompt">
+          <div class="shutdown-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <p>Are you sure you want to close this application and shut down the server?</p>
+        </div>
+        <div class="shutdown-dropdown-container">
+          <label for="shutdownActionSelect">Tindakan:</label>
+          <select id="shutdownActionSelect" class="shutdown-dropdown">
+            <option value="shutdown">Close Application & Server (Shut Down)</option>
+            <option value="cancel">Cancel</option>
+          </select>
+        </div>
+      </div>
+      <div class="shutdown-modal-footer">
+        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
+        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Shutdown Screen -->
+  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
+    <div class="win11-spinner-container">
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+    </div>
+    <div class="win11-shutdown-text">Closing...</div>
+    <div class="win11-shutdown-subtext">Please wait...</div>
+  </div>
+
+  <script>
+    // State management
+    let rawPatients = [];
+    let sortColumn = 'xray_no';
+    let sortAscending = true;
+
+    // Date range helpers
+    function getTodayISO() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function calculateDatesForPreset(preset) {
+      const today = new Date();
+      let start = new Date();
+      let end = new Date();
+
+      switch (preset) {
+        case 'today':
+          // Start and end are today
+          break;
+        case 'yesterday':
+          start.setDate(today.getDate() - 1);
+          end.setDate(today.getDate() - 1);
+          break;
+        case 'week':
+          start.setDate(today.getDate() - 7);
+          break;
+        case 'month':
+          start.setDate(1); // 1st day of current month
+          break;
+        case 'year':
+          start.setMonth(0, 1); // 1st Jan
+          break;
+        case 'custom':
+        default:
+          return null;
+      }
+
+      return {
+        start: start.toISOString().split('T')[0],
+        end: end.toISOString().split('T')[0]
+      };
+    }
+
+    // Hash code for colors
+    function getGroupColor(id, name, date) {
+      const key = `${id.trim()}_${name.trim()}_${date.trim()}`;
+      let hash = 0;
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const h = Math.abs(hash % 360);
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const s = isDark ? 30 : 45;
+      const l = isDark ? 22 : 94;
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+
+    // Helper to format X-ray numbers to 4 digits (or 5 digits past 9999)
+    function formatXrayNo(xray) {
+      if (!xray) return '';
+      const numMatch = xray.match(/\d+$/);
+      if (!numMatch) return xray;
+
+      const numStr = numMatch[0];
+      const prefix = xray.substring(0, xray.length - numStr.length);
+      const num = parseInt(numStr, 10);
+      const paddedNum = String(num).padStart(Math.max(4, numStr.length), '0');
+      return `${prefix}${paddedNum}`;
+    }
+
+    // Render the table records
+    function renderTable() {
+      const tbody = document.getElementById('patientListBody');
+      const noRecords = document.getElementById('noRecords');
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      // Filter
+      let filtered = rawPatients.filter(p => {
+        if (!search) return true;
+        const formattedXray = formatXrayNo(p.xray_no).toLowerCase();
+        return p.name.toLowerCase().includes(search) ||
+          p.id_number.toLowerCase().includes(search) ||
+          p.xray_no.toLowerCase().includes(search) ||
+          formattedXray.includes(search);
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        let valA = a[sortColumn];
+        let valB = b[sortColumn];
+
+        if (sortColumn === 'xray_no') {
+          // Extract trailing digits and compare numerically
+          const numA = parseInt(String(valA).match(/\d+$/)?.[0] || 0, 10);
+          const numB = parseInt(String(valB).match(/\d+$/)?.[0] || 0, 10);
+          if (numA !== numB) {
+            return sortAscending ? numA - numB : numB - numA;
+          }
+          // If digits are equal, fallback to string comparison of the whole string
+          valA = String(valA).toLowerCase();
+          valB = String(valB).toLowerCase();
+        } else if (sortColumn === 'age' || sortColumn === 'total_expose') {
+          valA = parseFloat(valA) || 0;
+          valB = parseFloat(valB) || 0;
+        } else {
+          valA = String(valA).toLowerCase();
+          valB = String(valB).toLowerCase();
+        }
+
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+
+      // Calculate registration groupings to determine same colors
+      const groupCounts = {};
+      filtered.forEach(p => {
+        const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
+        groupCounts[key] = (groupCounts[key] || 0) + 1;
+      });
+
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        noRecords.style.display = 'block';
+        return;
+      }
+      noRecords.style.display = 'none';
+
+      filtered.forEach((p, index) => {
+        const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
+        const hasGrouping = groupCounts[key] > 1;
+        const rowBgStyle = hasGrouping ? `style="background-color: ${getGroupColor(p.id_number, p.name, p.tarikh)}"` : '';
+
+        // Header Row
+        const trHeader = document.createElement('tr');
+        trHeader.className = 'patient-row-header';
+        trHeader.id = `header-${index}`;
+        if (rowBgStyle) {
+          trHeader.setAttribute('style', rowBgStyle.substring(7, rowBgStyle.length - 1));
+        }
+
+        trHeader.innerHTML = `
+          <td>${p.tarikh}</td>
+          <td style="font-weight: 700; font-family: monospace;">${formatXrayNo(p.xray_no)}</td>
+          <td>${p.id_number}</td>
+          <td class="patient-name-cell">${p.name}</td>
+          <td>${p.age !== null ? p.age : '-'}</td>
+          <td>${p.gender}</td>
+          <td>${p.exam_part}</td>
+          <td style="text-align: center;">
+            <button class="expand-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </td>
+        `;
+
+        // Accordion click trigger
+        trHeader.addEventListener('click', () => {
+          const detailRow = document.getElementById(`detail-${index}`);
+          const isOpen = trHeader.classList.toggle('open');
+          if (isOpen) {
+            detailRow.classList.add('show');
+          } else {
+            detailRow.classList.remove('show');
+          }
+        });
+
+        // Detail Row (Accordion Body)
+        const trDetail = document.createElement('tr');
+        trDetail.className = 'patient-row-detail';
+        trDetail.id = `detail-${index}`;
+        if (rowBgStyle) {
+          trDetail.setAttribute('style', rowBgStyle.substring(7, rowBgStyle.length - 1));
+        }
+
+        trDetail.innerHTML = `
+          <td colspan="8">
+            <div class="detail-container">
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Jenis Pemeriksaan</span>
+                  <span class="detail-val">${p.exam_type}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Laterally</span>
+                  <span class="detail-val">${p.laterality}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Klinik Rujukan</span>
+                  <span class="detail-val">${p.clinic}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Kategori</span>
+                  <span class="detail-val">${p.category}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Warganegara</span>
+                  <span class="detail-val">${p.citizen}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Kakitangan Kerajaan</span>
+                  <span class="detail-val">${p.gov_staff}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Bangsa / Kaum</span>
+                  <span class="detail-val">${p.race}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">LMP</span>
+                  <span class="detail-val">${p.lmp}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Media (CD/Filem)</span>
+                  <span class="detail-val">${p.cd_filem}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total Expose (Dose)</span>
+                  <span class="detail-val">${p.total_expose}</span>
+                </div>
+                <div class="detail-item" style="grid-column: span 2;">
+                  <span class="detail-label">Alamat Kediaman</span>
+                  <span class="detail-val">${p.address || '-'}</span>
+                </div>
+              </div>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(trHeader);
+        tbody.appendChild(trDetail);
+      });
+    }
+
+    // Fetch patients from API
+    async function loadPatients() {
+      const tbody = document.getElementById('patientListBody');
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+
+      if (!start || !end) return;
+
+      // Show Skeleton loaders
+      tbody.innerHTML = `
+        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
+      `;
+
+      try {
+        const response = await fetch(`/api/patients?start_date=${start}&end_date=${end}`);
+        const data = await response.json();
+        if (data.error) {
+          tbody.innerHTML = `<tr><td colspan="8" class="no-records" style="color: var(--danger-color);">${data.error}</td></tr>`;
+          return;
+        }
+        rawPatients = data;
+        renderTable();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="no-records" style="color: var(--danger-color);">Ralat menyambung ke pelayan. Gagal mengambil data.</td></tr>`;
+        console.error(err);
+      }
+    }
+
+    // Date picker elements and triggers
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    startDateInput.addEventListener('change', () => {
+      // Deactivate presets if customized
+      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('[data-preset="custom"]').classList.add('active');
+      loadPatients();
+    });
+
+    endDateInput.addEventListener('change', () => {
+      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('[data-preset="custom"]').classList.add('active');
+      loadPatients();
+    });
+
+    // Preset button trigger
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const preset = btn.getAttribute('data-preset');
+        if (preset === 'custom') return; // Do nothing, user changes inputs manually
+
+        const range = calculateDatesForPreset(preset);
+        if (range) {
+          startDateInput.value = range.start;
+          endDateInput.value = range.end;
+          loadPatients();
+        }
+      });
+    });
+
+    // Real-time search trigger
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+
+    // Sorting headers trigger
+    document.querySelectorAll('#tableHeaders th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.getAttribute('data-sort');
+        if (sortColumn === col) {
+          sortAscending = !sortAscending;
+        } else {
+          sortColumn = col;
+          sortAscending = true;
+        }
+
+        // Update headers visuals
+        document.querySelectorAll('#tableHeaders th[data-sort]').forEach(header => {
+          const ind = header.querySelector('.sort-indicator');
+          if (header.getAttribute('data-sort') === sortColumn) {
+            ind.textContent = sortAscending ? '▲' : '▼';
+          } else {
+            ind.textContent = '';
+          }
+        });
+
+        renderTable();
+      });
+    });
+
+    // Windows 11 Shutdown controls
+    function shutdownServer() {
+      document.getElementById("shutdownModalOverlay").style.display = "flex";
+    }
+
+    function closeShutdownModal() {
+      document.getElementById("shutdownModalOverlay").style.display = "none";
+    }
+
+    function confirmShutdown() {
+      const action = document.getElementById("shutdownActionSelect").value;
+      if (action === "shutdown") {
+        closeShutdownModal();
+        document.getElementById("win11ShutdownScreen").style.display = "flex";
+        fetch("/shutdown", { method: "POST" })
+          .then(() => {
+            setTimeout(() => {
+              window.close();
+            }, 3000);
+          })
+          .catch(err => {
+            console.error("Error shutting down:", err);
+          });
+      } else {
+        closeShutdownModal();
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      // Default to Today
+      const todayISO = getTodayISO();
+      startDateInput.value = todayISO;
+      endDateInput.value = todayISO;
+      loadPatients();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,27 @@
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# PyInstaller build files
+build/
+dist/
+pyinstaller.log
+pyinstaller_err.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# KKM Patient Data / PII (CRITICAL: DO NOT PUSH PATIENT DATA TO GITHUB)
+**/Pendaftaran/**/*.xlsx
+**/Pendaftaran/**/*.json
+**/Pendaftaran/extra_phris_data.json
+**/Pendaftaran/config.json
+test_temp_registration.xlsx
+*.xlsx
