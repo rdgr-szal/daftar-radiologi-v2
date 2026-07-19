@@ -256,18 +256,23 @@
       <!-- Card Left: Facility Info Settings -->
       <div class="settings-card">
         <h2 class="settings-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
           Konfigurasi Fasiliti & Klinik
         </h2>
-        
+
         <div class="form-group">
           <label for="klinikAsal">Nama Fasiliti / Klinik Asal</label>
-          <input type="text" id="klinikAsal" value="{{ config.klinik_asal }}" required style="text-transform: uppercase;">
+          <input type="text" id="klinikAsal" value="{{ config.klinik_asal }}" required
+            style="text-transform: uppercase;">
         </div>
 
         <div class="form-group">
           <label for="singkatanKlinik">Singkatan Fasiliti</label>
-          <input type="text" id="singkatanKlinik" value="{{ config.singkatan_klinik }}" required style="text-transform: uppercase;">
+          <input type="text" id="singkatanKlinik" value="{{ config.singkatan_klinik }}" required
+            style="text-transform: uppercase;">
         </div>
 
         <div class="form-group">
@@ -276,19 +281,25 @@
             <!-- Dynamic tags -->
           </div>
           <div class="add-clinic-group">
-            <input type="text" id="newClinicInput" placeholder="Masukkan nama klinik rujukan..." style="text-transform: uppercase;">
+            <input type="text" id="newClinicInput" placeholder="Masukkan nama klinik rujukan..."
+              style="text-transform: uppercase;">
             <button type="button" class="btn-add-clinic" onclick="addClinic()">Tambah</button>
           </div>
         </div>
 
-        <button type="button" class="btn-save-settings" onclick="saveSettings()">Simpan Konfigurasi</button>
+        <button type="button" class="btn-save-settings" onclick="saveSettings()">Save</button>
       </div>
 
       <!-- Card Right: Database Maintenance Settings -->
       <div class="settings-card">
         <h2 class="settings-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
-          Penyelenggaraan Database (Fail Excel)
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+          </svg>
+          Generate New Database (Excel)
         </h2>
 
         <div class="db-action-group">
@@ -309,17 +320,23 @@
             </select>
           </div>
 
-          <button type="button" class="btn-save-settings" style="background-color: var(--accent-color);" onclick="generateYearDatabase()">
-            Jana Fail Database (Excel Baru)
+          <button type="button" class="btn-save-settings" style="background-color: var(--accent-color);"
+            onclick="generateYearDatabase()">
+            Generate Database (Excel Baru)
           </button>
         </div>
 
-        <div class="db-status-info" style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 15px;">
-          <p><strong>Nota Penyelenggaraan:</strong></p>
+        <div class="db-status-info"
+          style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 15px;">
+          <p><strong>Nota:</strong></p>
           <ul style="margin-left: 16px; margin-top: 6px;">
-            <li>Sistem memerlukan fail Excel pendaftaran (12 fail bulanan) bagi setiap tahun untuk mula merekodkan data.</li>
-            <li>Klik butang di atas untuk menjana fail kosong bagi tahun yang belum diwujudkan. Rekod pesakit sedia ada pada tahun lain <strong>tidak akan terjejas</strong>.</li>
-            <li>Menyimpan konfigurasi semula akan mengemas kini senarai klinik luar (Masterlist) di dalam semua fail Excel pendaftaran secara automatik.</li>
+            <li>Sistem memerlukan fail Excel pendaftaran (12 fail bulanan) bagi setiap tahun untuk merekodkan data.
+            </li>
+            <li>Klik butang di atas untuk menjana fail baru bagi tahun yang belum diwujudkan. Rekod pesakit sedia ada
+              pada tahun lain <strong>tidak akan terjejas</strong>.</li>
+            <li>Konfigurasi semula fasiliti & klinik akan update senarai klinik luar, Nama Fasiliti & Singkatan Fasiliti
+              di dalam semua fail
+              Excel pendaftaran secara automatik.</li>
           </ul>
         </div>
       </div>
@@ -428,7 +445,7 @@
       const selectedYear = parseInt(document.getElementById("dbYearSelect").value);
       if (!selectedYear) return;
 
-      if (!confirm(`Adakah anda pasti mahu menjana fail database Excel kosong bagi tahun ${selectedYear}?`)) {
+      if (!confirm(`Adakah anda pasti mahu menjana fail database Excel baru bagi tahun ${selectedYear}?`)) {
         return;
       }
 
@@ -485,12 +502,12 @@
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
           </div>
-          <p>Adakah anda pasti mahu menamatkan sesi Daftar Radiologi dan menutup pelayan (server) aplikasi?</p>
+          <p>Menutup sesi Daftar Radiologi dan server aplikasi?</p>
         </div>
         <div class="shutdown-dropdown-container">
           <label for="shutdownActionSelect">Tindakan:</label>
           <select id="shutdownActionSelect" class="shutdown-dropdown">
-            <option value="shutdown">Tutup Aplikasi & Pelayan (Shut Down)</option>
+            <option value="shutdown">Close DaftarRadiologi & Server (Shut Down)</option>
             <option value="cancel">Batal</option>
           </select>
         </div>
@@ -511,8 +528,8 @@
       <div class="win11-spinner-dot"></div>
       <div class="win11-spinner-dot"></div>
     </div>
-    <div class="win11-shutdown-text">Menutup aplikasi...</div>
-    <div class="win11-shutdown-subtext">Sila tunggu sebentar sementara sistem ditutup dengan selamat.</div>
+    <div class="win11-shutdown-text">Closing...</div>
+    <div class="win11-shutdown-subtext">Please wait while system is shutting down.</div>
   </div>
 </body>
 
