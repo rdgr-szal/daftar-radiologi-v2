@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetapan Sistem - Buku Daftar Offline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script>
+    function shutdownServer() {
+      document.getElementById('shutdownModalOverlay').style.display = 'flex';
+    }
+
+    function closeShutdownModal() {
+      document.getElementById('shutdownModalOverlay').style.display = 'none';
+    }
+
+    function confirmShutdown() {
+      const action = document.getElementById('shutdownActionSelect').value;
+      if (action === 'cancel') {
+        closeShutdownModal();
+        return;
+      }
+
+      closeShutdownModal();
+      document.getElementById('win11ShutdownScreen').style.display = 'flex';
+
+      fetch('/api/shutdown', { method: 'POST' })
+        .then(res => res.json())
+        .catch(err => console.log(err));
+
+      setTimeout(() => {
+        window.open('', '_self', '');
+        window.close();
+
+        setTimeout(() => {
+          const textEl = document.querySelector('.win11-shutdown-text');
+          const subEl = document.querySelector('.win11-shutdown-subtext');
+          if (textEl) textEl.textContent = "Aplikasi telah ditutup dengan selamat.";
+          if (subEl) subEl.textContent = "Anda boleh menutup tab pelayar ini sekarang.";
+        }, 1000);
+      }, 2000);
+    }
+  </script>
+  <style>
+    /* Styling for settings card */
+    .settings-container {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .settings-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .settings-card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .settings-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-color);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .form-group input[type="text"],
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--input-border);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color var(--transition-speed);
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .clinic-tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border: 1.5px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      background-color: var(--input-bg);
+      min-height: 100px;
+      max-height: 160px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+
+    .clinic-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .btn-remove-tag {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-remove-tag:hover {
+      color: var(--danger-color);
+    }
+
+    .add-clinic-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-clinic-group input {
+      flex: 1;
+    }
+
+    .btn-add-clinic {
+      padding: 8px 16px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: background-color var(--transition-speed);
+    }
+
+    .btn-add-clinic:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-save-settings {
+      padding: 12px 20px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      width: 100%;
+      transition: background-color var(--transition-speed);
+    }
+
+    .btn-save-settings:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .db-action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .db-status-info {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section">
+        <h1>TETAPAN</h1>
+        <p>Urusan Konfigurasi Fasiliti & Penyelenggaraan Database</p>
+      </div>
+      <nav>
+        <a href="/" class="nav-link">DAFTAR</a>
+        <a href="/patient-list" class="nav-link">PATIENT LIST</a>
+        <a href="/dashboard" class="nav-link">DASHBOARD</a>
+        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
+        <a href="/phris" class="nav-link">RETEN</a>
+        <a href="/settings" class="nav-link active">TETAPAN</a>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+            </path>
+          </svg>
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <div class="settings-container">
+      <!-- Card Left: Facility Info Settings -->
+      <div class="settings-card">
+        <h2 class="settings-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Konfigurasi Fasiliti & Klinik
+        </h2>
+        
+        <div class="form-group">
+          <label for="klinikAsal">Nama Fasiliti / Klinik Asal</label>
+          <input type="text" id="klinikAsal" value="{{ config.klinik_asal }}" required style="text-transform: uppercase;">
+        </div>
+
+        <div class="form-group">
+          <label for="singkatanKlinik">Singkatan Fasiliti</label>
+          <input type="text" id="singkatanKlinik" value="{{ config.singkatan_klinik }}" required style="text-transform: uppercase;">
+        </div>
+
+        <div class="form-group">
+          <label>Senarai Klinik Rujukan Terlibat</label>
+          <div class="clinic-tags-container" id="clinicList">
+            <!-- Dynamic tags -->
+          </div>
+          <div class="add-clinic-group">
+            <input type="text" id="newClinicInput" placeholder="Masukkan nama klinik rujukan..." style="text-transform: uppercase;">
+            <button type="button" class="btn-add-clinic" onclick="addClinic()">Tambah</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn-save-settings" onclick="saveSettings()">Simpan Konfigurasi</button>
+      </div>
+
+      <!-- Card Right: Database Maintenance Settings -->
+      <div class="settings-card">
+        <h2 class="settings-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+          Penyelenggaraan Database (Fail Excel)
+        </h2>
+
+        <div class="db-action-group">
+          <div class="form-group">
+            <label for="dbYearSelect">Pilih Tahun Database</label>
+            <select id="dbYearSelect">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+              <option value="2029">2029</option>
+              <option value="2030">2030</option>
+              <option value="2031">2031</option>
+              <option value="2032">2032</option>
+              <option value="2033">2033</option>
+              <option value="2034">2034</option>
+              <option value="2035">2035</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-save-settings" style="background-color: var(--accent-color);" onclick="generateYearDatabase()">
+            Jana Fail Database (Excel Baru)
+          </button>
+        </div>
+
+        <div class="db-status-info" style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 15px;">
+          <p><strong>Nota Penyelenggaraan:</strong></p>
+          <ul style="margin-left: 16px; margin-top: 6px;">
+            <li>Sistem memerlukan fail Excel pendaftaran (12 fail bulanan) bagi setiap tahun untuk mula merekodkan data.</li>
+            <li>Klik butang di atas untuk menjana fail kosong bagi tahun yang belum diwujudkan. Rekod pesakit sedia ada pada tahun lain <strong>tidak akan terjejas</strong>.</li>
+            <li>Menyimpan konfigurasi semula akan mengemas kini senarai klinik luar (Masterlist) di dalam semua fail Excel pendaftaran secara automatik.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer
+      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+      rdgr.szal.kkbbs
+    </footer>
+  </div>
+
+  <script>
+    let clinics = JSON.parse('{{ config.klinik_rujukan|tojson | safe }}');
+    const klinikAsalDb = "{{ config.klinik_asal }}".toUpperCase();
+
+    function renderClinics() {
+      const container = document.getElementById("clinicList");
+      container.innerHTML = "";
+
+      clinics.forEach((clinic, idx) => {
+        const tag = document.createElement("div");
+        tag.className = "clinic-tag";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = clinic;
+
+        tag.appendChild(nameSpan);
+
+        // Hanya benarkan padam jika bukan klinik asal
+        if (clinic !== klinikAsalDb) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-remove-tag";
+          btn.innerHTML = "&times;";
+          btn.onclick = () => removeClinic(idx);
+          tag.appendChild(btn);
+        }
+
+        container.appendChild(tag);
+      });
+    }
+
+    function addClinic() {
+      const input = document.getElementById("newClinicInput");
+      const val = input.value.trim().toUpperCase();
+      if (!val) return;
+
+      if (clinics.includes(val)) {
+        alert("Klinik ini sudah ada dalam senarai!");
+        return;
+      }
+
+      clinics.push(val);
+      input.value = "";
+      renderClinics();
+    }
+
+    function removeClinic(idx) {
+      clinics.splice(idx, 1);
+      renderClinics();
+    }
+
+    function saveSettings() {
+      const klinikAsal = document.getElementById("klinikAsal").value.trim().toUpperCase();
+      const singkatanKlinik = document.getElementById("singkatanKlinik").value.trim().toUpperCase();
+
+      if (!klinikAsal || !singkatanKlinik) {
+        alert("Sila isi nama klinik asal dan singkatan fasiliti!");
+        return;
+      }
+
+      // Pastikan klinik asal dimasukkan dalam senarai klinik rujukan
+      if (!clinics.includes(klinikAsal)) {
+        clinics.unshift(klinikAsal);
+      }
+
+      const payload = {
+        klinik_asal: klinikAsal,
+        singkatan_klinik: singkatanKlinik,
+        klinik_rujukan: clinics
+      };
+
+      fetch("/api/settings/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert("Konfigurasi berjaya disimpan!");
+            window.location.reload();
+          } else {
+            alert("Gagal menyimpan konfigurasi: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Ralat berlaku ketika menyimpan konfigurasi.");
+        });
+    }
+
+    function generateYearDatabase() {
+      const selectedYear = parseInt(document.getElementById("dbYearSelect").value);
+      if (!selectedYear) return;
+
+      if (!confirm(`Adakah anda pasti mahu menjana fail database Excel kosong bagi tahun ${selectedYear}?`)) {
+        return;
+      }
+
+      fetch("/api/settings/generate-year", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ year: selectedYear })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert(`Jana fail database bulanan bagi tahun ${selectedYear} berjaya! Fail Excel baharu telah diwujudkan dalam folder Pendaftaran.`);
+          } else {
+            alert("Gagal menjana database: " + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Ralat berlaku ketika menghubungi pelayan.");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderClinics();
+      document.getElementById("newClinicInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addClinic();
+        }
+      });
+    });
+  </script>
+
+  <!-- Windows 11 Shutdown Modal Overlay -->
+  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
+    <div class="shutdown-modal">
+      <div class="shutdown-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+        <h3>Tutup Aplikasi</h3>
+      </div>
+      <div class="shutdown-modal-body">
+        <div class="shutdown-modal-prompt">
+          <div class="shutdown-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <p>Adakah anda pasti mahu menamatkan sesi Daftar Radiologi dan menutup pelayan (server) aplikasi?</p>
+        </div>
+        <div class="shutdown-dropdown-container">
+          <label for="shutdownActionSelect">Tindakan:</label>
+          <select id="shutdownActionSelect" class="shutdown-dropdown">
+            <option value="shutdown">Tutup Aplikasi & Pelayan (Shut Down)</option>
+            <option value="cancel">Batal</option>
+          </select>
+        </div>
+      </div>
+      <div class="shutdown-modal-footer">
+        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
+        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Windows 11 Shutdown Screen -->
+  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
+    <div class="win11-spinner-container">
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+    </div>
+    <div class="win11-shutdown-text">Menutup aplikasi...</div>
+    <div class="win11-shutdown-subtext">Sila tunggu sebentar sementara sistem ditutup dengan selamat.</div>
+  </div>
+</body>
+
+</html>

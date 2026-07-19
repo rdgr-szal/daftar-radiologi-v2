@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import datetime
+import shutil
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import openpyxl
 import webbrowser
@@ -1036,6 +1037,33 @@ def api_phris_matrix():
             
     return jsonify(matrix)
 
+# Utiliti: Jana fail Excel bagi suatu tahun jika belum wujud
+def generate_excel_files_for_year(year, klinik_rujukan, klinik_asal, singkatan_klinik):
+    referrals_only = [c for c in klinik_rujukan if c != klinik_asal]
+    for month in range(1, 12 + 1):
+        folder_name, file_month = MONTH_MAP[month]
+        dir_path = os.path.join(PENDAFTARAN_DIR, str(year), folder_name)
+        os.makedirs(dir_path, exist_ok=True)
+        
+        # Semak jika ada fail Excel di dalam folder
+        files_exist = False
+        try:
+            for f in os.listdir(dir_path):
+                if f.endswith(".xlsx") and not f.startswith("~$"):
+                    files_exist = True
+                    break
+        except Exception:
+            pass
+            
+        if not files_exist:
+            dest_filename = f"{year} {file_month} PER.SS-RA 101 {singkatan_klinik}.xlsx"
+            dest_path = os.path.join(dir_path, dest_filename)
+            try:
+                shutil.copy(TEMPLATE_FILE_PATH, dest_path)
+                print(f"Jana fail database: {dest_path}")
+            except Exception as e:
+                print(f"Gagal jana fail database bulanan ke {dest_path}: {e}")
+
 # 4. Halaman Setup Pertama Kali
 @app.route("/setup")
 def setup():
@@ -1049,6 +1077,8 @@ def api_setup():
         klinik_asal = data.get("klinik_asal", "").strip().upper()
         singkatan_klinik = data.get("singkatan_klinik", "").strip().upper()
         klinik_rujukan = [c.strip().upper() for c in data.get("klinik_rujukan", []) if c.strip()]
+        start_year = int(data.get("start_year", 2026))
+        end_year = int(data.get("end_year", 2027))
         
         if not klinik_asal:
             return jsonify({"success": False, "message": "Nama Klinik Asal diperlukan!"}), 400
@@ -1057,6 +1087,10 @@ def api_setup():
             
         if klinik_asal not in klinik_rujukan:
             klinik_rujukan.insert(0, klinik_asal)
+            
+        # Jana fail database excel dahulu bagi julat tahun yang dipilih
+        for y in range(start_year, end_year + 1):
+            generate_excel_files_for_year(y, klinik_rujukan, klinik_asal, singkatan_klinik)
             
         config_data = {
             "is_configured": True,
@@ -1092,6 +1126,66 @@ def api_add_clinic():
             return jsonify({"success": True, "message": f"Klinik {new_clinic} berjaya ditambah!", "clinics": config["klinik_rujukan"]})
         else:
             return jsonify({"success": False, "message": "Gagal menyimpan konfigurasi!"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# Halaman Tetapan (Settings)
+@app.route("/settings")
+def settings_page():
+    config = load_config()
+    if not config.get("is_configured", False):
+        return redirect(url_for("setup"))
+    return render_template("settings.html", config=config)
+
+# API: Simpan Tetapan Konfigurasi
+@app.route("/api/settings/save", methods=["POST"])
+def api_settings_save():
+    try:
+        data = request.json
+        klinik_asal = data.get("klinik_asal", "").strip().upper()
+        singkatan_klinik = data.get("singkatan_klinik", "").strip().upper()
+        klinik_rujukan = [c.strip().upper() for c in data.get("klinik_rujukan", []) if c.strip()]
+        
+        if not klinik_asal or not singkatan_klinik:
+            return jsonify({"success": False, "message": "Konfigurasi tidak lengkap!"}), 400
+            
+        config_data = {
+            "is_configured": True,
+            "klinik_asal": klinik_asal,
+            "singkatan_klinik": singkatan_klinik,
+            "klinik_rujukan": klinik_rujukan
+        }
+        
+        if save_config(config_data):
+            threading.Thread(target=sync_excel_masterlists, args=(klinik_rujukan, klinik_asal, singkatan_klinik), daemon=True).start()
+            return jsonify({"success": True, "message": "Konfigurasi berjaya dikemaskini!"})
+        else:
+            return jsonify({"success": False, "message": "Gagal menyimpan konfigurasi!"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# API: Jana fail Excel bagi tahun baru (Database upgrade)
+@app.route("/api/settings/generate-year", methods=["POST"])
+def api_settings_generate_year():
+    try:
+        data = request.json
+        year = int(data.get("year", 0))
+        if not year:
+            return jsonify({"success": False, "message": "Tahun tidak sah!"}), 400
+            
+        config = load_config()
+        klinik_asal = config.get("klinik_asal", "")
+        singkatan_klinik = config.get("singkatan_klinik", "")
+        klinik_rujukan = config.get("klinik_rujukan", [])
+        
+        if not klinik_asal:
+            return jsonify({"success": False, "message": "Konfigurasi sistem belum disetup!"}), 400
+            
+        generate_excel_files_for_year(year, klinik_rujukan, klinik_asal, singkatan_klinik)
+        # Jalankan sync untuk fail baru
+        threading.Thread(target=sync_excel_masterlists, args=(klinik_rujukan, klinik_asal, singkatan_klinik), daemon=True).start()
+        
+        return jsonify({"success": True, "message": f"Database untuk tahun {year} berjaya dijana!"})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

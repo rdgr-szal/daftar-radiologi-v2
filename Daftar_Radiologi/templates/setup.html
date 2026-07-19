@@ -256,7 +256,36 @@
         <!-- Dynamic clinic tags will be rendered here -->
       </div>
 
-      <button type="button" class="btn-save-setup" onclick="saveSetup()">Start Now</button>
+      <!-- Penjanaan Database Bulanan -->
+      <div class="form-group" style="margin-top: 24px;">
+        <label>Tahun Database Diperlukan</label>
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+          <div style="flex: 1;">
+            <label for="startYear" style="font-size: 0.75rem; color: var(--text-muted, #6b7280); margin-bottom: 4px; text-transform: none;">Tahun Mula</label>
+            <select id="startYear" style="width: 100%; padding: 10px; border: 1.5px solid var(--border-color, #e5e7eb); border-radius: 8px; background-color: var(--input-bg, #ffffff); color: var(--text-color, #1f2937); font-weight: 600;">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+              <option value="2029">2029</option>
+              <option value="2030">2030</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label for="endYear" style="font-size: 0.75rem; color: var(--text-muted, #6b7280); margin-bottom: 4px; text-transform: none;">Tahun Tamat</label>
+            <select id="endYear" style="width: 100%; padding: 10px; border: 1.5px solid var(--border-color, #e5e7eb); border-radius: 8px; background-color: var(--input-bg, #ffffff); color: var(--text-color, #1f2937); font-weight: 600;">
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027" selected>2027</option>
+              <option value="2028">2028</option>
+              <option value="2029">2029</option>
+              <option value="2030">2030</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-save-setup" onclick="saveSetup()" style="margin-top: 10px;">Start Now</button>
     </div>
     <footer
       style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0;">
@@ -335,10 +364,15 @@
         clinics.unshift(klinikAsal);
       }
 
+      const startYear = parseInt(document.getElementById("startYear").value) || 2026;
+      const endYear = parseInt(document.getElementById("endYear").value) || 2027;
+
       const payload = {
         klinik_asal: klinikAsal,
         singkatan_klinik: singkatanKlinik,
-        klinik_rujukan: clinics
+        klinik_rujukan: clinics,
+        start_year: startYear,
+        end_year: endYear
       };
 
       fetch("/api/setup", {
