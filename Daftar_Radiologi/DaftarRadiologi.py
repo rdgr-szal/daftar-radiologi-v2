@@ -1500,6 +1500,8 @@ def open_browser(port=5005):
     webbrowser.open(f"http://localhost:{port}")
 
 def show_startup_progress():
+    if sys.stdout is None or not hasattr(sys.stdout, 'write'):
+        return
     import time
     print("==================================================")
     print("               DAFTAR RADIOLOGI                   ")
