@@ -45,34 +45,7 @@
       }, 2000);
     }
   </script>
-  <style>
-    /* Tambahan stail khusus untuk halaman perbandingan rujukan */
-    .dashboard-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
 
-    @media (max-width: 900px) {
-      .dashboard-grid-2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-container-flex {
-      display: flex;
-      flex-direction: column;
-      height: 350px;
-      position: relative;
-    }
-
-    .kpi-percent {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: var(--primary-color, #3b82f6);
-    }
-  </style>
 </head>
 
 <body>
@@ -138,29 +111,21 @@
     </div>
 
     <!-- Stat counter boxes -->
-    <div class="stat-summary-row" style="margin-bottom: 24px; gap: 20px;">
-      <div class="stat-box" style="flex: 1; text-align: center; padding: 20px;">
-        <span class="title"
-          style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary);">Pesakit
-        </span>
-        <span class="value" style="font-size: 1.8rem; font-weight: 800; display: block; margin-top: 8px;">
-          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-patients"
-            style="color: var(--text-primary);">0</span>
+    <div class="stat-summary-row">
+      <div class="stat-box">
+        <span class="stat-title">Pesakit</span>
+        <span class="stat-value">
+          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-patients" style="color: var(--text-primary);">0</span>
           <span style="color: var(--text-secondary); font-weight: 400; font-size: 1.3rem; margin: 0 12px;">|</span>
-          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-patients"
-            style="color: var(--accent-color);">0</span>
+          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-patients" style="color: var(--accent-color);">0</span>
         </span>
       </div>
-      <div class="stat-box" style="flex: 1; text-align: center; padding: 20px;">
-        <span class="title"
-          style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary);">Kes
-        </span>
-        <span class="value" style="font-size: 1.8rem; font-weight: 800; display: block; margin-top: 8px;">
-          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-cases"
-            style="color: var(--text-primary);">0</span>
+      <div class="stat-box">
+        <span class="stat-title">Kes</span>
+        <span class="stat-value">
+          <span style="color: var(--text-primary);">{{ singkatan_klinik }}</span> <span id="stat-own-cases" style="color: var(--text-primary);">0</span>
           <span style="color: var(--text-secondary); font-weight: 400; font-size: 1.3rem; margin: 0 12px;">|</span>
-          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-cases"
-            style="color: var(--accent-color);">0</span>
+          <span style="color: var(--accent-color);">Rujukan</span> <span id="stat-ref-cases" style="color: var(--accent-color);">0</span>
         </span>
       </div>
     </div>
@@ -274,38 +239,12 @@
       </div>
     </div>
 
-    <footer
-      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+    <footer class="site-footer">
       rdgr.szal.kkbbs
     </footer>
   </div>
 
-  <style>
-    /* Styling for Section Titles inside Referrals page */
-    .section-title {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: var(--accent-color);
-      margin: 40px 0 16px 0;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--panel-border);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
 
-    .section-title svg {
-      width: 18px;
-      height: 18px;
-      color: var(--accent-color);
-    }
-
-    .dashboard-grid {
-      margin-bottom: 32px;
-    }
-  </style>
 
   <script>
     // Variables for Chart.js instances

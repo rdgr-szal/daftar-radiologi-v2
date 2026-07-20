@@ -9,6 +9,43 @@
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <!-- Chart.js local file -->
   <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+
+  <script>
+    function shutdownServer() {
+      document.getElementById('shutdownModalOverlay').style.display = 'flex';
+    }
+
+    function closeShutdownModal() {
+      document.getElementById('shutdownModalOverlay').style.display = 'none';
+    }
+
+    function confirmShutdown() {
+      const action = document.getElementById('shutdownActionSelect').value;
+      if (action === 'cancel') {
+        closeShutdownModal();
+        return;
+      }
+
+      closeShutdownModal();
+      document.getElementById('win11ShutdownScreen').style.display = 'flex';
+
+      fetch('/api/shutdown', { method: 'POST' })
+        .then(res => res.json())
+        .catch(err => console.log(err));
+
+      setTimeout(() => {
+        window.open('', '_self', '');
+        window.close();
+
+        setTimeout(() => {
+          const textEl = document.querySelector('.win11-shutdown-text');
+          const subEl = document.querySelector('.win11-shutdown-subtext');
+          if (textEl) textEl.textContent = "Aplikasi telah ditutup dengan selamat.";
+          if (subEl) subEl.textContent = "Anda boleh menutup tab pelayar ini sekarang.";
+        }, 1000);
+      }, 2000);
+    }
+  </script>
 </head>
 
 <body>
@@ -19,17 +56,648 @@
         <p>Analisis Beban Kerja</p>
       </div>
       <nav>
-        <!-- Navigation links and buttons remain unchanged -->
+        <a href="/" class="nav-link">DAFTAR</a>
+        <a href="/patient-list" class="nav-link">PATIENT LIST</a>
+        <a href="/dashboard" class="nav-link active">DASHBOARD</a>
+        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
+        <a href="/phris" class="nav-link">RETEN</a>
+        <a href="/settings" class="nav-link">TETAPAN</a>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+            </path>
+          </svg>
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
       </nav>
     </header>
 
-    <!-- Filter Bar, Stat counter boxes, Sections, and Footer also remain unchanged -->
+    <!-- Filter Bar -->
+    <div class="card filter-bar">
+      <form id="filterForm" method="GET" action="/dashboard" class="filter-form">
+        <div class="form-group filter-group">
+          <label for="month">Bulan</label>
+          <select id="month" name="month">
+            {% for m, info in months.items() %}
+            <option value="{{ m }}" {% if m==selected_month %}selected{% endif %}>{{ info[0].split('_')[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group filter-group">
+          <label for="year">Tahun</label>
+          <select id="year" name="year">
+            {% for y in available_years %}
+            <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn filter-btn">Filter</button>
+        </div>
+      </form>
+    </div>
 
+    <!-- Stat counter boxes -->
+    <div class="stat-summary-row">
+      <div class="stat-box">
+        <span class="stat-title">Jumlah Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</span>
+        <span id="stat-total-patients" class="stat-value">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Jumlah Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</span>
+        <span id="stat-total-cases" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Workload & Exams -->
+    <h3 class="section-title" style="margin-top: 24px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+      Beban Kerja & Pemeriksaan
+    </h3>
+    <div class="dashboard-grid">
+      <!-- Trend Kes Harian -->
+      <div class="dashboard-card col-8 card">
+        <h2 class="card-title">Kes Harian {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}
+        </h2>
+        <div style="height: 300px; position: relative;">
+          <canvas id="dailyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Jenis Pemeriksaan -->
+      <div class="dashboard-card col-4 card">
+        <h2 class="card-title">Jenis Pemeriksaan {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}
+        </h2>
+        <div style="height: 300px; position: relative; display: flex; justify-content: center;">
+          <canvas id="examTypeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Bahagian Pemeriksaan -->
+      <div class="dashboard-card col-12 card" style="margin-top: 12px;">
+        <h2 class="card-title">Bahagian Pemeriksaan {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year
+          }}</h2>
+        <div style="height: 350px; position: relative;">
+          <canvas id="examPartChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Jantina -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      Jantina (Lelaki vs Perempuan)
+    </h3>
+    <div class="dashboard-grid">
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="genderPatientsChart"></canvas>
+        </div>
+      </div>
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="genderCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Kaum -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      Kaum & Bangsa
+    </h3>
+    <div class="dashboard-grid">
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="racePatientsChart"></canvas>
+        </div>
+      </div>
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="raceCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Warganegara -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        <path d="M2 12h20" />
+      </svg>
+      Status Warganegara
+    </h3>
+    <div class="dashboard-grid">
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="citizenPatientsChart"></canvas>
+        </div>
+      </div>
+      <div class="dashboard-card col-6 card">
+        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="citizenCasesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Media -->
+    <h3 class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+        <line x1="7" y1="2" x2="7" y2="22" />
+        <line x1="17" y1="2" x2="17" y2="22" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="2" y1="7" x2="7" y2="7" />
+        <line x1="2" y1="17" x2="7" y2="17" />
+        <line x1="17" y1="17" x2="22" y2="17" />
+        <line x1="17" y1="7" x2="22" y2="7" />
+      </svg>
+      Media
+    </h3>
+    <div class="dashboard-grid">
+      <div class="dashboard-card col-12 card">
+        <h2 class="card-title">Media</h2>
+        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+          <canvas id="consumableChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <footer class="site-footer">
+      rdgr.szal.kkbbs
+    </footer>
   </div>
 
   <script>
-    // JavaScript code remains unchanged
+    // Variables for Chart Instances and Cache
+    let dailyTrendChart, examTypeChart, examPartChart;
+    let genderPatientsChart, genderCasesChart;
+    let racePatientsChart, raceCasesChart;
+    let citizenPatientsChart, citizenCasesChart;
+    let consumableChart;
+    let lastDashboardData = null;
+
+    // Helper to get active theme settings
+    function getThemeSettings() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      if (theme === 'dark') {
+        return {
+          textColor: '#a1a1aa', // zinc-400
+          borderColor: '#2e2e33', // zinc-800
+          accentColor: '#2dd4bf', // teal-400
+          accentGlow: 'rgba(45, 212, 191, 0.1)',
+          examPalette: ['#2dd4bf', '#34d399', '#60a5fa', '#f87171', '#a78bfa', '#fbbf24', '#f472b6'],
+          genderPalette: ['#60a5fa', '#f472b6'],
+          racePalette: ['#2dd4bf', '#f87171', '#fbbf24', '#34d399', '#a78bfa', '#60a5fa'],
+          citizenPalette: ['#34d399', '#f87171'],
+          consumablePalette: ['#60a5fa', '#fbbf24', '#2dd4bf']
+        };
+      } else {
+        return {
+          textColor: '#57534e', // stone-600
+          borderColor: '#e4e2d9', // warm beige border
+          accentColor: '#0f766e', // teal-700
+          accentGlow: 'rgba(15, 118, 110, 0.08)',
+          examPalette: ['#0f766e', '#16a34a', '#2563eb', '#dc2626', '#7c3aed', '#d97706', '#db2777'],
+          genderPalette: ['#2563eb', '#db2777'],
+          racePalette: ['#0f766e', '#dc2626', '#d97706', '#16a34a', '#7c3aed', '#2563eb'],
+          citizenPalette: ['#16a34a', '#dc2626'],
+          consumablePalette: ['#2563eb', '#d97706', '#0f766e']
+        };
+      }
+    }
+
+    // Apply global Chart.js defaults
+    function applyChartDefaults(settings) {
+      Chart.defaults.color = settings.textColor;
+      Chart.defaults.borderColor = settings.borderColor;
+      Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.font.weight = '500';
+    }
+
+    // Load data from Backend API
+    async function loadDashboardData() {
+      const month = document.getElementById('month').value;
+      const year = document.getElementById('year').value;
+
+      try {
+        const response = await fetch(`/api/dashboard-data?month=${month}&year=${year}`);
+        const data = await response.json();
+        lastDashboardData = data;
+
+        updateDashboardUI();
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      }
+    }
+
+    // Update the UI controls and recreate all charts
+    function updateDashboardUI() {
+      if (!lastDashboardData) return;
+      const data = lastDashboardData;
+
+      document.getElementById('stat-total-patients').innerText = data.total_patients;
+      document.getElementById('stat-total-cases').innerText = data.total_cases;
+
+      const settings = getThemeSettings();
+      applyChartDefaults(settings);
+
+      // Render Charts
+      renderDailyTrendChart(data.daily_cases, settings);
+      renderExamTypeChart(data.exam_types, settings);
+      renderExamPartChart(data.exam_parts, settings);
+
+      // Gender charts
+      renderGenderChart('genderPatientsChart', genderPatientsChart, data.patients_genders, settings, instance => genderPatientsChart = instance);
+      renderGenderChart('genderCasesChart', genderCasesChart, data.cases_genders, settings, instance => genderCasesChart = instance);
+
+      // Race charts
+      renderRaceChart('racePatientsChart', racePatientsChart, data.patients_races, settings, instance => racePatientsChart = instance);
+      renderRaceChart('raceCasesChart', raceCasesChart, data.cases_races, settings, instance => raceCasesChart = instance);
+
+      // Citizen charts
+      renderCitizenChart('citizenPatientsChart', citizenPatientsChart, data.patients_citizens, settings, instance => citizenPatientsChart = instance);
+      renderCitizenChart('citizenCasesChart', citizenCasesChart, data.cases_citizens, settings, instance => citizenCasesChart = instance);
+
+      // Media usage chart
+      renderConsumableChart(data.consumables, settings);
+    }
+
+    // Chart Render Functions
+    function renderDailyTrendChart(dailyCases, settings) {
+      const labels = Array.from({ length: 31 }, (_, i) => i + 1);
+      const ctx = document.getElementById('dailyTrendChart').getContext('2d');
+
+      if (dailyTrendChart) dailyTrendChart.destroy();
+
+      dailyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Bil. Kes',
+            data: dailyCases,
+            borderColor: settings.accentColor,
+            backgroundColor: settings.accentGlow,
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointBackgroundColor: settings.accentColor,
+            pointBorderColor: settings.accentColor,
+            pointHoverBackgroundColor: settings.accentColor,
+            pointHoverBorderColor: settings.accentColor,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+    }
+
+    function renderExamTypeChart(examTypes, settings) {
+      const ctx = document.getElementById('examTypeChart').getContext('2d');
+      if (examTypeChart) examTypeChart.destroy();
+
+      const labels = Object.keys(examTypes);
+      const values = Object.values(examTypes);
+
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (values.length === 0) values.push(0);
+
+      examTypeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: settings.examPalette,
+            borderWidth: 2,
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 10,
+                padding: 10,
+                font: { size: 10 }
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    function renderGenderChart(canvasId, chartInstance, genders, settings, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const labels = Object.keys(genders);
+      const values = Object.values(genders);
+
+      const newInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: settings.genderPalette,
+            borderWidth: 2,
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 10,
+                padding: 10,
+                font: { size: 10 }
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+      setInstanceCb(newInstance);
+    }
+
+    function renderRaceChart(canvasId, chartInstance, races, settings, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const labels = Object.keys(races);
+      const values = Object.values(races);
+
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (values.length === 0) values.push(0);
+
+      const newInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: settings.racePalette,
+            borderWidth: 2,
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 10,
+                padding: 8,
+                font: { size: 10 }
+              }
+            }
+          }
+        }
+      });
+      setInstanceCb(newInstance);
+    }
+
+    function renderCitizenChart(canvasId, chartInstance, citizens, settings, setInstanceCb) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const newInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Warganegara (YA)', 'Warga Asing (TIDAK)'],
+          datasets: [{
+            data: [citizens["YA"], citizens["TIDAK"]],
+            backgroundColor: settings.citizenPalette,
+            borderWidth: 0,
+            borderRadius: 6,
+            barThickness: 32
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+      setInstanceCb(newInstance);
+    }
+
+    function renderConsumableChart(consumables, settings) {
+      const ctx = document.getElementById('consumableChart').getContext('2d');
+      if (consumableChart) consumableChart.destroy();
+
+      consumableChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['CD-R', 'Filem 14x17', 'Filem 10x12'],
+          datasets: [{
+            data: [consumables["CD"], consumables["FILEM 14X17"], consumables["FILEM 10X12"]],
+            backgroundColor: settings.consumablePalette,
+            borderWidth: 0,
+            borderRadius: 6,
+            barThickness: 32
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
+    }
+
+    function renderExamPartChart(examParts, settings) {
+      const ctx = document.getElementById('examPartChart').getContext('2d');
+      if (examPartChart) examPartChart.destroy();
+
+      // Sort parts by count descending
+      const sortedParts = Object.entries(examParts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15); // Top 15 parts to keep it clean
+
+      const labels = sortedParts.map(item => item[0]);
+      const values = sortedParts.map(item => item[1]);
+
+      if (labels.length === 0) labels.push("Tiada Data");
+      if (values.length === 0) values.push(0);
+
+      examPartChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Bil. Kes',
+            data: values,
+            backgroundColor: settings.accentColor,
+            borderRadius: 6,
+            borderWidth: 0,
+            barThickness: 20
+          }]
+        },
+        options: {
+          indexAxis: 'y', // Make it horizontal!
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            },
+            y: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // Listen for custom theme switch event
+    window.addEventListener('theme-changed', () => {
+      updateDashboardUI();
+    });
+
+    // Load at startup
+    document.addEventListener('DOMContentLoaded', loadDashboardData);
   </script>
+  <!-- Windows 11 Shutdown Modal Overlay -->
+  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
+    <div class="shutdown-modal">
+      <div class="shutdown-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+        <h3>Tutup Aplikasi</h3>
+      </div>
+      <div class="shutdown-modal-body">
+        <div class="shutdown-modal-prompt">
+          <div class="shutdown-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <p>Adakah anda pasti mahu menamatkan sesi Daftar Radiologi dan menutup pelayan (server) aplikasi?</p>
+        </div>
+        <div class="shutdown-dropdown-container">
+          <label for="shutdownActionSelect">Tindakan:</label>
+          <select id="shutdownActionSelect" class="shutdown-dropdown">
+            <option value="shutdown">Tutup Aplikasi & Pelayan (Shut Down)</option>
+            <option value="cancel">Batal</option>
+          </select>
+        </div>
+      </div>
+      <div class="shutdown-modal-footer">
+        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
+        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Windows 11 Shutdown Screen -->
+  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
+    <div class="win11-spinner-container">
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+      <div class="win11-spinner-dot"></div>
+    </div>
+    <div class="win11-shutdown-text">Menutup aplikasi...</div>
+    <div class="win11-shutdown-subtext">Sila tunggu sebentar sementara sistem ditutup dengan selamat.</div>
+  </div>
 </body>
 
 </html>

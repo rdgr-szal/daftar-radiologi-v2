@@ -128,51 +128,6 @@
       background-color: var(--accent-glow);
     }
 
-    /* Segmented Control for ID Type */
-    .segmented-control {
-      display: flex;
-      background-color: var(--table-header-bg);
-      border-radius: 8px;
-      padding: 2px;
-      border: 1px solid var(--panel-border);
-      gap: 4px;
-      margin-top: 4px;
-      height: 38px;
-      align-items: center;
-    }
-
-    .segment-label {
-      flex: 1;
-      text-align: center;
-      padding: 6px 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all var(--transition-speed);
-      color: var(--text-secondary);
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-    }
-
-    .segment-label:hover {
-      color: var(--text-primary);
-      background-color: rgba(0, 0, 0, 0.02);
-    }
-
-    [data-theme="dark"] .segment-label:hover {
-      background-color: rgba(255, 255, 255, 0.02);
-    }
-
-    .segment-label.active {
-      background-color: var(--input-bg);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--panel-border);
-    }
-
     /* Metadata section on top */
     .metadata-section {
       display: flex;
@@ -256,110 +211,6 @@
       min-width: 180px;
     }
 
-    /* Radio Button Groups */
-    .gender-radio-group,
-    .citizen-radio-group,
-    .gov-radio-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .gender-label,
-    .citizen-label,
-    .gov-label {
-      flex: 1;
-      text-align: center;
-      padding: 9px 12px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 1px solid var(--panel-border);
-      transition: all var(--transition-speed);
-      color: var(--text-secondary);
-      user-select: none;
-    }
-
-    /* Gender Colors */
-    .gender-label.male:hover {
-      background-color: rgba(59, 130, 246, 0.05);
-    }
-
-    .gender-label.female:hover {
-      background-color: rgba(236, 72, 153, 0.05);
-    }
-
-    input[type="radio"][name="gender"][value="LELAKI"]:checked+.gender-label.male {
-      background-color: rgba(59, 130, 246, 0.15) !important;
-      color: #2563eb !important;
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-    }
-
-    input[type="radio"][name="gender"][value="PEREMPUAN"]:checked+.gender-label.female {
-      background-color: rgba(236, 72, 153, 0.15) !important;
-      color: #db2777 !important;
-      border-color: #ec4899 !important;
-      box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2) !important;
-    }
-
-    /* Kakitangan Kerajaan Custom styling (No color code, YA is black/dark grey, TIDAK is bolder stroke) */
-    input[type="radio"][name="gov_staff"][value="YA"]:checked+.gov-label {
-      background-color: var(--text-primary) !important;
-      color: var(--bg-color) !important;
-      border-color: var(--text-primary) !important;
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    input[type="radio"][name="gov_staff"][value="TIDAK"]:checked+.gov-label {
-      background-color: transparent !important;
-      color: var(--text-primary) !important;
-      border: 2px solid var(--text-primary) !important;
-      font-weight: 800 !important;
-    }
-
-    /* Theme-specific styles (MyKad = Blue, Passport = Red) */
-    /* MyKad Mode */
-    .theme-mykad input:focus,
-    .theme-mykad select:focus {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-    }
-
-    .theme-mykad .segment-label.active {
-      background-color: rgba(59, 130, 246, 0.12) !important;
-      color: #2563eb !important;
-      border-color: #3b82f6 !important;
-    }
-
-    .theme-mykad input[type="radio"][name="citizen"]:checked+.citizen-label {
-      background-color: rgba(59, 130, 246, 0.12) !important;
-      color: #2563eb !important;
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
-    }
-
-    /* Passport Mode */
-    .theme-passport input:focus,
-    .theme-passport select:focus {
-      border-color: #ef4444 !important;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
-    }
-
-    .theme-passport .segment-label.active {
-      background-color: rgba(239, 68, 68, 0.12) !important;
-      color: #dc2626 !important;
-      border-color: #ef4444 !important;
-    }
-
-    .theme-passport input[type="radio"][name="citizen"]:checked+.citizen-label {
-      background-color: rgba(239, 68, 68, 0.12) !important;
-      color: #dc2626 !important;
-      border-color: #ef4444 !important;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
-    }
-
     /* Compact inline row for section 2 */
     .form-row-inline {
       display: flex;
@@ -369,23 +220,99 @@
       align-items: flex-end;
     }
 
-    .flex-id-type {
-      flex: 0 0 250px;
-    }
-
-    .flex-id-number {
-      flex: 0 0 300px;
-    }
-
-    .flex-name {
-      flex: 1;
-    }
+    .flex-id-type { flex: 0 0 250px; }
+    .flex-id-number { flex: 0 0 300px; }
+    .flex-name { flex: 1; }
 
     /* 2 Column Grid for Sub-sections */
     .form-grid-2col {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
+    }
+
+    /* Exam table specific */
+    .exam-table {
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .exam-table th {
+      font-size: 0.8rem;
+      padding: 10px 12px;
+    }
+
+    .exam-table td {
+      padding: 8px 12px;
+      vertical-align: middle;
+    }
+
+    .exam-table input,
+    .exam-table select {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+
+    .btn-remove-row {
+      background-color: transparent;
+      color: var(--danger-color);
+      border: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all var(--transition-speed);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      width: 32px;
+      height: 32px;
+    }
+
+    .btn-remove-row:hover {
+      background-color: var(--danger-bg);
+      border-color: var(--danger-color);
+    }
+
+    .exam-section-header {
+      margin-top: 32px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--panel-border);
+      padding-bottom: 8px;
+    }
+
+    .exam-section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      border-left: 3px solid var(--accent-color);
+      padding-left: 8px;
+    }
+
+    .btn-add-exam {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background-color: var(--panel-bg);
+      color: var(--accent-color);
+      border: 1px solid var(--accent-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-add-exam:hover {
+      background-color: var(--accent-glow);
     }
 
     @media (max-width: 900px) {
@@ -662,8 +589,7 @@
         </div>
       </div>
     </form>
-    <footer
-      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+    <footer class="site-footer">
       rdgr.szal.kkbbs
     </footer>
   </div>

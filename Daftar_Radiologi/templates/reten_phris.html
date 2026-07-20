@@ -141,8 +141,7 @@
         </table>
       </div>
     </div>
-    <footer
-      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+    <footer class="site-footer">
       rdgr.szal.kkbbs
     </footer>
   </div>
@@ -318,7 +317,6 @@
     }
 
     function calculateTotals(arrayOfArrays) {
-      const totals = [0] * 12;
       const result = Array(12).fill(0);
       arrayOfArrays.forEach(arr => {
         for (let i = 0; i < 12; i++) {

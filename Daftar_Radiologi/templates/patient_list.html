@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms" data-theme="light">
+<html lang="ms">
 
 <head>
   <meta charset="UTF-8">
@@ -8,17 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <style>
-    /* Custom style for Patient List */
-    .filter-card {
-      background-color: var(--panel-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
-    }
+    /* Patient List — Page-specific styles */
 
     .filter-grid {
       display: grid;
@@ -45,53 +35,6 @@
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-    }
-
-    /* Segmented Control for Presets */
-    .preset-segmented {
-      display: flex;
-      background-color: var(--table-header-bg);
-      border-radius: 8px;
-      padding: 3px;
-      border: 1px solid var(--panel-border);
-      gap: 4px;
-      height: 38px;
-      align-items: center;
-    }
-
-    .preset-btn {
-      flex: 1;
-      text-align: center;
-      padding: 6px 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all var(--transition-speed);
-      color: var(--text-secondary);
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      border: none;
-      background: transparent;
-    }
-
-    .preset-btn:hover {
-      color: var(--text-primary);
-      background-color: rgba(0, 0, 0, 0.02);
-    }
-
-    [data-theme="dark"] .preset-btn:hover {
-      background-color: rgba(255, 255, 255, 0.02);
-    }
-
-    .preset-btn.active {
-      background-color: var(--input-bg);
-      color: var(--accent-color);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--panel-border);
     }
 
     .custom-range-container {
@@ -135,18 +78,7 @@
       pointer-events: none;
     }
 
-    /* Accordion Patient List */
-    .list-card {
-      background-color: var(--panel-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-      margin-bottom: 30px;
-    }
-
+    /* Patient table accordion */
     .patient-table {
       width: 100%;
       border-collapse: collapse;
@@ -187,9 +119,7 @@
       transition: background-color var(--transition-speed);
     }
 
-    .patient-row-header:hover {
-      background-color: var(--table-row-hover);
-    }
+    .patient-row-header:hover { background-color: var(--table-row-hover); }
 
     .patient-row-header td {
       padding: 12px 16px;
@@ -216,11 +146,8 @@
       height: 24px;
     }
 
-    .patient-row-header.open .expand-btn {
-      transform: rotate(180deg);
-    }
+    .patient-row-header.open .expand-btn { transform: rotate(180deg); }
 
-    /* Accordion Detail Body */
     .patient-row-detail {
       display: none;
       background-color: rgba(0, 0, 0, 0.01);
@@ -231,13 +158,9 @@
       background-color: rgba(255, 255, 255, 0.005);
     }
 
-    .patient-row-detail.show {
-      display: table-row;
-    }
+    .patient-row-detail.show { display: table-row; }
 
-    .detail-container {
-      padding: 16px 24px;
-    }
+    .detail-container { padding: 16px 24px; }
 
     .detail-grid {
       display: grid;
@@ -246,128 +169,11 @@
     }
 
     @media (max-width: 900px) {
-      .detail-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .detail-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 600px) {
-      .detail-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .detail-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .detail-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-val {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    /* Status indicator */
-    .no-records {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* Skeleton Loader */
-    .skeleton-row td {
-      padding: 16px;
-    }
-
-    .skeleton-bar {
-      height: 14px;
-      background: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.1) 37%, rgba(0, 0, 0, 0.05) 63%);
-      background-size: 400% 100%;
-      animation: skeleton-loading 1.4s ease infinite;
-      border-radius: 4px;
-    }
-
-    [data-theme="dark"] .skeleton-bar {
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 37%, rgba(255, 255, 255, 0.05) 63%);
-      background-size: 400% 100%;
-    }
-
-    @keyframes skeleton-loading {
-      0% {
-        background-position: 100% 50%;
-      }
-
-      100% {
-        background-position: 0 50%;
-      }
-    }
-
-    /* Pagination CSS */
-    .pagination-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      background-color: var(--table-header-bg);
-      border-top: 1px solid var(--panel-border);
-      font-size: 0.85rem;
-    }
-
-    .pagination-controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .page-btn {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border-radius: 6px;
-      border: 1px solid var(--panel-border);
-      background-color: var(--input-bg);
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all var(--transition-speed);
-    }
-
-    .page-btn:hover:not(:disabled) {
-      border-color: var(--accent-color);
-      color: var(--accent-color);
-    }
-
-    .page-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .page-select-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-secondary);
-    }
-
-    .page-select {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--input-border);
-      background-color: var(--input-bg);
-      color: var(--text-primary);
-      font-size: 0.8rem;
-      outline: none;
-      height: 34px;
+      .detail-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -410,12 +216,12 @@
     </header>
 
     <!-- Tapisan Date Range Picker & Carian -->
-    <div class="filter-card">
+    <div class="card card--compact" style="margin-bottom: 24px;">
       <div class="filter-grid">
         <!-- Preset Date Range Segmented Control -->
         <div class="preset-container">
           <span class="preset-label">Date</span>
-          <div class="preset-segmented">
+          <div class="segmented-control">
             <button type="button" class="preset-btn active" data-preset="today">Today</button>
             <button type="button" class="preset-btn" data-preset="yesterday">Yesterday</button>
             <button type="button" class="preset-btn" data-preset="week">Week</button>
@@ -453,7 +259,7 @@
     </div>
 
     <!-- Accordion Patient List Table -->
-    <div class="list-card">
+    <div class="card card--overflow" style="margin-bottom: 30px;">
       <div
         style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--panel-border); background-color: var(--table-header-bg); border-top-left-radius: 12px; border-top-right-radius: 12px; flex-wrap: wrap; gap: 10px;">
         <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Senarai Rekod Pemeriksaan</span>
@@ -512,8 +318,7 @@
       </div>
     </div>
 
-    <footer
-      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
+    <footer class="site-footer">
       rdgr.szal.kkbbs
     </footer>
   </div>

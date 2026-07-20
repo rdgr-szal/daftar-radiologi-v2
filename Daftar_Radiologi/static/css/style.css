@@ -1,8 +1,646 @@
-/* style.css - Premium Minimalist & Professional UI for Offline Buku Daftar Radiologi */
+/* =============================================================================
+   style.css — Buku Daftar Radiologi PER.SS-RA 101
+   Premium Minimalist & Professional UI (Offline App)
+   
+   Struktur:
+    1.  Google Fonts Import
+    2.  CSS Design Tokens (Variables)
+    3.  Base / Reset
+    4.  Typography & Shared Labels
+    5.  Layout — Container, Header, Nav
+    6.  Cards & Panels
+    7.  Form Elements — input, select, button
+    8.  Segmented Controls (borang & patient_list — digabungkan)
+    9.  Radio Button Groups (borang)
+   10.  Tables
+   11.  Filter Bar
+   12.  Stat Boxes (data_penuh)
+   13.  Section Titles (data_penuh — dipindahkan dari inline style)
+   14.  Dashboard Grid
+   15.  Pagination (patient_list)
+   16.  Skeleton Loader (patient_list)
+   17.  Toast Notification
+   18.  Shutdown Modal & Win11 Screen
+   19.  Site Footer (dipindahkan dari inline style berulang)
+   20.  No Records State
+   21.  Print Styles
+   22.  Responsive / Media Queries
+============================================================================= */
+
+/* =============================================================================
+   1. GOOGLE FONTS
+============================================================================= */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ... existing styles remain unchanged ... */
 
+/* =============================================================================
+   2. CSS DESIGN TOKENS
+============================================================================= */
+:root {
+  --accent-color:      #0f766e;
+  --accent-glow:       rgba(15, 118, 110, 0.08);
+  --primary-color:     #3b82f6;
+
+  --bg-color:          #f5f3ee;
+  --panel-bg:          rgba(255, 255, 255, 0.75);
+  --input-bg:          #ffffff;
+  --table-header-bg:   #f0eeea;
+  --table-row-hover:   rgba(15, 118, 110, 0.04);
+
+  --panel-border:      #e4e2d9;
+  --input-border:      #d1cfc8;
+  --border-color:      #e5e7eb;
+
+  --text-primary:      #1c1917;
+  --text-secondary:    #57534e;
+  --text-muted:        #9ca3af;
+
+  --danger-color:      #dc2626;
+  --danger-bg:         rgba(220, 38, 38, 0.06);
+  --success-color:     #16a34a;
+  --success-bg:        rgba(22, 163, 74, 0.08);
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.12);
+
+  --transition-speed: 0.18s;
+  --font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+[data-theme="dark"] {
+  --accent-color:      #2dd4bf;
+  --accent-glow:       rgba(45, 212, 191, 0.10);
+  --primary-color:     #60a5fa;
+
+  --bg-color:          #111113;
+  --panel-bg:          rgba(28, 28, 31, 0.85);
+  --input-bg:          #1c1c1f;
+  --table-header-bg:   #1a1a1e;
+  --table-row-hover:   rgba(45, 212, 191, 0.04);
+
+  --panel-border:      #2e2e33;
+  --input-border:      #38383e;
+  --border-color:      #2e2e33;
+
+  --text-primary:      #f4f4f5;
+  --text-secondary:    #a1a1aa;
+  --text-muted:        #71717a;
+
+  --danger-color:      #f87171;
+  --danger-bg:         rgba(248, 113, 113, 0.08);
+  --success-color:     #4ade80;
+  --success-bg:        rgba(74, 222, 128, 0.08);
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.5);
+}
+
+
+/* =============================================================================
+   3. BASE / RESET
+============================================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.6;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+
+/* =============================================================================
+   4. TYPOGRAPHY & SHARED LABELS
+============================================================================= */
+h1, h2, h3, h4, h5, h6 { line-height: 1.3; font-weight: 700; color: var(--text-primary); }
+p { color: var(--text-secondary); }
+
+/* Generic uppercase label — gunakan sebagai ganti .preset-label, .form-group label */
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Detail label (patient accordion) */
+.detail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-item { display: flex; flex-direction: column; gap: 4px; }
+
+
+/* =============================================================================
+   5. LAYOUT — CONTAINER, HEADER, NAV
+============================================================================= */
+.container { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logo-section h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  letter-spacing: -0.5px;
+}
+
+.logo-section p { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+
+nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+.nav-link {
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all var(--transition-speed);
+  border: 1px solid transparent;
+  letter-spacing: 0.2px;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background-color: var(--table-header-bg);
+  border-color: var(--panel-border);
+}
+
+.nav-link.active {
+  color: var(--accent-color);
+  background-color: var(--accent-glow);
+  border-color: var(--accent-color);
+  font-weight: 700;
+}
+
+.theme-toggle-btn,
+.nav-btn-shutdown {
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed);
+  width: 34px;
+  height: 34px;
+}
+
+.theme-toggle-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+.nav-btn-shutdown:hover { background-color: var(--danger-bg); border-color: var(--danger-color); color: var(--danger-color); }
+
+.theme-toggle-btn svg,
+.nav-btn-shutdown svg { width: 18px; height: 18px; }
+
+.theme-icon-dark { display: none; }
+[data-theme="dark"] .theme-icon-light { display: none; }
+[data-theme="dark"] .theme-icon-dark  { display: block; }
+
+
+/* =============================================================================
+   6. CARDS & PANELS
+============================================================================= */
+.card {
+  background-color: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Variant: list-card (patient_list) — overflow hidden, no padding */
+.card--overflow { overflow: hidden; padding: 0; }
+
+/* Variant: compact (filter bar) */
+.card--compact { padding: 16px 20px; }
+
+.card-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+
+.dashboard-card {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* =============================================================================
+   7. FORM ELEMENTS
+============================================================================= */
+.form-section { margin-bottom: 28px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+input[readonly], input:disabled { opacity: 0.7; cursor: default; }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2357534e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-speed);
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+  width: 100%;
+  letter-spacing: 0.2px;
+}
+
+.btn:hover { filter: brightness(1.08); box-shadow: var(--shadow-md); }
+
+.btn-primary { background-color: var(--accent-color); color: #ffffff; border-color: var(--accent-color); }
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--panel-border);
+}
+
+.btn-secondary:hover { background-color: var(--table-header-bg); color: var(--text-primary); }
+
+.filter-btn { width: auto; padding: 8px 20px; }
+
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.btn-print:hover { border-color: var(--accent-color); color: var(--accent-color); background-color: var(--accent-glow); }
+
+
+/* =============================================================================
+   8. SEGMENTED CONTROLS
+   Menggabungkan:
+   - .segmented-control + .segment-label (borang.html)
+   - .preset-segmented + .preset-btn (patient_list.html)
+   Kini kedua-dua guna .segmented-control + .segment-btn
+============================================================================= */
+.segmented-control {
+  display: flex;
+  background-color: var(--table-header-bg);
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid var(--panel-border);
+  gap: 4px;
+  height: 38px;
+  align-items: center;
+}
+
+/* Semua children type: label (radio-based) atau button */
+.segment-btn,
+.segment-label,
+.preset-btn {
+  flex: 1;
+  text-align: center;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  color: var(--text-secondary);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+
+.segment-btn:hover,
+.segment-label:hover,
+.preset-btn:hover {
+  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .segment-btn:hover,
+[data-theme="dark"] .segment-label:hover,
+[data-theme="dark"] .preset-btn:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.segment-btn.active,
+.segment-label.active,
+.preset-btn.active {
+  background-color: var(--input-bg);
+  color: var(--accent-color);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--panel-border);
+}
+
+
+/* =============================================================================
+   9. RADIO BUTTON GROUPS (borang.html)
+============================================================================= */
+.gender-radio-group,
+.citizen-radio-group,
+.gov-radio-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.gender-label,
+.citizen-label,
+.gov-label {
+  flex: 1;
+  text-align: center;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--panel-border);
+  transition: all var(--transition-speed);
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.gender-label.male:hover   { background-color: rgba(59, 130, 246, 0.05); }
+.gender-label.female:hover { background-color: rgba(236, 72, 153, 0.05); }
+
+input[type="radio"][name="gender"][value="LELAKI"]:checked + .gender-label.male {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+input[type="radio"][name="gender"][value="PEREMPUAN"]:checked + .gender-label.female {
+  background-color: rgba(236, 72, 153, 0.15) !important;
+  color: #db2777 !important;
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2) !important;
+}
+
+input[type="radio"][name="gov_staff"][value="YA"]:checked + .gov-label {
+  background-color: var(--text-primary) !important;
+  color: var(--bg-color) !important;
+  border-color: var(--text-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+input[type="radio"][name="gov_staff"][value="TIDAK"]:checked + .gov-label {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--text-primary) !important;
+  font-weight: 800 !important;
+}
+
+/* ID Type Theme Modes */
+.theme-mykad input:focus,
+.theme-mykad select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.theme-mykad .segment-label.active {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+}
+
+.theme-mykad input[type="radio"][name="citizen"]:checked + .citizen-label {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+.theme-passport input:focus,
+.theme-passport select:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+.theme-passport .segment-label.active {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #dc2626 !important;
+  border-color: #ef4444 !important;
+}
+
+.theme-passport input[type="radio"][name="citizen"]:checked + .citizen-label {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #dc2626 !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+}
+
+
+/* =============================================================================
+   10. TABLES
+============================================================================= */
+.table-container { width: 100%; overflow-x: auto; border-radius: 8px; }
+
+table { width: 100%; border-collapse: collapse; text-align: left; }
+
+th {
+  background-color: var(--table-header-bg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--panel-border);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+td {
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--panel-border);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background-color: var(--table-row-hover); }
+
+.table-category-header td {
+  background-color: var(--table-header-bg);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  border-top: 2px solid var(--panel-border);
+}
+
+.table-total-row td {
+  font-weight: 700;
+  background-color: var(--table-header-bg);
+  border-top: 1px solid var(--panel-border);
+}
+
+
+/* =============================================================================
+   11. FILTER BAR
+============================================================================= */
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filter-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.filter-group { min-width: 120px; }
+
+
+/* =============================================================================
+   12. STAT BOXES (dipindahkan dari inline styles data_penuh.html)
+============================================================================= */
+.stat-summary-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  flex: 1;
+  min-width: 160px;
+  text-align: center;
+  padding: 20px;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: block;
+  letter-spacing: 0.3px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  display: block;
+  margin-top: 8px;
+  color: var(--text-primary);
+}
+
+.kpi-percent {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+
+/* =============================================================================
+   13. SECTION TITLES (dipindahkan dari <style> data_penuh.html ke sini)
+============================================================================= */
 .section-title {
   font-size: 0.95rem;
   font-weight: 800;
@@ -21,10 +659,336 @@
   width: 18px;
   height: 18px;
   color: var(--accent-color);
+  flex-shrink: 0;
 }
 
-/* ... existing styles remain unchanged ... */
 
+/* =============================================================================
+   14. DASHBOARD GRID
+============================================================================= */
 .dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   margin-bottom: 32px;
+}
+
+.dashboard-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.chart-container-flex {
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+  position: relative;
+}
+
+
+/* =============================================================================
+   15. PAGINATION (dipindahkan dari <style> patient_list.html)
+============================================================================= */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: var(--table-header-bg);
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.85rem;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-controls { display: flex; gap: 8px; align-items: center; }
+
+.page-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.page-btn:hover:not(:disabled) { border-color: var(--accent-color); color: var(--accent-color); }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.page-select-container { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+
+.page-select {
+  padding: 6px 28px 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: var(--font-family);
+  outline: none;
+  height: 34px;
+  cursor: pointer;
+}
+
+
+/* =============================================================================
+   16. SKELETON LOADER (patient_list)
+============================================================================= */
+.skeleton-row td { padding: 16px; }
+
+.skeleton-bar {
+  height: 14px;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.05) 25%,
+    rgba(0, 0, 0, 0.10) 37%,
+    rgba(0, 0, 0, 0.05) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .skeleton-bar {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.10) 37%,
+    rgba(255, 255, 255, 0.05) 63%);
+  background-size: 400% 100%;
+}
+
+@keyframes skeleton-loading {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+
+/* =============================================================================
+   17. TOAST NOTIFICATION
+============================================================================= */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.toast.success { background-color: var(--success-bg); border: 1px solid var(--success-color); color: var(--success-color); }
+.toast.error   { background-color: var(--danger-bg);  border: 1px solid var(--danger-color);  color: var(--danger-color); }
+
+
+/* =============================================================================
+   18. SHUTDOWN MODAL & WIN11 SCREEN
+============================================================================= */
+.shutdown-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutdown-modal {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  width: min(420px, 90vw);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: modal-in 0.2s ease;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.shutdown-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  background-color: var(--table-header-bg);
+}
+
+.shutdown-modal-header svg { width: 20px; height: 20px; color: var(--danger-color); }
+.shutdown-modal-header h3  { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+
+.shutdown-modal-body { padding: 20px; }
+
+.shutdown-modal-prompt {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.shutdown-logo-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background-color: var(--table-header-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutdown-logo-icon svg { width: 18px; height: 18px; color: var(--text-secondary); }
+.shutdown-modal-prompt p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+.shutdown-dropdown-container { display: flex; flex-direction: column; gap: 6px; }
+
+.shutdown-dropdown-container label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.shutdown-dropdown { width: 100%; }
+
+.shutdown-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--panel-border);
+  background-color: var(--table-header-bg);
+}
+
+.shutdown-btn {
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  border: 1px solid transparent;
+  width: auto;
+}
+
+.shutdown-btn-primary { background-color: var(--danger-color); color: #ffffff; border-color: var(--danger-color); }
+.shutdown-btn-primary:hover { filter: brightness(1.1); }
+.shutdown-btn-secondary { background-color: transparent; color: var(--text-secondary); border-color: var(--panel-border); }
+.shutdown-btn-secondary:hover { background-color: var(--table-header-bg); color: var(--text-primary); }
+
+/* Win11 Shutdown Screen */
+.win11-shutdown-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: #000000;
+  z-index: 20000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.win11-spinner-container { display: flex; gap: 8px; align-items: center; }
+
+.win11-spinner-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  animation: win11-spin 1.2s ease-in-out infinite;
+}
+
+.win11-spinner-dot:nth-child(1) { animation-delay: 0s;    }
+.win11-spinner-dot:nth-child(2) { animation-delay: 0.15s; }
+.win11-spinner-dot:nth-child(3) { animation-delay: 0.30s; }
+.win11-spinner-dot:nth-child(4) { animation-delay: 0.45s; }
+.win11-spinner-dot:nth-child(5) { animation-delay: 0.60s; }
+
+@keyframes win11-spin {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%            { transform: scale(1.0); opacity: 1.0; }
+}
+
+.win11-shutdown-text    { font-size: 1.1rem; font-weight: 600; color: #ffffff; font-family: var(--font-family); }
+.win11-shutdown-subtext { font-size: 0.85rem; color: rgba(255,255,255,0.55); font-family: var(--font-family); margin-top: -16px; }
+
+
+/* =============================================================================
+   19. SITE FOOTER (dipindahkan dari inline style berulang dalam semua halaman)
+============================================================================= */
+.site-footer {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 15px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+
+/* =============================================================================
+   20. NO RECORDS STATE
+============================================================================= */
+.no-records {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+
+/* =============================================================================
+   21. PRINT STYLES
+============================================================================= */
+@media print {
+  header, nav, .filter-bar, .pagination-container,
+  .toast, .shutdown-modal-overlay, .win11-shutdown-screen,
+  .btn-print, .nav-btn-shutdown, .theme-toggle-btn { display: none !important; }
+
+  body { background-color: #ffffff; color: #000000; }
+  .card, .dashboard-card, .stat-box { box-shadow: none; border: 1px solid #cccccc; }
+  table { font-size: 0.75rem; }
+}
+
+
+/* =============================================================================
+   22. RESPONSIVE / MEDIA QUERIES
+============================================================================= */
+@media (max-width: 1024px) {
+  .dashboard-grid   { grid-template-columns: 1fr; }
+  .dashboard-grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .container { padding: 16px; }
+  header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  nav    { width: 100%; justify-content: flex-start; }
+  .stat-summary-row { flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .pagination-container { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
