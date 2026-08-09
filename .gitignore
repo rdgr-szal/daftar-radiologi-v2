@@ -40,6 +40,13 @@ config.json
 extra_phris_data.json
 test_temp_registration.xlsx
 
+# Secrets & Private Credentials
+.env
+*.pem
+*.key
+*.pfx
+*.p12
+
 # Internal Developer Docs, Criteria & Local Launch Scripts
 resources/
 PRD.md
