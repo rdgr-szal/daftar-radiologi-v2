@@ -136,18 +136,47 @@ jobs:
           tag_name: ${{ steps.tag_name.outputs.tag }}
           name: "Daftar Radiologi ${{ steps.tag_name.outputs.tag }}"
           body: |
-            ## 🚀 Daftar Radiologi V2 Release (${{ steps.tag_name.outputs.tag }})
+            ## 🚀 Daftar Radiologi V2 (${{ steps.tag_name.outputs.tag }})
             
-            Sistem Pengurusan Buku Daftar Radiologi & Reten PHRIS KKM (PER.SS-RA 101 Compliance).
+            Sistem Pengurusan Buku Daftar Radiologi & Penjanaan Reten PHRIS KKM (PER.SS-RA 101 Compliance).
             
-            ### 📥 Muat Turun Pemasang (Download Installers):
+            ---
+
+            ### 📥 Pakej Pemasang (Download Installers):
             - 🍏 **macOS (DMG Pemasang)**: `DaftarRadiologi-v2-macOS.dmg`
             - 🍏 **macOS (ZIP Portable)**: `DaftarRadiologi-v2-macOS-App.zip`
-            - 🪟 **Windows (ZIP Executable)**: `DaftarRadiologi-v2-Windows.zip` (ekstrak fail ini dan dwi-klik `DaftarRadiologi.exe`)
+            - 🪟 **Windows (ZIP Executable)**: `DaftarRadiologi-v2-Windows.zip` (ekstrak dan terus dwi-klik `DaftarRadiologi.exe`)
             
-            ### 📋 Cara Penggunaan:
-            1. **Windows**: Muat turun `DaftarRadiologi-v2-Windows.zip`, ekstrak ke komputer anda, dan dwi-klik `DaftarRadiologi.exe`.
-            2. **macOS**: Muat turun `DaftarRadiologi-v2-macOS.dmg`, dwi-klik fail `.dmg` dan seret ikon `Daftar Radiologi` ke folder `Applications`.
+            ---
+
+            ### ⚠️ Panduan Melepasi Amaran Keselamatan Pemasangan (Security Warning Bypass):
+
+            #### 🍏 Untuk Pengguna macOS (Gatekeeper Warning):
+            Semasa membuka aplikasi kali pertama, jika keluar amaran *"App cannot be opened because it is from an unidentified developer"*:
+            - **Cara 1 (Right-Click Open - Disyorkan)**:
+              1. Klik kanan (**Right-Click**) atau tekan `Control` + klik pada **Daftar Radiologi.app** di dalam folder `Applications`.
+              2. Pilih **Open**.
+              3. Klik **Open** sekali lagi pada tetingkap pengesahan. *(macOS akan mengingati pilihan ini secara kekal)*.
+            - **Cara 2 (Terminal Command)**:
+              Buka Terminal dan jalankan arahan berikut:
+              ```bash
+              xattr -cr /Applications/DaftarRadiologi.app
+              ```
+
+            #### 🪟 Untuk Pengguna Windows 10/11 (SmartScreen Warning):
+            Semasa menjalankan `DaftarRadiologi.exe`, jika keluar skrin biru *"Windows protected your PC / Unknown Publisher"*:
+            1. Klik pada pautan **"More info"** (*Maklumat lanjut*).
+            2. Klik butang **"Run anyway"** (*Jalankan jua*).
+            3. *(Windows akan mengingati kebenaran ini dan tidak akan bertanya lagi)*.
+
+            ---
+
+            ### ✨ Ciri-Ciri Utama V2:
+            - **Pematuhan PER.SS-RA 101**: Auto-parse MyKad/Pasport (Umur, Jantina, Warganegara) dan format tarikh seragam `DD/MM/YYYY`.
+            - **Katalog SMRP & Custom Orderables**: Carian pantas & penambahan kategori jenis/bahagian pemeriksaan kustom.
+            - **Dashboard Interaktif & Statistik**: Reten jenis pemeriksaan bersepadu (*Consolidated Pivot Table*), pergerakan pesakit (Jalan Kaki, Wheelchair, Trolley, RME), serta pecahan mengikut fasiliti rujukan.
+            - **Reten Bulanan PHRIS**: Matriks reten 12 bulan (JAN - DIS) dengan kiraan automatik.
+            - **Keselamatan Data Offline-First**: "Excel as a Database" kalis *blackout*, backup automatik harian, dan pelancar tetingkap desktop berperingkat (PyWebView & PySide6 Qt).
           files: |
             release_assets/DaftarRadiologi-v2-macOS.dmg
             release_assets/DaftarRadiologi-v2-macOS-App.zip
