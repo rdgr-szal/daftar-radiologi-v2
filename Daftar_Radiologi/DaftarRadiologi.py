@@ -61,9 +61,9 @@ def main():
         print("[DaftarRadiologi] Apps closed. Exiting safely.")
         sys.exit(0)
 
-    except ImportError:
-        print("[DaftarRadiologi] App not found. Switching to browser mode...")
-        threading.Timer(1.5, lambda: webbrowser.open(url)).start()
+    except Exception as e:
+        print(f"[DaftarRadiologi] Native window unavailable ({e}). Switching to browser fallback mode...")
+        threading.Timer(1.2, lambda: webbrowser.open(url)).start()
         app.run(host='127.0.0.1', port=port, debug=False)
 
 if __name__ == '__main__':
