@@ -1,536 +1,1958 @@
-<!DOCTYPE html>
-<html lang="ms">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tetapan Sistem - Buku Daftar Offline</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <script>
-    function shutdownServer() {
-      document.getElementById('shutdownModalOverlay').style.display = 'flex';
+{% block title %}Settings{% endblock %}
+{% block header_title %}Konfigurasi Daftar Radiologi{% endblock %}
+
+{% block content %}
+<style>
+  .settings-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .settings-nav-tabs {
+    display: flex;
+    gap: 0.35rem;
+    border-bottom: 2px solid var(--border-subtle);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .tab-btn {
+    padding: 9px 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: var(--transition);
+  }
+
+  .tab-btn:hover {
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+    border-bottom: 2px solid var(--primary);
+    font-weight: 700;
+  }
+
+  .tab-pane {
+    display: none;
+    animation: fadeIn 0.15s ease-in-out;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
     }
 
-    function closeShutdownModal() {
-      document.getElementById('shutdownModalOverlay').style.display = 'none';
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
+  }
 
-    function confirmShutdown() {
-      const action = document.getElementById('shutdownActionSelect').value;
-      if (action === 'cancel') {
-        closeShutdownModal();
-        return;
-      }
+  .gov-alert {
+    background: rgba(59, 130, 246, 0.06);
+    border-left: 4px solid var(--accent);
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    color: var(--text-main);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
 
-      closeShutdownModal();
-      document.getElementById('win11ShutdownScreen').style.display = 'flex';
+  .pill-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
 
-      fetch('/api/shutdown', { method: 'POST' })
-        .then(res => res.json())
-        .catch(err => console.log(err));
+  .pill-btn {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--bg-subtle);
+    cursor: pointer;
+    text-align: left;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
 
-      setTimeout(() => {
-        window.open('', '_self', '');
-        window.close();
+  .pill-btn:hover {
+    border-color: var(--primary-border);
+  }
 
-        setTimeout(() => {
-          const textEl = document.querySelector('.win11-shutdown-text');
-          const subEl = document.querySelector('.win11-shutdown-subtext');
-          if (textEl) textEl.textContent = "Aplikasi telah ditutup dengan selamat.";
-          if (subEl) subEl.textContent = "Anda boleh menutup tab pelayar ini sekarang.";
-        }, 1000);
-      }, 2000);
-    }
-  </script>
-  <style>
-    /* Styling for settings card */
-    .settings-container {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 24px;
-    }
+  .pill-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
 
-    @media (max-width: 900px) {
-      .settings-container {
-        grid-template-columns: 1fr;
-      }
-    }
+  .pill-btn input {
+    display: none;
+  }
 
-    .settings-card {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 24px;
-    }
+  .backup-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
 
-    .settings-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1.5px solid var(--panel-border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  .backup-table th {
+    background: var(--bg-subtle);
+    padding: 8px 12px;
+    font-weight: 700;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+  }
 
-    .settings-title svg {
-      width: 20px;
-      height: 20px;
-      color: var(--accent-color);
-    }
+  .backup-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+  .backup-table tr:last-child td {
+    border-bottom: none;
+  }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-    }
+  .subtab-btn {
+    padding: 7px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: var(--transition);
+  }
 
-    .form-group input[type="text"],
-    .form-group select {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1.5px solid var(--input-border);
-      background-color: var(--input-bg);
-      color: var(--text-primary);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color var(--transition-speed);
-    }
+  .subtab-btn:hover {
+    color: var(--primary);
+  }
 
-    .form-group input[type="text"]:focus,
-    .form-group select:focus {
-      border-color: var(--accent-color);
-    }
+  .subtab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 700;
+  }
 
-    .clinic-tags-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      border: 1.5px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 12px;
-      background-color: var(--input-bg);
-      min-height: 100px;
-      max-height: 160px;
-      overflow-y: auto;
-      margin-bottom: 16px;
-    }
+  .section-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+</style>
 
-    .clinic-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .btn-remove-tag {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 0.95rem;
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-remove-tag:hover {
-      color: var(--danger-color);
-    }
-
-    .add-clinic-group {
-      display: flex;
-      gap: 8px;
-    }
-
-    .add-clinic-group input {
-      flex: 1;
-    }
-
-    .btn-add-clinic {
-      padding: 8px 16px;
-      background-color: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: background-color var(--transition-speed);
-    }
-
-    .btn-add-clinic:hover {
-      background-color: var(--accent-hover);
-    }
-
-    .btn-save-settings {
-      padding: 12px 20px;
-      background-color: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.9rem;
-      width: 100%;
-      transition: background-color var(--transition-speed);
-    }
-
-    .btn-save-settings:hover {
-      background-color: var(--accent-hover);
-    }
-
-    .db-action-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .db-status-info {
-      font-size: 0.82rem;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-top: 8px;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-    <header>
-      <div class="logo-section">
-        <h1>TETAPAN</h1>
-        <p>Urusan Konfigurasi Fasiliti & Penyelenggaraan Database</p>
+<div class="settings-wrapper">
+  <div class="card">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <svg class="icon icon-lg" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span>Konfigurasi Fasiliti</span>
       </div>
-      <nav>
-        <a href="/" class="nav-link">DAFTAR</a>
-        <a href="/patient-list" class="nav-link">PATIENT LIST</a>
-        <a href="/dashboard" class="nav-link">DASHBOARD</a>
-        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
-        <a href="/phris" class="nav-link">RETEN</a>
-        <a href="/settings" class="nav-link active">TETAPAN</a>
-        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
-          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path
-              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
-            </path>
-          </svg>
-          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-          </svg>
-        </button>
-        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-            <line x1="12" y1="2" x2="12" y2="12"></line>
-          </svg>
-        </button>
-      </nav>
-    </header>
-
-    <div class="settings-container">
-      <!-- Card Left: Facility Info Settings -->
-      <div class="settings-card">
-        <h2 class="settings-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
-          Konfigurasi Fasiliti & Klinik
-        </h2>
-
-        <div class="form-group">
-          <label for="klinikAsal">Nama Fasiliti / Klinik Asal</label>
-          <input type="text" id="klinikAsal" value="{{ config.klinik_asal }}" required
-            style="text-transform: uppercase;">
-        </div>
-
-        <div class="form-group">
-          <label for="singkatanKlinik">Singkatan Fasiliti</label>
-          <input type="text" id="singkatanKlinik" value="{{ config.singkatan_klinik }}" required
-            style="text-transform: uppercase;">
-        </div>
-
-        <div class="form-group">
-          <label>Senarai Klinik Rujukan Terlibat</label>
-          <div class="clinic-tags-container" id="clinicList">
-            <!-- Dynamic tags -->
-          </div>
-          <div class="add-clinic-group">
-            <input type="text" id="newClinicInput" placeholder="Masukkan nama klinik rujukan..."
-              style="text-transform: uppercase;">
-            <button type="button" class="btn-add-clinic" onclick="addClinic()">Tambah</button>
-          </div>
-        </div>
-
-        <button type="button" class="btn-save-settings" onclick="saveSettings()">Save</button>
-      </div>
-
-      <!-- Card Right: Database Maintenance Settings -->
-      <div class="settings-card">
-        <h2 class="settings-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <ellipse cx="12" cy="5" rx="9" ry="3" />
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
-          </svg>
-          Generate New Database (Excel)
-        </h2>
-
-        <div class="db-action-group">
-          <div class="form-group">
-            <label for="dbYearSelect">Pilih Tahun Database</label>
-            <select id="dbYearSelect">
-              <option value="2025">2025</option>
-              <option value="2026" selected>2026</option>
-              <option value="2027">2027</option>
-              <option value="2028">2028</option>
-              <option value="2029">2029</option>
-              <option value="2030">2030</option>
-              <option value="2031">2031</option>
-              <option value="2032">2032</option>
-              <option value="2033">2033</option>
-              <option value="2034">2034</option>
-              <option value="2035">2035</option>
-            </select>
-          </div>
-
-          <button type="button" class="btn-save-settings" style="background-color: var(--accent-color);"
-            onclick="generateYearDatabase()">
-            Generate Database (Excel Baru)
-          </button>
-        </div>
-
-        <div class="db-status-info"
-          style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 15px;">
-          <p><strong>Nota:</strong></p>
-          <ul style="margin-left: 16px; margin-top: 6px;">
-            <li>Sistem memerlukan fail Excel pendaftaran (12 fail bulanan) bagi setiap tahun untuk merekodkan data.
-            </li>
-            <li>Klik butang di atas untuk menjana fail baru bagi tahun yang belum diwujudkan. Rekod pesakit sedia ada
-              pada tahun lain <strong>tidak akan terjejas</strong>.</li>
-            <li>Konfigurasi semula fasiliti & klinik akan update senarai klinik luar, Nama Fasiliti & Singkatan Fasiliti
-              di dalam semua fail
-              Excel pendaftaran secara automatik.</li>
-          </ul>
-        </div>
-      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+        Pengurusan profil fasiliti, staff, rujukan, modaliti, dan database.
+      </p>
     </div>
 
-    <footer
-      style="margin-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-muted, #9ca3af); padding: 15px 0; border-top: 1px solid var(--border-color, #e5e7eb);">
-      rdgr.szal.kkbbs
-    </footer>
-  </div>
-
-  <script>
-    let clinics = JSON.parse('{{ config.klinik_rujukan|tojson | safe }}');
-    const klinikAsalDb = "{{ config.klinik_asal }}".toUpperCase();
-
-    function renderClinics() {
-      const container = document.getElementById("clinicList");
-      container.innerHTML = "";
-
-      clinics.forEach((clinic, idx) => {
-        const tag = document.createElement("div");
-        tag.className = "clinic-tag";
-
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = clinic;
-
-        tag.appendChild(nameSpan);
-
-        // Hanya benarkan padam jika bukan klinik asal
-        if (clinic !== klinikAsalDb) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "btn-remove-tag";
-          btn.innerHTML = "&times;";
-          btn.onclick = () => removeClinic(idx);
-          tag.appendChild(btn);
-        }
-
-        container.appendChild(tag);
-      });
-    }
-
-    function addClinic() {
-      const input = document.getElementById("newClinicInput");
-      const val = input.value.trim().toUpperCase();
-      if (!val) return;
-
-      if (clinics.includes(val)) {
-        alert("Klinik ini sudah ada dalam senarai!");
-        return;
-      }
-
-      clinics.push(val);
-      input.value = "";
-      renderClinics();
-    }
-
-    function removeClinic(idx) {
-      clinics.splice(idx, 1);
-      renderClinics();
-    }
-
-    function saveSettings() {
-      const klinikAsal = document.getElementById("klinikAsal").value.trim().toUpperCase();
-      const singkatanKlinik = document.getElementById("singkatanKlinik").value.trim().toUpperCase();
-
-      if (!klinikAsal || !singkatanKlinik) {
-        alert("Sila isi nama klinik asal dan singkatan fasiliti!");
-        return;
-      }
-
-      // Pastikan klinik asal dimasukkan dalam senarai klinik rujukan
-      if (!clinics.includes(klinikAsal)) {
-        clinics.unshift(klinikAsal);
-      }
-
-      const payload = {
-        klinik_asal: klinikAsal,
-        singkatan_klinik: singkatanKlinik,
-        klinik_rujukan: clinics
-      };
-
-      fetch("/api/settings/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert("Konfigurasi berjaya disimpan!");
-            window.location.reload();
-          } else {
-            alert("Gagal menyimpan konfigurasi: " + data.message);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Ralat berlaku ketika menyimpan konfigurasi.");
-        });
-    }
-
-    function generateYearDatabase() {
-      const selectedYear = parseInt(document.getElementById("dbYearSelect").value);
-      if (!selectedYear) return;
-
-      if (!confirm(`Adakah anda pasti mahu menjana fail database Excel baru bagi tahun ${selectedYear}?`)) {
-        return;
-      }
-
-      fetch("/api/settings/generate-year", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ year: selectedYear })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert(`Jana fail database bulanan bagi tahun ${selectedYear} berjaya! Fail Excel baharu telah diwujudkan dalam folder Pendaftaran.`);
-          } else {
-            alert("Gagal menjana database: " + data.message);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Ralat berlaku ketika menghubungi pelayan.");
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderClinics();
-      document.getElementById("newClinicInput").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          addClinic();
-        }
-      });
-    });
-  </script>
-
-  <!-- Windows 11 Shutdown Modal Overlay -->
-  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
-    <div class="shutdown-modal">
-      <div class="shutdown-modal-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-          <line x1="12" y1="2" x2="12" y2="12"></line>
+    <!-- Navigation Tabs -->
+    <div class="settings-nav-tabs">
+      <button type="button" class="tab-btn active" onclick="switchTab('tabProfile')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
-        <h3>Tutup Aplikasi</h3>
-      </div>
-      <div class="shutdown-modal-body">
-        <div class="shutdown-modal-prompt">
-          <div class="shutdown-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-          </div>
-          <p>Menutup sesi Daftar Radiologi dan server aplikasi?</p>
+        <span>Fasiliti</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabStaff')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span>Staff</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabReferrals')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        </svg>
+        <span>Rujukan</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabModalities')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+        <span>Modaliti</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabPemeriksaan')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        <span>Pemeriksaan</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabConsumables')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M6 12a6 6 0 0 1 12 0" />
+        </svg>
+        <span>Consumables</span>
+      </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabDatabase')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+        </svg>
+        <span>Database</span>
+        {% if pending_sync_count and pending_sync_count > 0 %}
+        <span
+          style="background: #f59e0b; color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.72rem; margin-left: 2px;">{{
+          pending_sync_count }}</span>
+        {% endif %}
+      </button>
+    </div>
+
+    <form id="settingsForm" onsubmit="handleSaveSettings(event)">
+      <!-- TAB 1: Profil Fasiliti -->
+      <div id="tabProfile" class="tab-pane active">
+        <div class="section-card-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span>1. Profil Jenis Fasiliti</span>
         </div>
-        <div class="shutdown-dropdown-container">
-          <label for="shutdownActionSelect">Tindakan:</label>
-          <select id="shutdownActionSelect" class="shutdown-dropdown">
-            <option value="shutdown">Close DaftarRadiologi & Server (Shut Down)</option>
-            <option value="cancel">Batal</option>
+
+        <div class="pill-group">
+          <label class="pill-btn {% if config.facility_type != 'HOSPITAL' %}active{% endif %}" id="pillKK"
+            onclick="selectFacilityType('KK')">
+            <input type="radio" name="facility_type" value="KK" {% if config.facility_type !='HOSPITAL' %}checked{%
+              endif %}>
+            <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary);">Klinik Kesihatan</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">PER.SS-RA 101 compliance & Reten PHRIS</div>
+          </label>
+
+          <label class="pill-btn {% if config.facility_type == 'HOSPITAL' %}active{% endif %}" id="pillHospital"
+            onclick="selectFacilityType('HOSPITAL')">
+            <input type="radio" name="facility_type" value="HOSPITAL" {% if config.facility_type=='HOSPITAL' %}checked{%
+              endif %}>
+            <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary);">Hospital</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Piawaian SMRP 2.0 & Pendaftaran Multi-Modaliti
+            </div>
+          </label>
+        </div>
+
+        <div id="hospitalScopeArea"
+          style="display: {% if config.facility_type == 'HOSPITAL' %}block{% else %}none{% endif %}; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; border: 1px solid var(--border-subtle);">
+          <label
+            style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem; color: var(--text-main);">
+            Jenis Pendaftaran Hospital:</label>
+          <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+              <input type="radio" name="hospital_scope" value="ALL" {% if config.hospital_scope !='SINGLE' %}checked{%
+                endif %} onchange="toggleSingleModality(false)">
+              <span>Jabatan</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+              <input type="radio" name="hospital_scope" value="SINGLE" {% if config.hospital_scope=='SINGLE' %}checked{%
+                endif %} onchange="toggleSingleModality(true)">
+              <span>Modaliti</span>
+            </label>
+          </div>
+
+          <div id="singleModalitySelect"
+            style="display: {% if config.hospital_scope == 'SINGLE' %}block{% else %}none{% endif %};">
+            <label for="single_modality"
+              style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Pilih kegunaan
+              Modaliti
+              Khusus:</label>
+            <select id="single_modality" class="form-control" style="font-size: 0.85rem;">
+              {% for m in modalities_catalog %}
+              <option value="{{ m.code }}" {% if config.single_modality==m.code %}selected{% endif %}>
+                {{ m.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="klinik_asal">Nama Fasiliti *</label>
+            <input type="text" id="klinik_asal" name="klinik_asal" class="form-control" value="{{ config.klinik_asal }}"
+              required title="Nama Fasiliti">
+          </div>
+
+          <div class="form-group">
+            <label for="singkatan_klinik">Singkatan *</label>
+            <input type="text" id="singkatan_klinik" name="singkatan_klinik" class="form-control"
+              value="{{ config.singkatan_klinik }}" required style="text-transform: uppercase;"
+              title="Singkatan untuk tajuk buku daftar dan nombor rujukan">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Senarai Staff -->
+      <div id="tabStaff" class="tab-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div class="section-card-title" style="margin-bottom: 0.2rem; border-bottom: none; padding-bottom: 0;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <span>Senarai Staff</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">
+              Senarai staf bertugas di kaunter Radiologi.
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; height: 30px;"
+            onclick="addStaffRow('')">+ Tambah Staff</button>
+        </div>
+
+        <div id="staffContainer" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+          {% set staff_list = config.staff if config.staff else config.juru_xray %}
+          {% if staff_list and staff_list|length > 0 %}
+          {% for j in staff_list %}
+          <div class="staff-row-item" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" class="form-control staff-input" value="{{ j }}" placeholder="NAMA STAFF"
+              style="flex: 1; text-transform: uppercase;" oninput="updateDefaultStaffDropdown()"
+              title="Nama staff bertugas">
+            <button type="button" class="btn-remove-row"
+              onclick="this.parentElement.remove(); updateDefaultStaffDropdown();" title="Hapus baris ini"
+              style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="staff-row-item" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" class="form-control staff-input" value="" placeholder="NAMA STAFF"
+              style="flex: 1; text-transform: uppercase;" oninput="updateDefaultStaffDropdown()"
+              title="Nama staff bertugas">
+            <button type="button" class="btn-remove-row"
+              onclick="this.parentElement.remove(); updateDefaultStaffDropdown();" title="Hapus baris ini"
+              style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="default_staff">Default:</label>
+          <select id="default_staff" class="form-control" style="max-width: 320px;">
+            <option value="">TIADA</option>
+            {% set cur_def = config.default_staff if config.default_staff else config.default_juru_xray %}
+            {% for j in staff_list %}
+            <option value="{{ j }}" {% if j==cur_def %}selected{% endif %}>{{ j }}</option>
+            {% endfor %}
           </select>
         </div>
       </div>
-      <div class="shutdown-modal-footer">
-        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
-        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+
+      <!-- TAB 3: Rujukan & Wad -->
+      <div id="tabReferrals" class="tab-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div class="section-card-title" style="margin-bottom: 0.2rem; border-bottom: none; padding-bottom: 0;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              </svg>
+              <span>Fasiliti, Wad & Klinik Rujukan</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">
+              Senarai klinik rujukan atau wad/jabatan yang memohon pemeriksaan.
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; height: 30px;"
+            onclick="addRefFacilityRow('')">+ Tambah</button>
+        </div>
+
+        <div id="quickReferralChipsSettings" style="margin-bottom: 0.75rem;">
+          <!-- Dynamic Context-Aware Referral Suggestions -->
+        </div>
+
+        <div id="refFacilityContainer"
+          style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+          {% if config.klinik_rujukan and config.klinik_rujukan|length > 0 %}
+          {% for ref in config.klinik_rujukan %}
+          <div class="ref-row-item" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" class="form-control ref-facility-input" value="{{ ref }}"
+              placeholder="Nama Fasiliti / Wad Rujukan" style="flex: 1;">
+            <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()" title="Hapus baris ini"
+              style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="ref-row-item" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" class="form-control ref-facility-input" value=""
+              placeholder="Nama Fasiliti / Wad Rujukan" style="flex: 1;">
+            <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()" title="Hapus baris ini"
+              style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- TAB 4: Modaliti Aktif SMRP 2.0 -->
+      <div id="tabModalities" class="tab-pane">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div class="section-card-title" style="margin-bottom: 0; padding-bottom: 0; border: none;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            <span>Pilihan Modaliti Perkhidmatan Aktif (Taksonomi SMRP 2.0)</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 3px 8px; height: 28px;"
+              onclick="setModalityPreset('KK')">
+              Preset Klinik Kesihatan
+            </button>
+            <button type="button" class="btn btn-outline" style="font-size: 0.76rem; padding: 3px 8px; height: 28px;"
+              onclick="setModalityPreset('HOSPITAL')">
+              Preset Hospital (Semua Modaliti)
+            </button>
+          </div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Tandakan modaliti pengimejan patuh SMRP 2.0 yang ditawarkan di fasiliti anda. Pilihan ini mengawal Region &
+          Sub-Region di borang pendaftaran:
+        </p>
+
+        {% set active_mods = config.active_modalities if config.active_modalities else ["GENERAL RADIOGRAPHY", "MOBILE -
+        GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"] %}
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="GENERAL RADIOGRAPHY" {% if "GENERAL RADIOGRAPHY" in
+              active_mods or "General Radiography" in active_mods %}checked{% endif %}>
+            <span>GENERAL X-RAY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="MOBILE - GENERAL RADIOGRAPHY" {%
+              if "MOBILE - GENERAL RADIOGRAPHY" in active_mods or "Mobile Radiography" in active_mods %}checked{% endif
+              %}>
+            <span>MOBILE X-RAY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="ULTRASOUND" {% if "ULTRASOUND" in active_mods
+              or "Ultrasound" in active_mods %}checked{% endif %}>
+            <span>ULTRASOUND</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="MOBILE - ULTRASOUND" {% if "MOBILE - ULTRASOUND" in
+              active_mods %}checked{% endif %}>
+            <span>MOBILE ULTRASOUND</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="DENTAL" {% if "DENTAL" in active_mods or "Dental" in
+              active_mods %}checked{% endif %}>
+            <span>DENTAL/OPG</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="MAMMOGRAPHY" {% if "MAMMOGRAPHY" in active_mods
+              or "Mammography" in active_mods %}checked{% endif %}>
+            <span>MAMMOGRAPHY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="CT" {% if "CT" in active_mods or "CT-Scan" in
+              active_mods %}checked{% endif %}>
+            <span>CT SCAN</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="MRI" {% if "MRI" in active_mods %}checked{% endif
+              %}>
+            <span>MRI</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="FLUOROSCOPY" {% if "FLUOROSCOPY" in active_mods
+              or "Fluoroscopy" in active_mods %}checked{% endif %}>
+            <span>FLUOROSCOPY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="ANGIOGRAPHY" {% if "ANGIOGRAPHY" in active_mods
+              or "Angiography" in active_mods %}checked{% endif %}>
+            <span>ANGIOGRAPHY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="INTERVENTIONAL RADIOLOGY" {%
+              if "INTERVENTIONAL RADIOLOGY" in active_mods %}checked{% endif %}>
+            <span>INTERVENTIONAL RADIOLOGY</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="BMD" {% if "BMD" in active_mods %}checked{% endif
+              %}>
+            <span>BMD</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="INTRAVENOUS UROGRAPHY (IVU)" {%
+              if "INTRAVENOUS UROGRAPHY (IVU)" in active_mods %}checked{% endif %}>
+            <span>IVU</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+            <input type="checkbox" class="modality-checkbox" value="MOBILE C-ARM" {% if "MOBILE C-ARM" in active_mods
+              %}checked{% endif %}>
+            <span>MOBILE C-ARM</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- TAB: Pemeriksaan (Jenis & Bahagian Pemeriksaan Kustom) -->
+      <div id="tabPemeriksaan" class="tab-pane">
+        <div class="section-card-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Pengurusan Jenis & Bahagian Pemeriksaan Kustom</span>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Tambah Jenis Pemeriksaan (Kategori) baharu atau Bahagian Pemeriksaan kustom di bawah sebarang kategori untuk
+          digunakan pada borang pendaftaran pesakit.
+        </p>
+
+        <!-- Form 1: Tambah Jenis Pemeriksaan Baharu -->
+        <div
+          style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+          <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">
+            1. Tambah Kategori Jenis Pemeriksaan Baharu
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+            <div style="flex: 1;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Nama Jenis Pemeriksaan
+                (Kategori):</label>
+              <input type="text" id="newJenisInput" class="form-control" placeholder="Contoh: CT SCAN SPECIAL / DEXA"
+                style="font-size: 0.83rem; height: 36px; text-transform: uppercase;">
+            </div>
+            <button type="button" class="btn btn-outline"
+              style="height: 36px; font-weight: 600; font-size: 0.8rem; white-space: nowrap;"
+              onclick="addCustomJenisFromSettings()">
+              + Tambah Jenis
+            </button>
+          </div>
+        </div>
+
+        <!-- Form 2: Tambah Bahagian Pemeriksaan Baharu -->
+        <div
+          style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+          <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary); margin-bottom: 0.5rem;">
+            2. Tambah Bahagian Pemeriksaan Baharu
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: flex-end;">
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Pilih Jenis
+                Pemeriksaan:</label>
+              <select id="settingCustomJenis" class="form-control" style="font-size: 0.83rem; height: 36px;">
+                <option value="CHEST">CHEST</option>
+                <option value="ABDOMEN">ABDOMEN</option>
+                <option value="EXTREMITIES">EXTREMITIES</option>
+                <option value="SPINES">SPINES</option>
+                <option value="SKULL & FACIAL BONES">SKULL & FACIAL BONES</option>
+                <option value="PELVIS">PELVIS</option>
+                <option value="ULTRASOUND">ULTRASOUND</option>
+                <option value="CT">CT</option>
+                <option value="MRI">MRI</option>
+                <option value="DENTAL">DENTAL</option>
+                <option value="MAMMOGRAPHY">MAMMOGRAPHY</option>
+                <option value="FLUOROSCOPY">FLUOROSCOPY</option>
+                {% set custom_orderables = config.custom_smrp_orderables if config.custom_smrp_orderables else {} %}
+                {% for ck in custom_orderables.keys() %}
+                {% if ck not in ["CHEST", "ABDOMEN", "EXTREMITIES", "SPINES", "SKULL & FACIAL BONES", "PELVIS",
+                "ULTRASOUND", "CT", "MRI", "DENTAL", "MAMMOGRAPHY", "FLUOROSCOPY"] %}
+                <option value="{{ ck }}">{{ ck }} *</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Nama Bahagian
+                Pemeriksaan:</label>
+              <input type="text" id="settingCustomBahagian" class="form-control" placeholder="Contoh: Stress View Ankle"
+                style="font-size: 0.83rem; height: 36px;">
+            </div>
+            <button type="button" class="btn btn-primary" style="height: 36px; font-weight: 600; font-size: 0.8rem;"
+              onclick="addCustomOrderableFromSettings()">
+              + Tambah Bahagian
+            </button>
+          </div>
+          <div id="customOrderableFeedback" style="margin-top: 0.5rem; font-size: 0.78rem; display: none;"></div>
+        </div>
+
+        <!-- Section 3: Senarai Pemeriksaan Kustom Sedia Ada -->
+        <div
+          style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.75rem;">
+            3. Senarai Pemeriksaan Kustom Ditambah (Custom Examinations)
+          </div>
+
+          <table class="backup-table" style="background: var(--bg-card);">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Jenis Pemeriksaan (Kategori)</th>
+                <th>Bahagian Pemeriksaan</th>
+                <th style="width: 100px; text-align: center;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="customExamsTableBody">
+              {% set custom_orderables = config.custom_smrp_orderables if config.custom_smrp_orderables else {} %}
+              {% set ns = namespace(has_items=false) %}
+              {% for j_key, parts in custom_orderables.items() %}
+              {% if parts and parts|length > 0 %}
+              {% for part in parts %}
+              {% set ns.has_items = true %}
+              <tr>
+                <td><strong>{{ j_key }}</strong></td>
+                <td>{{ part }} *</td>
+                <td style="text-align: center;">
+                  <button type="button" class="btn-remove-row"
+                    onclick="deleteCustomOrderable('{{ j_key }}', '{{ part }}')" title="Hapus Bahagian Ini"
+                    style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              {% set ns.has_items = true %}
+              <tr>
+                <td><strong>{{ j_key }}</strong></td>
+                <td style="color: var(--text-muted); font-style: italic;">(Kategori Sahaja)</td>
+                <td style="text-align: center;">
+                  <button type="button" class="btn-remove-row" onclick="deleteCustomOrderable('{{ j_key }}', '')"
+                    title="Hapus Kategori Ini"
+                    style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+              {% if not ns.has_items %}
+              <tr>
+                <td colspan="3"
+                  style="text-align: center; color: var(--text-muted); font-style: italic; padding: 12px;">
+                  Tiada pemeriksaan kustom ditambah lagi. Gunakan borang di atas untuk menambah Jenis atau Bahagian
+                  Pemeriksaan baharu.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: Consumables -->
+      <div id="tabConsumables" class="tab-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div class="section-card-title" style="margin-bottom: 0.2rem; border-bottom: none; padding-bottom: 0;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M6 12a6 6 0 0 1 12 0" />
+              </svg>
+              <span>Senarai Consumables</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">
+              Senarai CD, DVD, atau saiz filem X-Ray untuk pilihan semasa pemeriksaan.
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; height: 30px;"
+            onclick="addConsumableRow('')">+ Tambah Consumable</button>
+        </div>
+
+        <div id="consumableContainer"
+          style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+          {% set cons_list = config.consumables if config.consumables else ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]",
+          "FILEM 10X12 [1]"] %}
+          {% for c in cons_list %}
+          <div class="consumable-row-item" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" class="form-control consumable-input" value="{{ c }}"
+              placeholder="cth: CD [1] / FILEM 14x17 [1]" style="flex: 1; text-transform: uppercase;"
+              title="Nama consumables">
+            <button type="button" class="btn-remove-row" onclick="this.parentElement.remove();" title="Hapus baris ini"
+              style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- TAB 5: Pangkalan Data Luar (Database & Backup Sub-Tabs) -->
+      <div id="tabDatabase" class="tab-pane">
+        <!-- Sub-Tabs Bar inside Database Tab -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-subtle); margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="display: flex; gap: 0.35rem;">
+            <button type="button" class="subtab-btn active" id="btnSubDb" onclick="switchDbSubTab('subDbSekunder')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
+              <span>Database</span>
+            </button>
+            <button type="button" class="subtab-btn" id="btnSubBackup" onclick="switchDbSubTab('subBackup')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span>Backup</span>
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" class="btn btn-outline"
+              style="font-size: 0.8rem; font-weight: 600; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
+              onclick="openDbGuidanceModal()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <span>Panduan Pematuhan Data & Storage</span>
+            </button>
+            <button type="button" class="btn btn-outline"
+              style="font-size: 0.8rem; font-weight: 600; white-space: nowrap; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
+              onclick="openDbHelpModal()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>Panduan Setup</span>
+            </button>
+          </div>
+        </div>
+
+        {% set db = config.db_config if config.db_config else {} %}
+        <!-- Hidden input for backward compatibility so payload keeps enabled status -->
+        <input type="checkbox" id="db_enabled" checked style="display: none;">
+
+        <!-- SUB-TAB 1: Database Sekunder -->
+        <div id="subDbSekunder" class="subtab-pane active">
+          <div
+            style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+            <div
+              style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span>Secondary Database</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+              Excel merupakan sistem rekod utama. Database sekunder berfungsi sebagai additional protection layer
+              sekiranya Excel mengalami kegagalan teknikal atau kerosakan data. Sila pilih serta configure database
+              secondary yang sesuai. Database secondary boleh dihoskan secara local atau cloud mengikut dasar organisasi
+              anda.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+              <div class="form-group">
+                <label for="db_provider">Suggested database provider</label>
+                <select id="db_provider" class="form-control" onchange="handleProviderChangeSettings()">
+                  <option value="sqlite" {% if db.provider=='sqlite' %}selected{% endif %}>SQLite Local / Intranet Drive
+                  </option>
+                  <option value="postgres" {% if db.provider in ['postgres', 'postgresql' , 'mygovcloud' ] %}selected{%
+                    endif %}>PostgreSQL (Cloud DB / MyGovCloud@PDSA)</option>
+                  <option value="mysql" {% if db.provider in ['mysql', 'mariadb' ] %}selected{% endif %}>MySQL / MariaDB
+                    (Local / Shared Drive)</option>
+                </select>
+              </div>
+              <div class="form-group" id="setHostGroup">
+                <label for="db_host">Host / IP</label>
+                <input type="text" id="db_host" class="form-control" value="{{ db.host if db.host else 'localhost' }}">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
+              id="setCredGroup">
+              <div class="form-group">
+                <label for="db_name">Nama Database</label>
+                <input type="text" id="db_name" class="form-control"
+                  value="{{ db.database if db.database else 'radiologi_db' }}">
+              </div>
+              <div class="form-group">
+                <label for="db_user">Username</label>
+                <input type="text" id="db_user" class="form-control" value="{{ db.username if db.username else '' }}">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
+              id="setPwdGroup">
+              <div class="form-group">
+                <label for="db_password">Password</label>
+                <input type="password" id="db_password" class="form-control"
+                  value="{{ db.password if db.password else '' }}" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label for="db_port">Port</label>
+                <input type="number" id="db_port" class="form-control" value="{{ db.port if db.port else 5432 }}">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="testDbConnectionSettings()">
+                <span>Test Connection</span>
+              </button>
+              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="initDbSchemaSettings()">
+                <span>Create Database</span>
+              </button>
+              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="flushSyncQueue()">
+                <span>Sync Pending Data ({{ pending_sync_count or 0 }})</span>
+              </button>
+            </div>
+            <div id="dbActionFeedback" style="margin-top: 0.6rem; font-size: 0.8rem; text-align: center;"></div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: Backup -->
+        <div id="subBackup" class="subtab-pane" style="display: none;">
+          <div class="gov-alert" style="border-left-color: #10b981; background: rgba(16, 185, 129, 0.08);">
+            <strong>Integrasi Google Drive MyGovUC:</strong> Setiap warga / unit KKM mempunyai atau boleh memohon akaun
+            <em>MyGovUC 2.0 (@moh.gov.my)</em> (rujuk Jabatan IT). Dengan menetapkan folder <strong>Google Drive for
+              Desktop</strong>, salinan backup .zip akan di-upload secara automatik ke akaun Google Drive MyGovUC!
+          </div>
+
+          {% set mg = config.mygovuc_backup if config.mygovuc_backup else {} %}
+          <div
+            style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+              <label for="mygovuc_drive_path">Laluan Folder MyGovUC Google Drive (Intranet Desktop)</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="mygovuc_drive_path" class="form-control"
+                  value="{{ mg.drive_path if mg.drive_path else '' }}"
+                  placeholder="cth: G:\My Drive\Backup_Radiologi  atau  C:\Users\Staff\Google Drive\Backup_Radiologi"
+                  style="flex: 1;">
+                <button type="button" class="btn btn-outline" onclick="selectDriveFolder()"
+                  style="height: 36px; white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"
+                  title="Pilih folder secara terus dari komputer">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>Pilih Folder</span>
+                </button>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                Masukkan laluan atau klik <strong>"Pilih Folder"</strong> untuk halakan fail .zip backup ke Google Drive
+                Desktop MyGovUC.
+              </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label
+                  style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+                  <input type="checkbox" id="mygovuc_auto_daily" {% if mg.auto_daily !=False %}checked{% endif %}>
+                  <span>Auto Backup (Daily On-Boot / 5PM)</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="mygovuc_retention">Backup Storage (Days)</label>
+                <input type="number" id="mygovuc_retention" class="form-control"
+                  value="{{ mg.retention_days if mg.retention_days else 30 }}" style="max-width: 120px;">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <button type="button" class="btn btn-primary" style="flex: 1;" onclick="triggerManualBackup()">
+                <span>Backup (.zip)</span>
+              </button>
+              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="openRestoreModal()">
+                <span>Restore From Backup (.zip)</span>
+              </button>
+            </div>
+            <div id="backupFeedback" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
+          </div>
+
+          <!-- Section: Pemulihan 1-Klik Fail Excel Rosak -->
+          <div
+            style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: #d97706; fill: none; stroke-width: 2;">
+                  <path
+                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                </svg>
+                <strong style="font-size: 0.9rem; color: var(--text-main);">Repair Excel file</strong>
+              </div>
+              <button type="button" class="btn btn-outline"
+                style="color: #d97706; border-color: #f59e0b; font-weight: 600; font-size: 0.8rem;"
+                onclick="triggerExcelRepair()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: currentColor; fill: none; stroke-width: 2;">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                <span>Fix Excel File</span>
+              </button>
+            </div>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">
+              Gunakan feature ini jika fail Excel tidak dapat dibuka / rosak / corrupted akibat gangguan bekalan
+              elektrik. Sistem
+              akan menyelamatkan semua rekod pesakit dari backup file & DB secondary, lalu membina semula secara
+              automatik.
+            </p>
+            <div id="repairFeedback"
+              style="margin-top: 0.5rem; font-size: 0.78rem; display: none; padding: 0.5rem; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border-subtle);">
+            </div>
+          </div>
+
+          <!-- Senarai Backup Yang Wujud -->
+          <div class="section-card-title">
+            <svg class="icon icon-sm" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>Local Backups</span>
+          </div>
+          <table class="backup-table">
+            <thead>
+              <tr>
+                <th>NAMA FAIL</th>
+                <th>TARIKH</th>
+                <th>SAIZ</th>
+                <th style="text-align: right;">TINDAKAN</th>
+              </tr>
+            </thead>
+            <tbody id="backupListTbody">
+              {% if backups and backups|length > 0 %}
+              {% for b in backups %}
+              <tr>
+                <td style="font-family: monospace; font-weight: 600; color: var(--primary);">{{ b.filename }}</td>
+                <td>{{ b.created_at }}</td>
+                <td>{{ b.size_mb }} MB</td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button type="button" class="btn btn-outline"
+                    style="padding: 2px 8px; font-size: 0.75rem; height: 26px; font-weight: 600; color: var(--primary); margin-right: 0.4rem;"
+                    onclick="restoreLocalBackup('{{ b.filename }}')" title="Pulihkan data daripada sandaran ini">
+                    Pulihkan
+                  </button>
+                  <a href="/api/backup/download/{{ b.filename }}" class="btn-action-icon" style="color: var(--primary);"
+                    title="Muat turun ZIP">
+                    Muat Turun
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  Belum ada fail backup. Klik "Backup (.zip)" di atas untuk mencipta fail sandaran pertama.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Buttons Bottom -->
+      <div
+        style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="openExcelFolder()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>Buka Folder Excel</span>
+        </button>
+
+        <button type="submit" class="btn btn-primary" id="btnSaveSettings" style="min-width: 160px; font-weight: 700;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <span>Simpan</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Restore Backup -->
+<div class="modal-backdrop" id="restoreModal"
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999;">
+  <div
+    style="background: var(--bg-card); border-radius: 12px; width: 100%; max-width: 480px; padding: 1.5rem; border: 1px solid var(--border-subtle);">
+    <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">Pulihkan Data dari Fail
+      Backup (.zip)</h3>
+    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Pilih fail backup `.zip` yang dieksport dari PC lama. Semua fail Excel Buku Daftar & Pangkalan Data akan
+      dipulihkan secara automatik.
+    </p>
+
+    <form id="restoreForm" onsubmit="handleRestoreSubmit(event)">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label>Pilih Fail Backup (.zip) *</label>
+        <input type="file" id="restore_file" accept=".zip" class="form-control" required>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button type="button" class="btn btn-outline" onclick="closeRestoreModal()">Batal</button>
+        <button type="submit" class="btn btn-primary">Sahkan Pulihkan Data</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Panduan Pematuhan Data Pesakit & Syarat Storan (Vertically Centered Scrollable) -->
+<div class="modal-backdrop" id="dbGuidanceModal"
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
+  <div class="modal-dialog"
+    style="max-width: 600px; max-height: calc(100vh - 2rem); display: flex; flex-direction: column; background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); overflow: hidden;">
+    <div
+      style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.6rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg class="icon icon-lg" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--primary);">Panduan Pematuhan Data
+          Pesakit & Syarat Storan</h3>
+      </div>
+      <button type="button" onclick="closeDbGuidanceModal()"
+        style="background: transparent; border: none; font-size: 1.25rem; font-weight: bold; cursor: pointer; color: var(--text-muted); line-height: 1;">&times;</button>
+    </div>
+
+    <div
+      style="overflow-y: auto; max-height: calc(100vh - 12rem); padding-right: 0.5rem; font-size: 0.83rem; line-height: 1.6; color: var(--text-main);">
+      <div
+        style="background: var(--bg-subtle); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 0.85rem;">
+        <strong style="color: var(--primary); display: block; margin-bottom: 0.4rem;">1. Pematuhan Keselamatan Maklumat
+          Sektor Awam:</strong>
+        Rekod Pesakit & Maklumat Peribadi (PII) dikategorikan sebagai <em>Data Terkawal</em> mengikut Arahan Keselamatan
+        & GP ICT KKM.<br>
+        • <strong>Pangkalan data yang dibenarkan:</strong> MyGovCloud@PDSA, On-Premise Kerajaan, Local Intranet SQLite /
+        Postgres / MySQL.<br>
+        • <strong>Amaran:</strong> Public Cloud luar negara (contoh: Cloudflare D1, Supabase Awam) adalah <strong>TIDAK
+          DIBENARKAN</strong>.
+      </div>
+
+      <div
+        style="background: var(--bg-subtle); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <strong style="color: var(--primary); display: block; margin-bottom: 0.4rem;">2. Strategi Ketahanan Data
+          3-layer (Triple Redundancy):</strong>
+        • <strong>Primary storage (Excel .xlsx):</strong> Dijana & disimpan terus ke local storage <em>(synchronous
+          disk write)</em> sebaik sahaja didaftarkan mengikut format piawai audit PER.SS-RA 101.<br><br>
+        • <strong>Secondary storage (DataBase):</strong> Sangat digalakkan sebagai <em>second layer backup</em>
+        (SQLite Intranet NAS, MyGovCloud@PDSA, atau On-Premise) untuk carian pantas & pemeliharaan rekod.<br><br>
+        • <strong>Third storage (Auto-Backup .zip file):</strong> Fungsi keselamatan sedia ada secara automatik
+        dalam bentuk fail zip (.zip) yang boleh sync pada Google Drive Desktop (Akaun MyGovUC).
       </div>
     </div>
-  </div>
 
-  <!-- Fullscreen Windows 11 Shutdown Screen -->
-  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
-    <div class="win11-spinner-container">
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
+    <div
+      style="display: flex; justify-content: flex-end; margin-top: 1rem; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle);">
+      <button type="button" class="btn btn-primary" onclick="closeDbGuidanceModal()"
+        style="font-weight: 700;">Tutup</button>
     </div>
-    <div class="win11-shutdown-text">Closing...</div>
-    <div class="win11-shutdown-subtext">Please wait while system is shutting down.</div>
   </div>
-</body>
+</div>
 
-</html>
+<!-- Modal Panduan Persediaan Pangkalan Data (Vertically Centered & Scrollable) -->
+<div class="modal-backdrop" id="dbHelpModal"
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 9999; padding: 1.25rem;">
+  <div class="modal-dialog"
+    style="max-width: 760px; width: 100%; max-height: calc(100vh - 3rem); display: flex; flex-direction: column; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-xl); overflow: hidden;">
+
+    <!-- Modal Header -->
+    <div
+      style="display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border-subtle); background: var(--bg-subtle);">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div
+          style="width: 38px; height: 38px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg class="icon icon-md" viewBox="0 0 24 24"
+            style="stroke: var(--primary); fill: none; stroke-width: 2; width: 20px; height: 20px;">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-main);">Panduan Database (Setup
+            Help)</h3>
+          <p style="margin: 0.15rem 0 0 0; font-size: 0.76rem; color: var(--text-muted);">Dokumentasi teknikal,
+            pematuhan keselamatan KKM, dan konfigurasi pelayan</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeDbHelpModal()"
+        style="background: transparent; border: none; font-size: 1.5rem; font-weight: bold; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 0.2rem 0.5rem; border-radius: 4px;"
+        title="Tutup">&times;</button>
+    </div>
+
+    <!-- Modal Body (Scrollable) -->
+    <div
+      style="overflow-y: auto; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.84rem; line-height: 1.6; color: var(--text-main);">
+
+      <!-- Section 1: Pematuhan Sektor Awam -->
+      <div
+        style="background: var(--bg-subtle); padding: 1rem 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);">
+        <div
+          style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; font-size: 0.9rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"
+            style="stroke: currentColor; fill: none; stroke-width: 2; width: 16px; height: 16px;">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <span>1. Pematuhan Keselamatan Maklumat Sektor Awam (KKM)</span>
+        </div>
+        <p style="margin: 0 0 0.5rem 0; font-size: 0.82rem;">
+          Rekod Perubatan Pesakit & <em>Personally Identifiable Information (PII)</em> dikategorikan sebagai
+          <strong>RASMI: Data Terkawal</strong>. Penggunaan <em>Public Cloud</em> luar negara (Off-shore CSP) adalah
+          <strong>TIDAK DIBENARKAN</strong>.
+        </p>
+        <div
+          style="background: var(--bg-card); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.81rem;">
+          <strong style="color: var(--text-main);">Database Storage Yang Disyorkan:</strong>
+          <ol style="margin: 0.4rem 0 0 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.25rem;">
+            <li><strong>MyGovCloud@PDSA:</strong> Managed PostgreSQL / MySQL di data centre sektor awam Malaysia.</li>
+            <li><strong>Server Intranet On-Premise:</strong> PostgreSQL / MySQL di local server Hospital / PKD.
+            </li>
+            <li><strong>Local SQLite / NAS:</strong> local database atau <em>Shared Drive</em>
+              intranet.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Section 2: Panduan Mengikut Jenis Pangkalan Data -->
+      <div>
+        <div
+          style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; font-size: 0.9rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"
+            style="stroke: currentColor; fill: none; stroke-width: 2; width: 16px; height: 16px;">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          </svg>
+          <span>2. Panduan Database Setup</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <!-- Option A: SQLite -->
+          <div
+            style="background: var(--bg-subtle); padding: 0.9rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+              <span style="font-weight: 700; color: var(--primary); font-size: 0.88rem;">SQLite (Local /
+                Intranet Network Drive)</span>
+              <span
+                style="background: rgba(16, 185, 129, 0.12); color: #059669; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Recommended
+                untuk KK</span>
+            </div>
+            <p style="margin: 0 0 0.4rem 0; font-size: 0.8rem; color: var(--text-muted);">
+              Sesuai untuk Klinik Kesihatan atau kaunter bersaiz kecil/sederhana. Tiada pemasangan pelayan rumit
+              diperlukan.
+            </p>
+            <ol
+              style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.2rem;">
+              <li>Pilih <strong>SQLite Local / Intranet Drive</strong> pada menu Tetapan.</li>
+              <li>Untuk fail tempatan, kekalkan <code>radiologi_local.db</code> (tersimpan di folder
+                <code>Pendaftaran/</code>).
+              </li>
+              <li>Untuk share directory (NAS / Shared Drive), masukkan directory cth:
+                <code>Z:\Radiologi\radiologi_Data\radiologi_local.db</code>.
+              </li>
+              <li>Klik <strong>"Create Database"</strong> untuk create tables secara automatik.</li>
+            </ol>
+          </div>
+
+          <!-- Option B: PostgreSQL -->
+          <div
+            style="background: var(--bg-subtle); padding: 0.9rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+              <span style="font-weight: 700; color: var(--primary); font-size: 0.88rem;">PostgreSQL /
+                MyGovCloud@PDSA</span>
+              <span
+                style="background: rgba(37, 99, 235, 0.12); color: #2563eb; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Recommended
+                untuk Hospital</span>
+            </div>
+            <p style="margin: 0 0 0.3rem 0; font-size: 0.8rem; color: var(--text-muted);">
+              Contoh arahan bagi Pentadbir Sistem (DBA) di pelayan PostgreSQL:
+            </p>
+            <pre
+              style="background: #0f172a; color: #38bdf8; padding: 0.55rem 0.75rem; border-radius: 6px; font-size: 0.76rem; margin: 0.3rem 0 0.4rem 0; overflow-x: auto; font-family: monospace;">CREATE DATABASE radiologi_db;
+CREATE USER rad_user WITH PASSWORD 'KataLaluanSelamat123';
+GRANT ALL PRIVILEGES ON DATABASE radiologi_db TO rad_user;</pre>
+            <div style="font-size: 0.8rem; color: var(--text-main);">
+              <strong>Parameter Tetapan:</strong> Host: <code>10.x.x.x</code> | Port: <code>5432</code> | Database:
+              <code>radiologi_db</code>
+            </div>
+          </div>
+
+          <!-- Option C: MySQL -->
+          <div
+            style="background: var(--bg-subtle); padding: 0.9rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+              <span style="font-weight: 700; color: var(--primary); font-size: 0.88rem;">MySQL / MariaDB
+                (Intranet Server)</span>
+              <span
+                style="background: rgba(107, 114, 128, 0.12); color: var(--text-muted); font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Intranet
+                Server</span>
+            </div>
+            <pre
+              style="background: #0f172a; color: #38bdf8; padding: 0.55rem 0.75rem; border-radius: 6px; font-size: 0.76rem; margin: 0.3rem 0 0.4rem 0; overflow-x: auto; font-family: monospace;">CREATE DATABASE radiologi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'rad_user'@'%' IDENTIFIED BY 'KataLaluanSelamat123';
+GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
+            <div style="font-size: 0.8rem; color: var(--text-main);">
+              <strong>Parameter Tetapan:</strong> Host: <code>192.168.x.x</code> | Port: <code>3306</code> | Database:
+              <code>radiologi_db</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Semakan IP Server -->
+      <div
+        style="background: var(--bg-subtle); padding: 1rem 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div
+          style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; font-size: 0.9rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"
+            style="stroke: currentColor; fill: none; stroke-width: 2; width: 16px; height: 16px;">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+            <line x1="6" y1="6" x2="6.01" y2="6" />
+            <line x1="6" y1="18" x2="6.01" y2="18" />
+          </svg>
+          <span>3. Cara Semak Host IP Server (IP Address)</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div
+            style="background: var(--bg-card); padding: 0.7rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.78rem;">
+            <strong style="color: var(--primary);">Windows System:</strong>
+            <ol
+              style="margin: 0.3rem 0 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.15rem;">
+              <li>Tekan <code>Win + R</code>, taip <code>cmd</code>.</li>
+              <li>Taip arahan: <code>ipconfig</code></li>
+              <li>Cari nilai <strong>IPv4 Address</strong>.</li>
+            </ol>
+          </div>
+          <div
+            style="background: var(--bg-card); padding: 0.7rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.78rem;">
+            <strong style="color: var(--primary);">Linux / Mac System:</strong>
+            <ol
+              style="margin: 0.3rem 0 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.15rem;">
+              <li>Buka Terminal.</li>
+              <li>Taip arahan: <code>ip a</code> / <code>ifconfig</code></li>
+              <li>Use IP Static from IT Hospital.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Penyelarasan Data & Migrasi -->
+      <div
+        style="background: var(--bg-subtle); padding: 1rem 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div
+          style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.4rem; font-size: 0.9rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"
+            style="stroke: currentColor; fill: none; stroke-width: 2; width: 16px; height: 16px;">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+          <span>4. Sync & PC Migration</span>
+        </div>
+        <p style="margin: 0 0 0.4rem 0; font-size: 0.8rem;">
+          Aplikasi ini menyimpan rekod ke <strong>fail Excel (.xlsx)</strong> tempatan secara serta-merta
+          <em>(synchronous disk
+            write)</em> selepas butang DAFTAR ditekan. Ini memastikan data yang didaftarkan kekal selamat pada <em>hard
+            disk</em> sebelum <em>sync</em> dijalankan. Jika secondary database disconnected, rekod disimpan
+          dalam queue dan boleh sync semula menggunakan <strong>Sync Pending Data</strong>.
+        </p>
+        <p style="margin: 0; font-size: 0.78rem; color: var(--text-muted);">
+          * Migrate ke PC baharu, install aplikasi dan gunakan <strong>"Restore Data from Backup File
+            (.zip)"</strong> untuk mengembalikan seluruh sistem.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div
+      style="display: flex; justify-content: flex-end; align-items: center; padding: 0.85rem 1.5rem; border-top: 1px solid var(--border-subtle); background: var(--bg-subtle);">
+      <button type="button" class="btn btn-primary" onclick="closeDbHelpModal()"
+        style="font-weight: 700; padding: 0.45rem 1.2rem; font-size: 0.82rem;">Close</button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function switchTab(tabIdOrEvent, optionalTabId) {
+    let tabId = tabIdOrEvent;
+    if (typeof tabIdOrEvent === 'object' && tabIdOrEvent.preventDefault) {
+      tabIdOrEvent.preventDefault();
+      tabId = optionalTabId;
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => {
+      const attr = b.getAttribute('onclick') || '';
+      return attr.includes(tabId);
+    });
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const targetPane = document.getElementById(tabId);
+    if (targetPane) targetPane.classList.add('active');
+  }
+
+  function switchDbSubTab(subTabId) {
+    document.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.subtab-pane').forEach(pane => pane.style.display = 'none');
+
+    if (subTabId === 'subDbSekunder') {
+      const btn = document.getElementById('btnSubDb');
+      if (btn) btn.classList.add('active');
+      const pane = document.getElementById('subDbSekunder');
+      if (pane) pane.style.display = 'block';
+    } else if (subTabId === 'subBackup') {
+      const btn = document.getElementById('btnSubBackup');
+      if (btn) btn.classList.add('active');
+      const pane = document.getElementById('subBackup');
+      if (pane) pane.style.display = 'block';
+    }
+  }
+
+  function openDbGuidanceModal() {
+    const modal = document.getElementById('dbGuidanceModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeDbGuidanceModal() {
+    const modal = document.getElementById('dbGuidanceModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  const kkSuggestionsSettings = [
+    "KK BERHAMPIRAN",
+    "KLINIK DESA",
+    "KLINIK IBU & ANAK (KKIA)",
+    "PESAKIT LUAR (OPD)",
+    "KLINIK PERGIGIAN"
+  ];
+
+  const hospitalSuggestionsSettings = [
+    "JABATAN KECEMASAN (ETD)",
+    "MOPD",
+    "SOPD",
+    "O&G",
+    "PEDIATRIK",
+    "ORTHOPEDIK",
+    "OPHTALMOLOGY",
+    "WAD LELAKI / PEREMPUAN",
+    "ICU / CCU / HDU"
+  ];
+
+  function setModalityPreset(presetType) {
+    const checkboxes = document.querySelectorAll('.modality-checkbox');
+    const kkModalities = ["GENERAL RADIOGRAPHY", "MOBILE - GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"];
+
+    checkboxes.forEach(cb => {
+      if (presetType === 'KK') {
+        cb.checked = kkModalities.includes(cb.value);
+      } else if (presetType === 'HOSPITAL') {
+        cb.checked = true;
+      }
+    });
+
+    if (typeof showToast === 'function') {
+      showToast(presetType === 'KK' ? 'Preset Klinik Kesihatan diterapkan!' : 'Preset Hospital (Semua Modaliti) diterapkan!');
+    }
+  }
+
+  function addCustomJenisFromSettings() {
+    const input = document.getElementById('newJenisInput');
+    const val = input ? input.value.trim().toUpperCase() : '';
+    if (!val) {
+      if (typeof showToast === 'function') showToast('Sila masukkan nama Jenis Pemeriksaan.', 'error');
+      return;
+    }
+
+    fetch('/api/settings/add-custom-orderable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jenis_pemeriksaan: val, bahagian_pemeriksaan: '' })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (typeof showToast === 'function') showToast(data.message);
+          input.value = '';
+          setTimeout(() => location.reload(), 500);
+        } else {
+          if (typeof showToast === 'function') showToast(data.message, 'error');
+        }
+      });
+  }
+
+  function addCustomOrderableFromSettings() {
+    const jenis = document.getElementById('settingCustomJenis').value;
+    const bahagian = document.getElementById('settingCustomBahagian').value.trim();
+    if (!jenis || !bahagian) {
+      if (typeof showToast === 'function') showToast('Sila pilih Jenis dan masukkan nama Bahagian Pemeriksaan.', 'error');
+      return;
+    }
+
+    const fb = document.getElementById('customOrderableFeedback');
+    if (fb) {
+      fb.style.display = 'block';
+      fb.innerHTML = '<em>Menyimpan bahagian pemeriksaan baharu...</em>';
+      fb.style.color = 'var(--text-muted)';
+    }
+
+    fetch('/api/settings/add-custom-orderable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jenis_pemeriksaan: jenis, bahagian_pemeriksaan: bahagian })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (fb) {
+            fb.innerHTML = `<strong>[BERJAYA]</strong> ${data.message}`;
+            fb.style.color = '#10b981';
+          }
+          document.getElementById('settingCustomBahagian').value = '';
+          if (typeof showToast === 'function') showToast(data.message);
+          setTimeout(() => location.reload(), 500);
+        } else {
+          if (fb) {
+            fb.innerHTML = `<strong>[RALAT]</strong> ${data.message}`;
+            fb.style.color = '#ef4444';
+          }
+          if (typeof showToast === 'function') showToast(data.message, 'error');
+        }
+      })
+      .catch(err => {
+        if (fb) {
+          fb.innerHTML = `<strong>[RALAT]</strong> Gagal menambah bahagian pemeriksaan.`;
+          fb.style.color = '#ef4444';
+        }
+      });
+  }
+
+  function deleteCustomOrderable(jenis, bahagian) {
+    const targetLabel = bahagian ? `bahagian '${bahagian}'` : `kategori jenis pemeriksaan '${jenis}'`;
+    if (!confirm(`Adakah anda pasti untuk memadam ${targetLabel}?`)) return;
+
+    fetch('/api/settings/delete-custom-orderable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jenis_pemeriksaan: jenis, bahagian_pemeriksaan: bahagian })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (typeof showToast === 'function') showToast(data.message);
+          setTimeout(() => location.reload(), 500);
+        } else {
+          if (typeof showToast === 'function') showToast(data.message, 'error');
+        }
+      });
+  }
+
+  function updateQuickReferralChipsSettings(type) {
+    const container = document.getElementById('quickReferralChipsSettings');
+    if (!container) return;
+
+    const suggestions = (type === 'HOSPITAL') ? hospitalSuggestionsSettings : kkSuggestionsSettings;
+    const labelText = (type === 'HOSPITAL') ? 'Cadangan Unit / Wad Hospital:' : 'Cadangan Klinik / Fasiliti Rujukan:';
+
+    let html = `<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${labelText}</span><br style="margin-bottom: 0.3rem;">`;
+    suggestions.forEach(s => {
+      html += `<span class="badge-chip" onclick="addRefFacilityRow('${s}')">+ ${s}</span> `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function selectFacilityType(type) {
+    document.getElementById('pillKK').classList.toggle('active', type === 'KK');
+    document.getElementById('pillHospital').classList.toggle('active', type === 'HOSPITAL');
+    document.querySelector(`input[name="facility_type"][value="${type}"]`).checked = true;
+    document.getElementById('hospitalScopeArea').style.display = type === 'HOSPITAL' ? 'block' : 'none';
+    updateQuickReferralChipsSettings(type);
+  }
+
+  function toggleSingleModality(isSingle) {
+    document.getElementById('singleModalitySelect').style.display = isSingle ? 'block' : 'none';
+  }
+
+  function toggleDbSettings() {
+    const enabled = document.getElementById('db_enabled').checked;
+    document.getElementById('dbSettingsBox').style.display = enabled ? 'block' : 'none';
+  }
+
+  function handleProviderChangeSettings() {
+    const p = document.getElementById('db_provider').value;
+    const isSqlite = (p === 'sqlite');
+
+    document.getElementById('setHostGroup').style.display = isSqlite ? 'none' : 'block';
+    document.getElementById('setCredGroup').style.display = 'grid';
+    document.getElementById('setPwdGroup').style.display = isSqlite ? 'none' : 'grid';
+
+    if (p === 'postgres') {
+      document.getElementById('db_port').value = '5432';
+    } else if (p === 'mysql') {
+      document.getElementById('db_port').value = '3306';
+    }
+  }
+
+  function selectDriveFolder() {
+    fetch('/api/select-folder', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.folder_path) {
+          document.getElementById('mygovuc_drive_path').value = data.folder_path;
+          if (typeof showToast === 'function') {
+            showToast('Folder dipilih: ' + data.folder_path);
+          }
+        } else if (data.message && data.message !== 'Tiada folder dipilih.') {
+          alert(data.message);
+        }
+      })
+      .catch(err => {
+        console.error('Ralat memilih folder:', err);
+      });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function addStaffRow(val = '') {
+    const container = document.getElementById('staffContainer');
+    const div = document.createElement('div');
+    div.className = 'staff-row-item';
+    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+    div.innerHTML = `
+      <input type="text" class="form-control staff-input" value="${escapeHtml(val)}" placeholder="NAMA STAFF" style="flex: 1; text-transform: uppercase;" oninput="updateDefaultStaffDropdown()" title="Nama staff bertugas">
+      <button type="button" class="btn-remove-row" onclick="this.parentElement.remove(); updateDefaultStaffDropdown();" title="Hapus baris ini" style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
+    updateDefaultStaffDropdown();
+  }
+
+  function addRefFacilityRow(val = '') {
+    const container = document.getElementById('refFacilityContainer');
+    const div = document.createElement('div');
+    div.className = 'ref-row-item';
+    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+    div.innerHTML = `
+      <input type="text" class="form-control ref-facility-input" value="${escapeHtml(val)}" placeholder="Nama Fasiliti / Wad Rujukan" style="flex: 1;">
+      <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()" title="Hapus baris ini" style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
+  }
+
+  function addConsumableRow(val = '') {
+    const container = document.getElementById('consumableContainer');
+    const div = document.createElement('div');
+    div.className = 'consumable-row-item';
+    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+    div.innerHTML = `
+      <input type="text" class="form-control consumable-input" value="${escapeHtml(val)}" placeholder="cth: CD [1] / FILEM 14x17 [1]" style="flex: 1; text-transform: uppercase;" title="Nama consumables">
+      <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()" title="Hapus baris ini" style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
+  }
+
+  function updateDefaultStaffDropdown() {
+    const select = document.getElementById('default_staff');
+    if (!select) return;
+    const currentVal = select.value;
+    const staffInputs = document.querySelectorAll('.staff-input');
+
+    select.innerHTML = '<option value="">TIADA</option>';
+    staffInputs.forEach(inp => {
+      const val = inp.value.trim().toUpperCase();
+      if (val) {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        if (val === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      }
+    });
+  }
+
+  function triggerManualBackup() {
+    const fb = document.getElementById('backupFeedback');
+    fb.innerHTML = '<em>Mencipta bungkusan backup .zip...</em>';
+    fb.style.color = 'var(--text-muted)';
+
+    const drivePathInput = document.getElementById('mygovuc_drive_path');
+    const drivePath = drivePathInput ? drivePathInput.value.trim() : '';
+
+    fetch('/api/backup/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drive_path: drivePath })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fb.innerHTML = `[BERJAYA] ${data.message}`;
+          fb.style.color = '#10b981';
+          showToast('Backup berjaya dicipta!');
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          fb.innerHTML = `[RALAT] ${data.message}`;
+          fb.style.color = '#ef4444';
+        }
+      });
+  }
+
+  function triggerExcelRepair() {
+    if (!confirm('Adakah anda pasti ingin menjalankan Pemulihan 1-Klik untuk membaiki & membina semula fail Excel tahun {{ current_year }}?')) {
+      return;
+    }
+
+    const fb = document.getElementById('repairFeedback');
+    fb.style.display = 'block';
+    fb.innerHTML = '<em>Sedang mendiagnosis & memulihkan fail Excel {{ current_year }}...</em>';
+    fb.style.color = 'var(--text-muted)';
+
+    fetch('/api/excel/repair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ year: {{ current_year }} })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        fb.innerHTML = `<strong>[PEMULIHAN BERJAYA]</strong><br>${data.message.replace(/\n/g, '<br>')}`;
+        fb.style.color = '#10b981';
+        if (typeof showToast === 'function') {
+          showToast('Fail Excel {{ current_year }} berjaya dipulihkan!');
+        }
+      } else {
+        fb.innerHTML = `<strong>[RALAT PEMULIHAN]</strong> ${data.message}`;
+        fb.style.color = '#ef4444';
+      }
+    })
+    .catch(err => {
+      fb.innerHTML = `<strong>[RALAT]</strong> Gagal menjalankan enjin pemulihan fail Excel.`;
+      fb.style.color = '#ef4444';
+    });
+  }
+
+  function openRestoreModal() {
+    document.getElementById('restoreModal').style.display = 'flex';
+  }
+
+  function closeRestoreModal() {
+    document.getElementById('restoreModal').style.display = 'none';
+  }
+
+  function openDbGuidanceModal() {
+    const modal = document.getElementById('dbGuidanceModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeDbGuidanceModal() {
+    const modal = document.getElementById('dbGuidanceModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function openDbHelpModal() {
+    const modal = document.getElementById('dbHelpModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeDbHelpModal() {
+    const modal = document.getElementById('dbHelpModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function handleRestoreSubmit(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('restore_file');
+    if (!fileInput.files.length) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('/api/backup/restore', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          closeRestoreModal();
+          showToast(data.message);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(err => alert('Ralat memulihkan fail backup.'));
+  }
+
+  function restoreLocalBackup(filename) {
+    if (!confirm(`Adakah anda pasti ingin memulihkan semula data daripada fail backup [${filename}]?\n\nData dan konfigurasi semasa akan digantikan dengan salinan tersebut.`)) {
+      return;
+    }
+
+    fetch('/api/backup/restore-local/' + filename, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast(data.message);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(err => alert('Ralat memulihkan data sandaran.'));
+  }
+
+  function getDbConfigPayload() {
+    return {
+      enabled: document.getElementById('db_enabled').checked,
+      provider: document.getElementById('db_provider').value,
+      host: document.getElementById('db_host').value,
+      port: parseInt(document.getElementById('db_port').value) || 5432,
+      database: document.getElementById('db_name').value,
+      username: document.getElementById('db_user').value,
+      password: document.getElementById('db_password').value,
+      table_prefix: 'rad_'
+    };
+  }
+
+  function getMyGovUcBackupPayload() {
+    return {
+      enabled: true,
+      drive_path: document.getElementById('mygovuc_drive_path').value.trim(),
+      auto_daily: document.getElementById('mygovuc_auto_daily').checked,
+      retention_days: parseInt(document.getElementById('mygovuc_retention').value) || 30
+    };
+  }
+
+  function testDbConnectionSettings() {
+    const fb = document.getElementById('dbActionFeedback');
+    fb.innerHTML = '<em>Menguji sambungan database...</em>';
+    fb.style.color = 'var(--text-muted)';
+
+    fetch('/api/db/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ db_config: getDbConfigPayload() })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fb.innerHTML = `<strong>[BERJAYA]</strong> ${data.message}`;
+          fb.style.color = '#10b981';
+        } else {
+          fb.innerHTML = `<strong>[RALAT]</strong> ${data.message}`;
+          fb.style.color = '#ef4444';
+        }
+      });
+  }
+
+  function initDbSchemaSettings() {
+    const fb = document.getElementById('dbActionFeedback');
+    fb.innerHTML = '<em>Menjana skema jadual pangkalan data...</em>';
+    fb.style.color = 'var(--text-muted)';
+
+    fetch('/api/db/init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ db_config: getDbConfigPayload() })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fb.innerHTML = `<strong>[BERJAYA]</strong> ${data.message}`;
+          fb.style.color = '#10b981';
+          showToast(data.message);
+        } else {
+          fb.innerHTML = `<strong>[RALAT]</strong> ${data.message}`;
+          fb.style.color = '#ef4444';
+        }
+      });
+  }
+
+  function flushSyncQueue() {
+    const fb = document.getElementById('dbActionFeedback');
+    fb.innerHTML = '<em>Syncing rekod offline...</em>';
+    fb.style.color = 'var(--text-muted)';
+
+    fetch('/api/db/sync', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        fb.innerHTML = `${data.message}`;
+        fb.style.color = data.success ? '#10b981' : '#f59e0b';
+        showToast(data.message);
+      });
+  }
+
+  function handleSaveSettings(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveSettings');
+    btn.disabled = true;
+
+    const facilityType = document.querySelector('input[name="facility_type"]:checked').value;
+    const hospitalScope = document.querySelector('input[name="hospital_scope"]:checked') ? document.querySelector('input[name="hospital_scope"]:checked').value : 'ALL';
+    const singleModality = document.getElementById('single_modality').value;
+    const klinikAsal = document.getElementById('klinik_asal').value.trim();
+    const singkatan = document.getElementById('singkatan_klinik').value.trim().toUpperCase();
+    const defaultStaff = document.getElementById('default_staff').value;
+
+    const refInputs = document.querySelectorAll('.ref-facility-input');
+    const refList = Array.from(refInputs).map(inp => inp.value.trim()).filter(val => val.length > 0);
+
+    const staffInputs = document.querySelectorAll('.staff-input');
+    const staffList = Array.from(staffInputs).map(inp => inp.value.trim().toUpperCase()).filter(val => val.length > 0);
+
+    const modCheckboxes = document.querySelectorAll('.modality-checkbox:checked');
+    const activeMods = Array.from(modCheckboxes).map(c => c.value);
+
+    const consumableInputs = document.querySelectorAll('.consumable-input');
+    const consumableList = Array.from(consumableInputs).map(inp => inp.value.trim().toUpperCase()).filter(val => val.length > 0);
+
+    fetch('/api/settings/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        facility_type: facilityType,
+        hospital_scope: hospitalScope,
+        single_modality: singleModality,
+        klinik_asal: klinikAsal,
+        singkatan_klinik: singkatan,
+        staff: staffList,
+        default_staff: defaultStaff,
+        klinik_rujukan: refList,
+        active_modalities: activeMods,
+        consumables: consumableList,
+        db_config: getDbConfigPayload(),
+        mygovuc_backup: getMyGovUcBackupPayload()
+      })
+    })
+      .then(res => res.json())
+      .then(res => {
+        btn.disabled = false;
+        if (res.success) {
+          showToast(res.message);
+        } else {
+          showToast(res.message, 'error');
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        showToast('Ralat menyimpan tetapan.', 'error');
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    handleProviderChangeSettings();
+    updateQuickReferralChipsSettings('{{ config.facility_type if config.facility_type else "KK" }}');
+  });
+</script>
+{% endblock %}

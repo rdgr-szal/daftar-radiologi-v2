@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+  <meta charset="UTF-8">
+  <title>BUKU DAFTAR RADIOLOGI - {{ data.singkatan }}{% if data.modality_name %} - {{ data.modality_name }}{% endif %} {{ data.month_name }} {{ data.year }}</title>
+  <style>
+    /* Tetapan Kertas A4 Landscape (Saiz Piawai KKM Printing) */
+    @page {
+      size: A4 landscape;
+      margin: 6mm 8mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8.5pt;
+      color: #000;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .print-actions {
+      text-align: right;
+      margin-bottom: 8px;
+    }
+
+    .btn-print {
+      background-color: #00695c;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-print:hover {
+      background-color: #004d40;
+    }
+
+    .header-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-sub {
+      text-align: center;
+      font-weight: bold;
+      font-size: 8.5pt;
+      margin-bottom: 8px;
+    }
+
+    /* Jadual Utama 24 Lajur Fit A4 Landscape (Tanpa Lajur DATE Redundan) */
+    table.print-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    table.print-table th,
+    table.print-table td {
+      border: 1px solid #000;
+      padding: 3.5px 3px;
+      text-align: center;
+      font-size: 7.5pt;
+      word-wrap: break-word;
+      overflow: hidden;
+      line-height: 1.15;
+    }
+
+    table.print-table th {
+      background-color: #e0f2f1 !important;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 7.2pt;
+    }
+
+    .text-left {
+      text-align: left !important;
+    }
+
+    .text-center {
+      text-align: center !important;
+    }
+
+    /* Ringkasan Audit Bawah Fit A4 */
+    .audit-summary-container {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      page-break-inside: avoid;
+    }
+
+    .audit-box {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      flex: 1;
+      font-size: 7.5pt;
+      background-color: #fafafa !important;
+    }
+
+    .audit-box h4 {
+      margin: 0 0 4px 0;
+      border-bottom: 1px solid #000;
+      padding-bottom: 2px;
+      font-size: 8pt;
+      text-transform: uppercase;
+    }
+
+    .audit-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    @media print {
+      .print-actions {
+        display: none !important;
+      }
+
+      body {
+        width: 100%;
+      }
+
+      table.print-table tr {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="print-actions">
+    <button class="btn-print" onclick="window.print()">
+      <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24">
+        <polyline points="6 9 6 2 18 2 18 9" />
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+        <rect x="6" y="14" width="12" height="8" />
+      </svg>
+      <span>Cetak Buku Daftar (A4 Landscape)</span>
+    </button>
+  </div>
+
+  <div class="header-title">BUKU DAFTAR RADIOLOGI {{ data.singkatan }}{% if data.modality_name %} ({{ data.modality_name.upper() }}){% endif %}</div>
+  <div class="header-sub">{% if data.facility_type == 'HOSPITAL' %}HOSPITAL / FASILITI{% else %}KLINIK KESIHATAN{% endif %}: {{ data.klinik_asal.upper() }} | BULAN: {{ data.month_name }} TAHUN: {{ data.year }}</div>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th style="width: 52px;">TARIKH</th>
+        <th style="width: 38px;">LMP</th>
+        <th style="width: 28px;">BIL</th>
+        <th style="width: 45px;">NO. XRAY</th>
+        <th style="width: 72px;">NO. IC/PASPORT</th>
+        <th style="width: 125px;">NAMA PESAKIT</th>
+        <th style="width: 26px;">UMUR</th>
+        <th style="width: 20px;">JANT</th>
+        <th style="width: 32px;">WARGA</th>
+        <th style="width: 38px;">STAF</th>
+        <th style="width: 44px;">BANGSA</th>
+        <th style="width: 90px;">ALAMAT</th>
+        <th style="width: 50px;">JENIS</th>
+        <th style="width: 55px;">BAHAGIAN</th>
+        <th style="width: 38px;">LATERALITI</th>
+        <th style="width: 85px;">KLINIK RUJUKAN</th>
+        <th style="width: 55px;">KATEGORI</th>
+        <th style="width: 42px;">CD/FILEM</th>
+        <th style="width: 26px;">EXP</th>
+        <th style="width: 26px;">REJ</th>
+        <th style="width: 38px;">DETAIL</th>
+        <th style="width: 68px;">PEGAWAI</th>
+        <th style="width: 58px;">STAFF</th>
+        <th style="width: 55px;">CATATAN</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in data.records %}
+      <tr>
+        <td>{{ r.tarikh }}</td>
+        <td>{{ r.lmp }}</td>
+        <td>{{ r.bil_kes }}</td>
+        <td style="font-weight: bold;">{{ r.nombor_xray }}</td>
+        <td>{{ r.ic_pasport }}</td>
+        <td class="text-left" style="font-weight: bold;">{{ r.nama }}</td>
+        <td>{{ r.umur }}</td>
+        <td>{{ r.jantina }}</td>
+        <td>{{ r.warganegara }}</td>
+        <td></td>
+        <td>{{ r.bangsa }}</td>
+        <td class="text-left">{{ r.alamat }}</td>
+        <td>{{ r.jenis_pemeriksaan }}</td>
+        <td>{{ r.bahagian_pemeriksaan }}</td>
+        <td>{{ r.lateraliti or r.laterally }}</td>
+        <td class="text-left">{{ r.klinik_rujukan }}</td>
+        <td>{{ r.kategori }}</td>
+        <td>{{ r.cd_filem }}</td>
+        <td>1</td>
+        <td>0</td>
+        <td></td>
+        <td>{{ r.pegawai_rujukan }}</td>
+        <td>{{ r.operator }}</td>
+        <td>{{ r.catatan }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="24" style="padding: 15px; font-style: italic;">Tiada rekod pendaftaran pesakit bagi bulan ini.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Ringkasan Audit Bawah A4 Landscape -->
+  <div class="audit-summary-container">
+    <div class="audit-box">
+      <h4>RINGKASAN AUDIT KES</h4>
+      <div class="audit-row"><span>JUMLAH KES:</span> <strong>{{ data.total_cases }}</strong></div>
+      <div class="audit-row"><span>LELAKI:</span> <span>{{ data.male_count }}</span></div>
+      <div class="audit-row"><span>PEREMPUAN:</span> <span>{{ data.female_count }}</span></div>
+    </div>
+
+    <div class="audit-box">
+      <h4>RINGKASAN MODALITY</h4>
+      <div class="audit-row"><span>CXR (DADA):</span> <span>{{ data.cxr_count }}</span></div>
+      <div class="audit-row"><span>CXR TB:</span> <span>{{ data.cxr_tb_count }}</span></div>
+      <div class="audit-row"><span>CXR HRG:</span> <span>{{ data.cxr_hrg_count }}</span></div>
+      <div class="audit-row"><span>AXR / ABDOMEN:</span> <span>{{ data.axr_count }}</span></div>
+      <div class="audit-row"><span>EXTREMITI:</span> <span>{{ data.ext_count }}</span></div>
+    </div>
+
+    <div class="audit-box">
+      <h4>PECAHAN KLINIK RUJUKAN</h4>
+      {% for clinic_name, count in data.clinic_counts.items() %}
+      <div class="audit-row"><span>{{ clinic_name }}:</span> <span>{{ count }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+
+</html>

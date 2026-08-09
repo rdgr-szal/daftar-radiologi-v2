@@ -1,703 +1,1108 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Analisis Beban Kerja - Buku Daftar Offline</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <!-- Chart.js local file -->
-  <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+{% block title %}Dashboard Analisis Radiologi - KKM{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
 
-  <script>
-    function shutdownServer() {
-      document.getElementById('shutdownModalOverlay').style.display = 'flex';
-    }
+{% block content %}
+<style>
+  .filter-tabs-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
 
-    function closeShutdownModal() {
-      document.getElementById('shutdownModalOverlay').style.display = 'none';
-    }
+  .filter-tab-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+  }
 
-    function confirmShutdown() {
-      const action = document.getElementById('shutdownActionSelect').value;
-      if (action === 'cancel') {
-        closeShutdownModal();
-        return;
-      }
+  .filter-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+  }
 
-      closeShutdownModal();
-      document.getElementById('win11ShutdownScreen').style.display = 'flex';
+  .filter-tab:hover {
+    color: var(--text-main);
+  }
 
-      fetch('/api/shutdown', { method: 'POST' })
-        .then(res => res.json())
-        .catch(err => console.log(err));
+  .filter-tab.active {
+    background: var(--bg-card) !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  }
 
-      setTimeout(() => {
-        window.open('', '_self', '');
-        window.close();
+  /* Custom Week Date Picker Popover Styles */
+  .week-picker-trigger-btn {
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
 
-        setTimeout(() => {
-          const textEl = document.querySelector('.win11-shutdown-text');
-          const subEl = document.querySelector('.win11-shutdown-subtext');
-          if (textEl) textEl.textContent = "Aplikasi telah ditutup dengan selamat.";
-          if (subEl) subEl.textContent = "Anda boleh menutup tab pelayar ini sekarang.";
-        }, 1000);
-      }, 2000);
-    }
-  </script>
-</head>
+  .week-picker-popover {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    padding: 0.85rem;
+    margin-top: 6px;
+    width: 310px;
+  }
 
-<body>
-  <div class="container">
-    <header>
-      <div class="logo-section">
-        <h1>DASHBOARD</h1>
-        <p>Analisis Beban Kerja</p>
-      </div>
-      <nav>
-        <a href="/" class="nav-link">DAFTAR</a>
-        <a href="/patient-list" class="nav-link">PATIENT LIST</a>
-        <a href="/dashboard" class="nav-link active">DASHBOARD</a>
-        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
-        <a href="/phris" class="nav-link">RETEN</a>
-        <a href="/settings" class="nav-link">TETAPAN</a>
-        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
-          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path
-              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
-            </path>
+  .week-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--primary);
+  }
+
+  .wp-nav-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  .wp-nav-btn {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wp-nav-btn:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .wp-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .wp-calendar-table th {
+    padding: 4px 2px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .wp-th-week {
+    border-right: 1px solid var(--border-subtle);
+    color: var(--primary);
+  }
+
+  .wp-week-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .wp-week-row:hover {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+  }
+
+  .wp-week-row:hover td {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .wp-week-row.selected-week {
+    background-color: var(--primary) !important;
+  }
+
+  .wp-week-row.selected-week td {
+    color: #ffffff !important;
+    font-weight: 700;
+  }
+
+  .wp-week-row td {
+    padding: 6px 2px;
+    border-radius: 0;
+  }
+
+  .wp-week-num {
+    border-right: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.72rem;
+  }
+
+  /* Dashboard Custom Layout */
+  .dashboard-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 1.5rem 0 0.75rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-subvalues {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .metric-subrow {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .metric-subrow span:last-child {
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .split-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .detailed-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+
+  .dashboard-table th {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-align: left;
+  }
+
+  .dashboard-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    color: var(--text-main);
+  }
+
+  .dashboard-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dashboard-table tr:hover {
+    background-color: var(--bg-subtle);
+  }
+
+  .dashboard-table th.text-center,
+  .dashboard-table td.text-center,
+  .dashboard-table th.text-right,
+  .dashboard-table td.text-right,
+  .text-right,
+  .text-center {
+    text-align: center !important;
+  }
+</style>
+
+<!-- Filter & Time Period Bar (Identical to patient_list.html) -->
+<form id="dashboardFilterForm" method="GET" action="{{ url_for('dashboard.dashboard_view') }}"
+  style="margin-bottom: 1.25rem;">
+  <input type="hidden" name="period" id="period" value="{{ period }}">
+  <input type="hidden" name="day_date" id="day_date" value="{{ selected_date }}">
+
+  <div class="filter-tabs-bar">
+    <!-- Left: Period Switcher Buttons -->
+    <div class="filter-tab-group">
+      <a href="{{ url_for('dashboard.dashboard_view', period='day', day_date=selected_date) }}"
+        class="filter-tab {% if period == 'day' %}active{% endif %}">Hari</a>
+      <a href="{{ url_for('dashboard.dashboard_view', period='week', day_date=selected_date) }}"
+        class="filter-tab {% if period == 'week' %}active{% endif %}">Minggu</a>
+      <a href="{{ url_for('dashboard.dashboard_view', period='month', year=selected_year, month=selected_month, day_date=selected_date) }}"
+        class="filter-tab {% if period == 'month' %}active{% endif %}">Bulan</a>
+      <a href="{{ url_for('dashboard.dashboard_view', period='year', year=selected_year, day_date=selected_date) }}"
+        class="filter-tab {% if period == 'year' %}active{% endif %}">Tahun</a>
+    </div>
+
+    <!-- Center / Controls: Period-Specific Controls -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      {% if period == 'day' %}
+      <input type="date" class="form-control" value="{{ selected_date }}"
+        style="width: auto; height: 30px; font-size: 0.8rem;" onchange="setDayDateValue(this.value)">
+      {% elif period == 'week' %}
+      <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
+        <button type="button" class="btn btn-outline week-picker-trigger-btn" onclick="toggleWeekPickerCalendar(event)"
+          title="Klik untuk membuka Kalendar Penapis Minggu">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-          </svg>
+          <span id="weekPickerTriggerLabel">({{ week_range_text }})</span>
         </button>
-        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Tutup Aplikasi">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-            <line x1="12" y1="2" x2="12" y2="12"></line>
-          </svg>
-        </button>
-      </nav>
-    </header>
 
-    <!-- Filter Bar -->
-    <div class="card filter-bar">
-      <form id="filterForm" method="GET" action="/dashboard" class="filter-form">
-        <div class="form-group filter-group">
-          <label for="month">Bulan</label>
-          <select id="month" name="month">
-            {% for m, info in months.items() %}
-            <option value="{{ m }}" {% if m==selected_month %}selected{% endif %}>{{ info[0].split('_')[1] }}</option>
-            {% endfor %}
-          </select>
+        <!-- Calendar Popover Menu -->
+        <div id="weekPickerPopover" class="week-picker-popover" onclick="event.stopPropagation()">
+          <div class="week-picker-header">
+            <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} Ogos</span>
+            <div class="wp-nav-btns">
+              <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(-1)">&lt;</button>
+              <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(1)">&gt;</button>
+            </div>
+          </div>
+
+          <table class="wp-calendar-table">
+            <thead>
+              <tr>
+                <th class="wp-th-week">#</th>
+                <th>Isnin</th>
+                <th>Sel</th>
+                <th>Rab</th>
+                <th>Kha</th>
+                <th>Jum</th>
+                <th>Sab</th>
+                <th>Ahd</th>
+              </tr>
+            </thead>
+            <tbody id="wpCalendarBody">
+              <!-- Dynamically generated rows via JS -->
+            </tbody>
+          </table>
         </div>
-        <div class="form-group filter-group">
-          <label for="year">Tahun</label>
-          <select id="year" name="year">
-            {% for y in available_years %}
-            <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <button type="submit" class="btn filter-btn">Filter</button>
-        </div>
-      </form>
+      </div>
+      {% elif period == 'month' %}
+      <select name="month" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+        onchange="this.form.submit()">
+        {% for m_idx in range(1, 13) %}
+        <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
+          {{ month_map[m_idx][1] }}
+        </option>
+        {% endfor %}
+      </select>
+      {% endif %}
+
+      <select name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+        onchange="this.form.submit()">
+        {% for y in available_years %}
+        <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
     </div>
+  </div>
+</form>
 
-    <!-- Stat counter boxes -->
-    <div class="stat-summary-row">
-      <div class="stat-box">
-        <span class="stat-title">Jumlah Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</span>
-        <span id="stat-total-patients" class="stat-value">0</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-title">Jumlah Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</span>
-        <span id="stat-total-cases" class="stat-value">0</span>
-      </div>
-    </div>
-
-    <!-- Section 1: Workload & Exams -->
-    <h3 class="section-title" style="margin-top: 24px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-        stroke-linejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="14" />
-      </svg>
-      Beban Kerja & Pemeriksaan
-    </h3>
-    <div class="dashboard-grid">
-      <!-- Trend Kes Harian -->
-      <div class="dashboard-card col-8 card">
-        <h2 class="card-title">Kes Harian {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}
-        </h2>
-        <div style="height: 300px; position: relative;">
-          <canvas id="dailyTrendChart"></canvas>
+<!-- Section 2: Summary Metrics (Cards Grid) -->
+<div class="metrics-grid">
+  <!-- Card 1: Total Kes & Pesakit -->
+  <div class="metric-card">
+    <div>
+      <div class="metric-label">Jumlah Keseluruhan</div>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700;">BIL KES</span>
+          <div class="metric-value" id="valTotalCases" style="color: var(--primary);">0</div>
         </div>
-      </div>
-
-      <!-- Jenis Pemeriksaan -->
-      <div class="dashboard-card col-4 card">
-        <h2 class="card-title">Jenis Pemeriksaan {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}
-        </h2>
-        <div style="height: 300px; position: relative; display: flex; justify-content: center;">
-          <canvas id="examTypeChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Bahagian Pemeriksaan -->
-      <div class="dashboard-card col-12 card" style="margin-top: 12px;">
-        <h2 class="card-title">Bahagian Pemeriksaan {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year
-          }}</h2>
-        <div style="height: 350px; position: relative;">
-          <canvas id="examPartChart"></canvas>
+        <div style="text-align: right;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700;">BIL
+            PESAKIT</span>
+          <div class="metric-value" id="valTotalPatients" style="color: var(--accent);">0</div>
         </div>
       </div>
     </div>
-
-    <!-- Section 2: Jantina -->
-    <h3 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-        stroke-linejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-      Jantina (Lelaki vs Perempuan)
-    </h3>
-    <div class="dashboard-grid">
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="genderPatientsChart"></canvas>
-        </div>
-      </div>
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="genderCasesChart"></canvas>
-        </div>
-      </div>
+    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic;">
+      * Tidak termasuk rekod pemeriksaan yang terbatal
     </div>
-
-    <!-- Section 3: Kaum -->
-    <h3 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-        stroke-linejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-      Kaum & Bangsa
-    </h3>
-    <div class="dashboard-grid">
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="racePatientsChart"></canvas>
-        </div>
-      </div>
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="raceCasesChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 4: Warganegara -->
-    <h3 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-        stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-        <path d="M2 12h20" />
-      </svg>
-      Status Warganegara
-    </h3>
-    <div class="dashboard-grid">
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Pesakit {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="citizenPatientsChart"></canvas>
-        </div>
-      </div>
-      <div class="dashboard-card col-6 card">
-        <h2 class="card-title">Kes {{ months.get(selected_month)[0].split('_')[1] }} {{ selected_year }}</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="citizenCasesChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 5: Media -->
-    <h3 class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-        stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-        <line x1="7" y1="2" x2="7" y2="22" />
-        <line x1="17" y1="2" x2="17" y2="22" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <line x1="2" y1="7" x2="7" y2="7" />
-        <line x1="2" y1="17" x2="7" y2="17" />
-        <line x1="17" y1="17" x2="22" y2="17" />
-        <line x1="17" y1="7" x2="22" y2="7" />
-      </svg>
-      Media
-    </h3>
-    <div class="dashboard-grid">
-      <div class="dashboard-card col-12 card">
-        <h2 class="card-title">Media</h2>
-        <div style="height: 250px; position: relative; display: flex; justify-content: center;">
-          <canvas id="consumableChart"></canvas>
-        </div>
-      </div>
-    </div>
-    <footer class="site-footer">
-      rdgr.szal.kkbbs
-    </footer>
   </div>
 
-  <script>
-    // Variables for Chart Instances and Cache
-    let dailyTrendChart, examTypeChart, examPartChart;
-    let genderPatientsChart, genderCasesChart;
-    let racePatientsChart, raceCasesChart;
-    let citizenPatientsChart, citizenCasesChart;
-    let consumableChart;
-    let lastDashboardData = null;
+  <!-- Card 2: Pesakit Jalan Kaki -->
+  <div class="metric-card">
+    <div>
+      <div class="metric-label">Berjalan</div>
+      <div class="metric-value" id="valTotalJalanKaki" style="color: #10b981;">0</div>
+    </div>
+    <div class="metric-subvalues">
+      <div class="metric-subrow">
+        <span><span class="singkatan-label">{{ config.singkatan_klinik if config and config.singkatan_klinik else ''
+            }}</span></span>
+        <span id="valJalanKakiSendiri">0</span>
+      </div>
+      <div class="metric-subrow">
+        <span>LUAR</span>
+        <span id="valJalanKakiLuar">0</span>
+      </div>
+    </div>
+  </div>
 
-    // Helper to get active theme settings
-    function getThemeSettings() {
-      const theme = document.documentElement.getAttribute('data-theme') || 'light';
-      if (theme === 'dark') {
-        return {
-          textColor: '#a1a1aa', // zinc-400
-          borderColor: '#2e2e33', // zinc-800
-          accentColor: '#2dd4bf', // teal-400
-          accentGlow: 'rgba(45, 212, 191, 0.1)',
-          examPalette: ['#2dd4bf', '#34d399', '#60a5fa', '#f87171', '#a78bfa', '#fbbf24', '#f472b6'],
-          genderPalette: ['#60a5fa', '#f472b6'],
-          racePalette: ['#2dd4bf', '#f87171', '#fbbf24', '#34d399', '#a78bfa', '#60a5fa'],
-          citizenPalette: ['#34d399', '#f87171'],
-          consumablePalette: ['#60a5fa', '#fbbf24', '#2dd4bf']
-        };
-      } else {
-        return {
-          textColor: '#57534e', // stone-600
-          borderColor: '#e4e2d9', // warm beige border
-          accentColor: '#0f766e', // teal-700
-          accentGlow: 'rgba(15, 118, 110, 0.08)',
-          examPalette: ['#0f766e', '#16a34a', '#2563eb', '#dc2626', '#7c3aed', '#d97706', '#db2777'],
-          genderPalette: ['#2563eb', '#db2777'],
-          racePalette: ['#0f766e', '#dc2626', '#d97706', '#16a34a', '#7c3aed', '#2563eb'],
-          citizenPalette: ['#16a34a', '#dc2626'],
-          consumablePalette: ['#2563eb', '#d97706', '#0f766e']
-        };
+  <!-- Card 3: Wheelchair & Trolley -->
+  <div class="metric-card">
+    <div>
+      <div class="metric-label">Wheelchair & Trolley</div>
+      <div class="metric-value" id="valTotalWheelchairTrolley" style="color: #f59e0b;">0</div>
+    </div>
+    <div class="metric-subvalues">
+      <div class="metric-subrow">
+        <span>Wheelchair</span>
+        <span id="valWheelchair">0</span>
+      </div>
+      <div class="metric-subrow">
+        <span>Trolley</span>
+        <span id="valTrolley">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: RME -->
+  <div class="metric-card">
+    <div>
+      <div class="metric-label">Routine Medical Examination (RME)</div>
+      <div class="metric-value" id="valTotalRME" style="color: #8b5cf6;">0</div>
+    </div>
+    <div class="metric-subvalues">
+      <div class="metric-subrow">
+        <span><span class="singkatan-label">{{ config.singkatan_klinik if config and config.singkatan_klinik else ''
+            }}</span></span>
+        <span id="valRmeSendiri">0</span>
+      </div>
+      <div class="metric-subrow">
+        <span>LUAR</span>
+        <span id="valRmeLuar">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: Reten Harian Mengikut Jenis Pemeriksaan -->
+<div class="dashboard-section-title">
+  <svg class="icon icon-sm" viewBox="0 0 24 24">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+  <span>1. Reten</span>
+</div>
+
+<div class="card" style="margin-bottom: 1.25rem;">
+  <div class="card-header-clean">
+    <div class="card-title-text">
+      <span>Reten Kes Mengikut Kategori Jenis Pemeriksaan</span>
+    </div>
+  </div>
+  <div style="overflow-x: auto;">
+    <table class="dashboard-table" id="tableSection1Consolidated">
+      <thead>
+        <tr>
+          <th>Jenis Pemeriksaan</th>
+          <th class="text-right" style="width: 140px;"><span class="singkatan-label">{{ config.singkatan_klinik if
+              config and config.singkatan_klinik else '' }}</span></th>
+          <th class="text-right" style="width: 120px;">LUAR</th>
+          <th class="text-right" style="width: 140px;">JUMLAH KES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">Memuatkan data...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 3: Analografi & Statistik Operasi -->
+<div class="dashboard-section-title">
+  <svg class="icon icon-sm" viewBox="0 0 24 24">
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </svg>
+  <span>2. Statistik</span>
+</div>
+
+<div class="detailed-tables-grid">
+  <!-- 1. Kiraan Jumlah Pesakit Keseluruhan -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Jumlah Pesakit Keseluruhan</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3Clinics">
+      <thead>
+        <tr>
+          <th>Fasiliti</th>
+          <th class="text-right" style="width: 120px;">Jumlah Pesakit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2. Table Penggunaan Consumables -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Consumables</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3Consumables">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th class="text-right" style="width: 120px;">Bil</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2.1 Table Kiraan Kes: Sendiri vs Luar -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Jumlah Kes</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3SendiriVsLuar">
+      <thead>
+        <tr>
+          <th>Fasiliti</th>
+          <th class="text-center" style="width: 120px;">Bilangan Kes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2.2 Table Kiraan Kes Mengikut Pecahan Fasiliti -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Jumlah Kes Mengikut Fasiliti</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3ClinicCases">
+      <thead>
+        <tr>
+          <th>Fasiliti</th>
+          <th class="text-center" style="width: 120px;">Bilangan Kes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3.1 Table Wheelchair & Trolley: Sendiri vs Luar -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Wheelchair & Trolley</span>
+      </div>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="dashboard-table" id="tableSection3MobilisasiSendiriVsLuar">
+        <thead>
+          <tr>
+            <th>Jenis</th>
+            <th class="text-center" style="width: 110px;"><span class="singkatan-label">{{ config.singkatan_klinik if
+                config and config.singkatan_klinik else '' }}</span></th>
+            <th class="text-center" style="width: 90px;">LUAR</th>
+            <th class="text-center" style="width: 110px;">JUMLAH</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3.2 Table Wheelchair & Trolley Mengikut Pecahan Fasiliti -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Wheelchair & Trolley Mengikut Fasiliti</span>
+      </div>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="dashboard-table" id="tableSection3MobilisasiConsolidated">
+        <thead>
+          <tr>
+            <th>Fasiliti / Klinik</th>
+            <th class="text-center" style="width: 110px;">Wheelchair</th>
+            <th class="text-center" style="width: 110px;">Trolley</th>
+            <th class="text-center" style="width: 110px;">JUMLAH</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. Table Kiraan Kes: Jantina -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Jantina</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3Jantina">
+      <thead>
+        <tr>
+          <th>Jantina</th>
+          <th class="text-right" style="width: 120px;">Bilangan Kes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. Table Kiraan Kes: Bangsa -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header-clean">
+      <div class="card-title-text">
+        <span>Bangsa</span>
+      </div>
+    </div>
+    <table class="dashboard-table" id="tableSection3Bangsa">
+      <thead>
+        <tr>
+          <th>Bangsa</th>
+          <th class="text-right" style="width: 120px;">Bilangan Kes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2" style="text-align: center; color: var(--text-muted);">Memuatkan data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  function setPeriod(p) {
+    document.getElementById('period').value = p;
+    document.getElementById('dashboardFilterForm').submit();
+  }
+
+  function setDayDateValue(v) {
+    document.getElementById('day_date').value = v;
+    document.getElementById('dashboardFilterForm').submit();
+  }
+
+  // Week Picker Calendar logic
+  const selectedDateStr = "{{ selected_date }}";
+  const monthNamesMs = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+
+  let wpYear = parseInt(selectedDateStr.split('-')[0], 10) || new Date().getFullYear();
+  let wpMonth = parseInt(selectedDateStr.split('-')[1], 10) || (new Date().getMonth() + 1);
+
+  function getISOWeekNumber(d) {
+    const date = new Date(d.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  }
+
+  function formatYMD(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function toggleWeekPickerCalendar(e) {
+    e.stopPropagation();
+    const pop = document.getElementById('weekPickerPopover');
+    if (!pop) return;
+    const isVisible = (pop.style.display === 'block');
+    pop.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+      renderWpCalendar(wpYear, wpMonth);
+    }
+  }
+
+  function navigateWpMonth(delta) {
+    wpMonth += delta;
+    if (wpMonth > 12) {
+      wpMonth = 1;
+      wpYear++;
+    } else if (wpMonth < 1) {
+      wpMonth = 12;
+      wpYear--;
+    }
+    renderWpCalendar(wpYear, wpMonth);
+  }
+
+  function renderWpCalendar(year, month) {
+    const label = document.getElementById('wpYearMonthLabel');
+    if (label) label.textContent = `${year} ${monthNamesMs[month - 1]}`;
+
+    const tbody = document.getElementById('wpCalendarBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const selectedDateParts = selectedDateStr.split('-');
+    const selectedDateObj = (selectedDateParts.length === 3)
+      ? new Date(parseInt(selectedDateParts[0], 10), parseInt(selectedDateParts[1], 10) - 1, parseInt(selectedDateParts[2], 10))
+      : new Date();
+
+    const selectedMon = new Date(selectedDateObj);
+    const selDay = selectedMon.getDay() || 7;
+    selectedMon.setDate(selectedMon.getDate() - (selDay - 1));
+    const selectedMonStr = formatYMD(selectedMon);
+
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    const dayOfWeek = firstDayOfMonth.getDay() || 7;
+
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(startDate.getDate() - (dayOfWeek - 1));
+
+    let curDate = new Date(startDate);
+
+    for (let r = 0; r < 6; r++) {
+      const monDate = new Date(curDate);
+      const weekNum = getISOWeekNumber(monDate);
+      const monStr = formatYMD(monDate);
+
+      const tr = document.createElement('tr');
+      tr.className = 'wp-week-row';
+      if (monStr === selectedMonStr) {
+        tr.classList.add('selected-week');
       }
-    }
 
-    // Apply global Chart.js defaults
-    function applyChartDefaults(settings) {
-      Chart.defaults.color = settings.textColor;
-      Chart.defaults.borderColor = settings.borderColor;
-      Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
-      Chart.defaults.font.size = 11;
-      Chart.defaults.font.weight = '500';
-    }
+      tr.onclick = function () {
+        window.location.href = "/dashboard?period=week&day_date=" + monStr;
+      };
 
-    // Load data from Backend API
-    async function loadDashboardData() {
-      const month = document.getElementById('month').value;
-      const year = document.getElementById('year').value;
+      const tdWeek = document.createElement('td');
+      tdWeek.className = 'wp-week-num';
+      tdWeek.textContent = weekNum;
+      tr.appendChild(tdWeek);
 
-      try {
-        const response = await fetch(`/api/dashboard-data?month=${month}&year=${year}`);
-        const data = await response.json();
-        lastDashboardData = data;
-
-        updateDashboardUI();
-      } catch (err) {
-        console.error("Error loading dashboard data:", err);
+      for (let c = 0; c < 7; c++) {
+        const td = document.createElement('td');
+        td.textContent = curDate.getDate();
+        if (curDate.getMonth() + 1 !== month) {
+          td.style.opacity = '0.35';
+        }
+        tr.appendChild(td);
+        curDate.setDate(curDate.getDate() + 1);
       }
+
+      tbody.appendChild(tr);
+      if (r >= 4 && curDate.getMonth() + 1 !== month) break;
     }
+  }
 
-    // Update the UI controls and recreate all charts
-    function updateDashboardUI() {
-      if (!lastDashboardData) return;
-      const data = lastDashboardData;
-
-      document.getElementById('stat-total-patients').innerText = data.total_patients;
-      document.getElementById('stat-total-cases').innerText = data.total_cases;
-
-      const settings = getThemeSettings();
-      applyChartDefaults(settings);
-
-      // Render Charts
-      renderDailyTrendChart(data.daily_cases, settings);
-      renderExamTypeChart(data.exam_types, settings);
-      renderExamPartChart(data.exam_parts, settings);
-
-      // Gender charts
-      renderGenderChart('genderPatientsChart', genderPatientsChart, data.patients_genders, settings, instance => genderPatientsChart = instance);
-      renderGenderChart('genderCasesChart', genderCasesChart, data.cases_genders, settings, instance => genderCasesChart = instance);
-
-      // Race charts
-      renderRaceChart('racePatientsChart', racePatientsChart, data.patients_races, settings, instance => racePatientsChart = instance);
-      renderRaceChart('raceCasesChart', raceCasesChart, data.cases_races, settings, instance => raceCasesChart = instance);
-
-      // Citizen charts
-      renderCitizenChart('citizenPatientsChart', citizenPatientsChart, data.patients_citizens, settings, instance => citizenPatientsChart = instance);
-      renderCitizenChart('citizenCasesChart', citizenCasesChart, data.cases_citizens, settings, instance => citizenCasesChart = instance);
-
-      // Media usage chart
-      renderConsumableChart(data.consumables, settings);
+  document.addEventListener('click', function (e) {
+    const pop = document.getElementById('weekPickerPopover');
+    if (pop && !pop.contains(e.target) && !e.target.closest('.week-picker-trigger-btn')) {
+      pop.style.display = 'none';
     }
+  });
 
-    // Chart Render Functions
-    function renderDailyTrendChart(dailyCases, settings) {
-      const labels = Array.from({ length: 31 }, (_, i) => i + 1);
-      const ctx = document.getElementById('dailyTrendChart').getContext('2d');
 
-      if (dailyTrendChart) dailyTrendChart.destroy();
+  // Fetch & Load Dashboard data
+  function loadDashboardData() {
+    const period = "{{ period }}";
+    const dayDate = "{{ selected_date }}";
+    const month = "{{ selected_month }}";
+    const year = "{{ selected_year }}";
 
-      dailyTrendChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Bil. Kes',
-            data: dailyCases,
-            borderColor: settings.accentColor,
-            backgroundColor: settings.accentGlow,
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2.5,
-            pointBackgroundColor: settings.accentColor,
-            pointBorderColor: settings.accentColor,
-            pointHoverBackgroundColor: settings.accentColor,
-            pointHoverBorderColor: settings.accentColor,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
+    let url = `/api/dashboard-data?period=${period}&day_date=${dayDate}&month=${month}&year=${year}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          // Set facility abbreviation labels
+          const singkatan = res.singkatan || "KK";
+          document.querySelectorAll('.singkatan-label').forEach(el => el.innerText = singkatan);
+
+          // Section 2: Cards
+          document.getElementById('valTotalCases').innerText = res.summary.total_cases;
+          document.getElementById('valTotalPatients').innerText = res.summary.total_patients;
+
+          const jalanKakiTotal = res.section2.jalan_kaki_sendiri + res.section2.jalan_kaki_luar;
+          document.getElementById('valTotalJalanKaki').innerText = jalanKakiTotal;
+          document.getElementById('valJalanKakiSendiri').innerText = res.section2.jalan_kaki_sendiri;
+          document.getElementById('valJalanKakiLuar').innerText = res.section2.jalan_kaki_luar;
+
+          const wheelchairTrolleyTotal = res.section2.wheelchair + res.section2.trolley;
+          document.getElementById('valTotalWheelchairTrolley').innerText = wheelchairTrolleyTotal;
+          document.getElementById('valWheelchair').innerText = res.section2.wheelchair;
+          document.getElementById('valTrolley').innerText = res.section2.trolley;
+
+          const rmeTotal = res.section2.rme_sendiri + res.section2.rme_luar;
+          document.getElementById('valTotalRME').innerText = rmeTotal;
+          document.getElementById('valRmeSendiri').innerText = res.section2.rme_sendiri;
+          document.getElementById('valRmeLuar').innerText = res.section2.rme_luar;
+
+          // Section 1: Modality census table (Consolidated Pivot)
+          populateConsolidatedSection1Table(res.section1.sendiri, res.section1.luar, res.section1.total);
+
+          // Section 3: Detailed Tables
+          // 3.1 Jumlah Pesakit Keseluruhan
+          populateCensusTable('tableSection3Clinics', res.section3.clinic_patients, "Jumlah Pesakit");
+
+          // 3.2.1 Jumlah Kes: Sendiri vs Luar
+          const vsLuarBody = document.querySelector('#tableSection3SendiriVsLuar tbody');
+          if (vsLuarBody) {
+            vsLuarBody.innerHTML = `
+              <tr>
+                <td>${singkatan}</td>
+                <td class="text-center font-bold">${res.section3.kes_sendiri_vs_luar.sendiri}</td>
+              </tr>
+              <tr>
+                <td>LUAR</td>
+                <td class="text-center font-bold">${res.section3.kes_sendiri_vs_luar.luar}</td>
+              </tr>
+              <tr style="background: var(--bg-subtle); font-weight: 700;">
+                <td>Jumlah Kes</td>
+                <td class="text-center">${res.summary.total_cases}</td>
+              </tr>
+            `;
           }
-        }
-      });
-    }
 
-    function renderExamTypeChart(examTypes, settings) {
-      const ctx = document.getElementById('examTypeChart').getContext('2d');
-      if (examTypeChart) examTypeChart.destroy();
+          // 3.2.2 Jumlah Kes Mengikut Pecahan Fasiliti
+          populateCensusTable('tableSection3ClinicCases', res.section3.clinic_cases, "Bilangan Kes");
 
-      const labels = Object.keys(examTypes);
-      const values = Object.values(examTypes);
+          // 3.3.1 Wheelchair & Trolley: Sendiri vs Luar
+          const mobFas = res.section3.mobilisasi_fasiliti || {};
+          const wcSendiri = mobFas.wheelchair_sendiri || 0;
+          const wcLuar = mobFas.wheelchair_luar || 0;
+          const wcTotal = res.section2.wheelchair || (wcSendiri + wcLuar);
 
-      if (labels.length === 0) labels.push("Tiada Data");
-      if (values.length === 0) values.push(0);
+          const trSendiri = mobFas.trolley_sendiri || 0;
+          const trLuar = mobFas.trolley_luar || 0;
+          const trTotal = res.section2.trolley || (trSendiri + trLuar);
 
-      examTypeChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: settings.examPalette,
-            borderWidth: 2,
-            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: {
-                boxWidth: 10,
-                padding: 10,
-                font: { size: 10 }
-              }
-            }
-          },
-          cutout: '70%'
-        }
-      });
-    }
-
-    function renderGenderChart(canvasId, chartInstance, genders, settings, setInstanceCb) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      const labels = Object.keys(genders);
-      const values = Object.values(genders);
-
-      const newInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: settings.genderPalette,
-            borderWidth: 2,
-            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: {
-                boxWidth: 10,
-                padding: 10,
-                font: { size: 10 }
-              }
-            }
-          },
-          cutout: '70%'
-        }
-      });
-      setInstanceCb(newInstance);
-    }
-
-    function renderRaceChart(canvasId, chartInstance, races, settings, setInstanceCb) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      const labels = Object.keys(races);
-      const values = Object.values(races);
-
-      if (labels.length === 0) labels.push("Tiada Data");
-      if (values.length === 0) values.push(0);
-
-      const newInstance = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: settings.racePalette,
-            borderWidth: 2,
-            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1c1c1f' : '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: {
-                boxWidth: 10,
-                padding: 8,
-                font: { size: 10 }
-              }
-            }
+          const mobSvLBody = document.querySelector('#tableSection3MobilisasiSendiriVsLuar tbody');
+          if (mobSvLBody) {
+            mobSvLBody.innerHTML = `
+              <tr>
+                <td><strong>Wheelchair</strong></td>
+                <td class="text-center">${wcSendiri}</td>
+                <td class="text-center">${wcLuar}</td>
+                <td class="text-center font-bold" style="color: var(--primary);">${wcTotal}</td>
+              </tr>
+              <tr>
+                <td><strong>Trolley</strong></td>
+                <td class="text-center">${trSendiri}</td>
+                <td class="text-center">${trLuar}</td>
+                <td class="text-center font-bold" style="color: var(--primary);">${trTotal}</td>
+              </tr>
+              <tr style="background: var(--bg-subtle); font-weight: 700; border-top: 2px solid var(--border-subtle);">
+                <td>JUMLAH</td>
+                <td class="text-center">${wcSendiri + trSendiri}</td>
+                <td class="text-center">${wcLuar + trLuar}</td>
+                <td class="text-center" style="color: var(--primary);">${wheelchairTrolleyTotal}</td>
+              </tr>
+            `;
           }
-        }
-      });
-      setInstanceCb(newInstance);
-    }
 
-    function renderCitizenChart(canvasId, chartInstance, citizens, settings, setInstanceCb) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      const newInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Warganegara (YA)', 'Warga Asing (TIDAK)'],
-          datasets: [{
-            data: [citizens["YA"], citizens["TIDAK"]],
-            backgroundColor: settings.citizenPalette,
-            borderWidth: 0,
-            borderRadius: 6,
-            barThickness: 32
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
+          // 3.3.2 Wheelchair & Trolley Mengikut Pecahan Fasiliti
+          if (res.section3.mobilisasi_by_clinic) {
+            populateMobilisasiByClinicTable(res.section3.mobilisasi_by_clinic.wheelchair, res.section3.mobilisasi_by_clinic.trolley);
           }
+
+          // 3.4 Jantina
+          const jantinaBody = document.querySelector('#tableSection3Jantina tbody');
+          jantinaBody.innerHTML = `
+            <tr>
+              <td>Lelaki</td>
+              <td class="text-right font-bold">${res.section3.jantina.lelaki}</td>
+            </tr>
+            <tr>
+              <td>Perempuan</td>
+              <td class="text-right font-bold">${res.section3.jantina.perempuan}</td>
+            </tr>
+            <tr style="background: var(--bg-subtle); font-weight: 700;">
+              <td>Jumlah</td>
+              <td class="text-right">${res.section3.jantina.lelaki + res.section3.jantina.perempuan}</td>
+            </tr>
+          `;
+
+          // 3.5 Bangsa
+          populateCensusTable('tableSection3Bangsa', res.section3.bangsa);
+
+          // 3.6 Consumables
+          populateCensusTable('tableSection3Consumables', res.section3.consumables, "Unit");
         }
+      })
+      .catch(err => {
+        console.error('Ralat memuat data dashboard:', err);
       });
-      setInstanceCb(newInstance);
+  }
+
+  function populateMobilisasiByClinicTable(wcObj, trObj) {
+    const tbody = document.querySelector('#tableSection3MobilisasiConsolidated tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const allClinics = Array.from(new Set([
+      ...Object.keys(wcObj || {}),
+      ...Object.keys(trObj || {})
+    ]));
+
+    if (allClinics.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">Tiada rekod data dijumpai</td></tr>`;
+      return;
     }
 
-    function renderConsumableChart(consumables, settings) {
-      const ctx = document.getElementById('consumableChart').getContext('2d');
-      if (consumableChart) consumableChart.destroy();
-
-      consumableChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['CD-R', 'Filem 14x17', 'Filem 10x12'],
-          datasets: [{
-            data: [consumables["CD"], consumables["FILEM 14X17"], consumables["FILEM 10X12"]],
-            backgroundColor: settings.consumablePalette,
-            borderWidth: 0,
-            borderRadius: 6,
-            barThickness: 32
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              grid: { display: false }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      });
-    }
-
-    function renderExamPartChart(examParts, settings) {
-      const ctx = document.getElementById('examPartChart').getContext('2d');
-      if (examPartChart) examPartChart.destroy();
-
-      // Sort parts by count descending
-      const sortedParts = Object.entries(examParts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 15); // Top 15 parts to keep it clean
-
-      const labels = sortedParts.map(item => item[0]);
-      const values = sortedParts.map(item => item[1]);
-
-      if (labels.length === 0) labels.push("Tiada Data");
-      if (values.length === 0) values.push(0);
-
-      examPartChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Bil. Kes',
-            data: values,
-            backgroundColor: settings.accentColor,
-            borderRadius: 6,
-            borderWidth: 0,
-            barThickness: 20
-          }]
-        },
-        options: {
-          indexAxis: 'y', // Make it horizontal!
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            },
-            y: {
-              grid: { display: false }
-            }
-          }
-        }
-      });
-    }
-
-    // Listen for custom theme switch event
-    window.addEventListener('theme-changed', () => {
-      updateDashboardUI();
+    allClinics.sort((a, b) => {
+      const totA = ((wcObj && wcObj[a]) || 0) + ((trObj && trObj[a]) || 0);
+      const totB = ((wcObj && wcObj[b]) || 0) + ((trObj && trObj[b]) || 0);
+      return totB - totA;
     });
 
-    // Load at startup
-    document.addEventListener('DOMContentLoaded', loadDashboardData);
-  </script>
-  <!-- Windows 11 Shutdown Modal Overlay -->
-  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
-    <div class="shutdown-modal">
-      <div class="shutdown-modal-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-          <line x1="12" y1="2" x2="12" y2="12"></line>
-        </svg>
-        <h3>Tutup Aplikasi</h3>
-      </div>
-      <div class="shutdown-modal-body">
-        <div class="shutdown-modal-prompt">
-          <div class="shutdown-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-          </div>
-          <p>Adakah anda pasti mahu menamatkan sesi Daftar Radiologi dan menutup pelayan (server) aplikasi?</p>
-        </div>
-        <div class="shutdown-dropdown-container">
-          <label for="shutdownActionSelect">Tindakan:</label>
-          <select id="shutdownActionSelect" class="shutdown-dropdown">
-            <option value="shutdown">Tutup Aplikasi & Pelayan (Shut Down)</option>
-            <option value="cancel">Batal</option>
-          </select>
-        </div>
-      </div>
-      <div class="shutdown-modal-footer">
-        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
-        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
-      </div>
-    </div>
-  </div>
+    let sumWc = 0;
+    let sumTr = 0;
+    let grandTotal = 0;
 
-  <!-- Fullscreen Windows 11 Shutdown Screen -->
-  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
-    <div class="win11-spinner-container">
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-    </div>
-    <div class="win11-shutdown-text">Menutup aplikasi...</div>
-    <div class="win11-shutdown-subtext">Sila tunggu sebentar sementara sistem ditutup dengan selamat.</div>
-  </div>
-</body>
+    allClinics.forEach(cl => {
+      const countWc = (wcObj && wcObj[cl]) || 0;
+      const countTr = (trObj && trObj[cl]) || 0;
+      const countTot = countWc + countTr;
 
-</html>
+      sumWc += countWc;
+      sumTr += countTr;
+      grandTotal += countTot;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${cl}</strong></td>
+        <td class="text-center">${countWc}</td>
+        <td class="text-center">${countTr}</td>
+        <td class="text-center font-bold" style="color: var(--primary);">${countTot}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement('tr');
+    trTotal.style.cssText = "background: var(--bg-subtle); font-weight: 700; border-top: 2px solid var(--border-subtle);";
+    trTotal.innerHTML = `
+      <td>JUMLAH KESELURUHAN</td>
+      <td class="text-center">${sumWc}</td>
+      <td class="text-center">${sumTr}</td>
+      <td class="text-center" style="color: var(--primary);">${grandTotal}</td>
+    `;
+    tbody.appendChild(trTotal);
+  }
+
+  function populateConsolidatedSection1Table(sendiriObj, luarObj, totalObj) {
+    const tbody = document.querySelector('#tableSection1Consolidated tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const allModalities = Array.from(new Set([
+      ...Object.keys(sendiriObj || {}),
+      ...Object.keys(luarObj || {}),
+      ...Object.keys(totalObj || {})
+    ]));
+
+    if (allModalities.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">Tiada rekod data dijumpai</td></tr>`;
+      return;
+    }
+
+    allModalities.sort((a, b) => ((totalObj && totalObj[b]) || 0) - ((totalObj && totalObj[a]) || 0));
+
+    let sumSendiri = 0;
+    let sumLuar = 0;
+    let sumTotal = 0;
+
+    allModalities.forEach(mod => {
+      const cntSendiri = (sendiriObj && sendiriObj[mod]) || 0;
+      const cntLuar = (luarObj && luarObj[mod]) || 0;
+      const cntTotal = (totalObj && totalObj[mod]) || (cntSendiri + cntLuar);
+
+      sumSendiri += cntSendiri;
+      sumLuar += cntLuar;
+      sumTotal += cntTotal;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${mod}</strong></td>
+        <td class="text-right">${cntSendiri}</td>
+        <td class="text-right">${cntLuar}</td>
+        <td class="text-right font-bold" style="color: var(--primary);">${cntTotal}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement('tr');
+    trTotal.style.cssText = "background: var(--bg-subtle); font-weight: 700; border-top: 2px solid var(--border-subtle);";
+    trTotal.innerHTML = `
+      <td>JUMLAH KESELURUHAN</td>
+      <td class="text-right">${sumSendiri}</td>
+      <td class="text-right">${sumLuar}</td>
+      <td class="text-right" style="color: var(--primary);">${sumTotal}</td>
+    `;
+    tbody.appendChild(trTotal);
+  }
+
+  function populateCensusTable(tableId, dataObj, countLabel = "Bilangan Kes") {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const keys = Object.keys(dataObj || {});
+    if (keys.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted); font-style: italic;">Tiada rekod data dijumpai</td></tr>`;
+      return;
+    }
+
+    // Sort by count descending
+    keys.sort((a, b) => dataObj[b] - dataObj[a]);
+
+    let grandTotal = 0;
+    keys.forEach(k => {
+      const val = dataObj[k];
+      grandTotal += val;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${k}</td>
+        <td class="text-right font-bold">${val}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Add Grand Total Row
+    const trTotal = document.createElement('tr');
+    trTotal.style.cssText = "background: var(--bg-subtle); font-weight: 700; border-top: 2px solid var(--border-subtle);";
+    trTotal.innerHTML = `
+      <td>JUMLAH</td>
+      <td class="text-right">${grandTotal}</td>
+    `;
+    tbody.appendChild(trTotal);
+  }
+
+  document.addEventListener('DOMContentLoaded', loadDashboardData);
+</script>
+{% endblock %}

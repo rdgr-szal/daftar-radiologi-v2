@@ -40,10 +40,9 @@ fi
 source .venv/bin/activate
 
 # 3. Always ensure all required packages are installed
-# (even if .venv existed before, it may be missing packages)
 draw_progress 35 "Checking and installing dependencies..."
 python3 -m pip install --quiet --upgrade pip
-python3 -m pip install --quiet Flask openpyxl pyinstaller
+python3 -m pip install --quiet Flask openpyxl pyinstaller pywebview pypdf xlrd
 
 # Verify pyinstaller is available before proceeding
 if ! python3 -m PyInstaller --version > /dev/null 2>&1; then

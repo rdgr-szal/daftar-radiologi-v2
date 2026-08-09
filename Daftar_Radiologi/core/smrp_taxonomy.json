@@ -1,0 +1,3878 @@
+{
+  "GENERAL RADIOGRAPHY": {
+    "code": "01",
+    "name": "GENERAL RADIOGRAPHY",
+    "regions": {
+      "ABDOMEN": {
+        "code": "001",
+        "name": "ABDOMEN",
+        "sub_regions": [
+          {
+            "code": "002",
+            "name": "Abdomen"
+          },
+          {
+            "code": "003",
+            "name": "KUB"
+          }
+        ]
+      },
+      "CHEST": {
+        "code": "004",
+        "name": "CHEST",
+        "sub_regions": [
+          {
+            "code": "005",
+            "name": "Chest"
+          },
+          {
+            "code": "006",
+            "name": "Chest ( Paeds - Long Line)"
+          }
+        ]
+      },
+      "EXTREMITIES": {
+        "code": "007",
+        "name": "EXTREMITIES",
+        "sub_regions": [
+          {
+            "code": "008",
+            "name": "Acromio Clavicular Joint"
+          },
+          {
+            "code": "009",
+            "name": "Ankle Joint Right"
+          },
+          {
+            "code": "010",
+            "name": "Ankle Joint Left"
+          },
+          {
+            "code": "011",
+            "name": "Both Upper Limbs- Paediatric - Bone Length Measurement  (AP)"
+          },
+          {
+            "code": "012",
+            "name": "Both Lower Limbs- Paediatric - Bone Length Measurement"
+          },
+          {
+            "code": "013",
+            "name": "Calcaneum Right"
+          },
+          {
+            "code": "014",
+            "name": "Calcaneum Left"
+          },
+          {
+            "code": "015",
+            "name": "Clavicle Right"
+          },
+          {
+            "code": "016",
+            "name": "Clavicle Left"
+          },
+          {
+            "code": "017",
+            "name": "Elbow Joint Right"
+          },
+          {
+            "code": "018",
+            "name": "Elbow Joint Left"
+          },
+          {
+            "code": "019",
+            "name": "Femur Right"
+          },
+          {
+            "code": "020",
+            "name": "Femur Left"
+          },
+          {
+            "code": "021",
+            "name": "Fingers Right"
+          },
+          {
+            "code": "022",
+            "name": "Fingers Left"
+          },
+          {
+            "code": "023",
+            "name": "Foot Right"
+          },
+          {
+            "code": "024",
+            "name": "Foot Left"
+          },
+          {
+            "code": "025",
+            "name": "Hand Right"
+          },
+          {
+            "code": "026",
+            "name": "Hand Left"
+          },
+          {
+            "code": "027",
+            "name": "Hip Joint Right"
+          },
+          {
+            "code": "028",
+            "name": "Hip Joint Left"
+          },
+          {
+            "code": "029",
+            "name": "Humerus Right"
+          },
+          {
+            "code": "030",
+            "name": "Humerus Left"
+          },
+          {
+            "code": "031",
+            "name": "Knee Joint Right"
+          },
+          {
+            "code": "032",
+            "name": "Knee Joint Left"
+          },
+          {
+            "code": "033",
+            "name": "Radius Ulna Right"
+          },
+          {
+            "code": "034",
+            "name": "Radius Ulna Left"
+          },
+          {
+            "code": "035",
+            "name": "Scaphoid Left"
+          },
+          {
+            "code": "036",
+            "name": "Scaphoid Right"
+          },
+          {
+            "code": "037",
+            "name": "Scapula Right"
+          },
+          {
+            "code": "038",
+            "name": "Scapula Left"
+          },
+          {
+            "code": "039",
+            "name": "Shoulder Joint Right"
+          },
+          {
+            "code": "040",
+            "name": "Shoulder Joint Left"
+          },
+          {
+            "code": "041",
+            "name": "Sterno-Clavicular Joints"
+          },
+          {
+            "code": "042",
+            "name": "Sternum"
+          },
+          {
+            "code": "043",
+            "name": "Thumb Right"
+          },
+          {
+            "code": "044",
+            "name": "Thumb Left"
+          },
+          {
+            "code": "045",
+            "name": "Tibia/Fibula Right"
+          },
+          {
+            "code": "046",
+            "name": "Tibia/Fibula Left"
+          },
+          {
+            "code": "047",
+            "name": "Wrist Joint Right"
+          },
+          {
+            "code": "048",
+            "name": "Wrist Joint Left"
+          }
+        ]
+      },
+      "PELVIS": {
+        "code": "049",
+        "name": "PELVIS",
+        "sub_regions": [
+          {
+            "code": "050",
+            "name": "Pelvis"
+          },
+          {
+            "code": "051",
+            "name": "Pelvimetry"
+          }
+        ]
+      },
+      "SKELETAL SURVEY": {
+        "code": "052",
+        "name": "SKELETAL SURVEY",
+        "sub_regions": [
+          {
+            "code": "053",
+            "name": "Skeletal Survey - Bone Age"
+          },
+          {
+            "code": "054",
+            "name": "Skeletal Survey - Bone Dysplasia"
+          },
+          {
+            "code": "055",
+            "name": "Skeletal Survey - Metastases (Paediatric)"
+          },
+          {
+            "code": "056",
+            "name": "Skeletal Survey - Metastases (Adult)"
+          },
+          {
+            "code": "057",
+            "name": "Skeletal Survey - Multiple Myeloma"
+          },
+          {
+            "code": "058",
+            "name": "Skeletal Survey - NAI"
+          },
+          {
+            "code": "059",
+            "name": "Skeletal Survey - Renal Osteo-Dystrophy (Adult)"
+          },
+          {
+            "code": "060",
+            "name": "Skeletal Survey - Renal Osteo-Dystrophy (Paediatric)"
+          },
+          {
+            "code": "061",
+            "name": "Skeletal Survey - Total Body - Infant"
+          }
+        ]
+      },
+      "SKULL & FACIAL BONES": {
+        "code": "062",
+        "name": "SKULL & FACIAL BONES",
+        "sub_regions": [
+          {
+            "code": "063",
+            "name": "Facial Bones"
+          },
+          {
+            "code": "064",
+            "name": "IAM (Internal Auditory Meatus)"
+          },
+          {
+            "code": "065",
+            "name": "Mandible"
+          },
+          {
+            "code": "066",
+            "name": "Mastoids"
+          },
+          {
+            "code": "067",
+            "name": "Maxilla"
+          },
+          {
+            "code": "068",
+            "name": "Nasal Bone"
+          },
+          {
+            "code": "069",
+            "name": "CBCT"
+          },
+          {
+            "code": "070",
+            "name": "Orbits"
+          },
+          {
+            "code": "071",
+            "name": "Paranasal Sinuses"
+          },
+          {
+            "code": "072",
+            "name": "Petrous Temporal Bone  Ray"
+          },
+          {
+            "code": "073",
+            "name": "Pituitary Fossa"
+          },
+          {
+            "code": "074",
+            "name": "Post Nasal Space"
+          },
+          {
+            "code": "075",
+            "name": "Skull"
+          },
+          {
+            "code": "076",
+            "name": "OPG"
+          },
+          {
+            "code": "077",
+            "name": "TMJ (Temporo-Mandibular Joints)"
+          },
+          {
+            "code": "078",
+            "name": "Zygoma"
+          }
+        ]
+      },
+      "SPINES": {
+        "code": "079",
+        "name": "SPINES",
+        "sub_regions": [
+          {
+            "code": "080",
+            "name": "Cervical Spine"
+          },
+          {
+            "code": "081",
+            "name": "Neck"
+          },
+          {
+            "code": "082",
+            "name": "Cervical Spine C1 C2"
+          },
+          {
+            "code": "083",
+            "name": "Thoracic Spine"
+          },
+          {
+            "code": "084",
+            "name": "Thoraco Lumbar Spine"
+          },
+          {
+            "code": "085",
+            "name": "Lumbo Sacral Spine"
+          },
+          {
+            "code": "086",
+            "name": "Whole Spine"
+          },
+          {
+            "code": "087",
+            "name": "Sacro Iliac Joints"
+          },
+          {
+            "code": "088",
+            "name": "Sacrum Coccyx"
+          }
+        ]
+      }
+    }
+  },
+  "MOBILE - GENERAL RADIOGRAPHY": {
+    "code": "02",
+    "name": "MOBILE - GENERAL RADIOGRAPHY",
+    "regions": {
+      "MOBILE - ABDOMEN": {
+        "code": "089",
+        "name": "MOBILE - ABDOMEN",
+        "sub_regions": [
+          {
+            "code": "090",
+            "name": "Mobile Abdomen"
+          }
+        ]
+      },
+      "MOBILE - CHEST": {
+        "code": "091",
+        "name": "MOBILE - CHEST",
+        "sub_regions": [
+          {
+            "code": "092",
+            "name": "Mobile Chest"
+          }
+        ]
+      },
+      "MOBILE - EXTREMITIES": {
+        "code": "093",
+        "name": "MOBILE - EXTREMITIES",
+        "sub_regions": [
+          {
+            "code": "094",
+            "name": "Mobile Ankle Joint Right"
+          },
+          {
+            "code": "095",
+            "name": "Mobile Ankle Joint Left"
+          },
+          {
+            "code": "096",
+            "name": "Mobile Clavicle Right"
+          },
+          {
+            "code": "097",
+            "name": "Mobile Clavicle Left"
+          },
+          {
+            "code": "098",
+            "name": "Mobile Elbow Right"
+          },
+          {
+            "code": "099",
+            "name": "Mobile Elbow Left"
+          },
+          {
+            "code": "100",
+            "name": "Mobile Femur Right"
+          },
+          {
+            "code": "101",
+            "name": "Mobile Femur Left"
+          },
+          {
+            "code": "102",
+            "name": "Mobile Foot Right"
+          },
+          {
+            "code": "103",
+            "name": "Mobile Foot Left"
+          },
+          {
+            "code": "104",
+            "name": "Mobile Hand Right"
+          },
+          {
+            "code": "105",
+            "name": "Mobile Hand Left"
+          },
+          {
+            "code": "106",
+            "name": "Mobile Hip Right"
+          },
+          {
+            "code": "107",
+            "name": "Mobile Hip Left"
+          },
+          {
+            "code": "108",
+            "name": "Mobile Humerus"
+          },
+          {
+            "code": "109",
+            "name": "Mobile Humerus Left"
+          },
+          {
+            "code": "110",
+            "name": "Mobile Knee Joint Right"
+          },
+          {
+            "code": "111",
+            "name": "Mobile Knee Joint Left"
+          },
+          {
+            "code": "112",
+            "name": "Mobile Radius Ulna Right"
+          },
+          {
+            "code": "113",
+            "name": "Mobile Radius Ulna Left"
+          },
+          {
+            "code": "114",
+            "name": "Mobile Shoulder Joint Right"
+          },
+          {
+            "code": "115",
+            "name": "Mobile Shoulder Joint Left"
+          },
+          {
+            "code": "116",
+            "name": "Mobile Tibia Fibula Right"
+          },
+          {
+            "code": "117",
+            "name": "Mobile Tibia Fibula Left"
+          },
+          {
+            "code": "118",
+            "name": "Mobile Wrist Joint Right"
+          },
+          {
+            "code": "119",
+            "name": "Mobile Wrist Joint Left"
+          }
+        ]
+      },
+      "MOBILE - PELVIS": {
+        "code": "120",
+        "name": "MOBILE - PELVIS",
+        "sub_regions": [
+          {
+            "code": "121",
+            "name": "Mobile Pelvis"
+          }
+        ]
+      },
+      "MOBILE - SKELETAL SURVEY - Infant": {
+        "code": "122",
+        "name": "MOBILE - SKELETAL SURVEY - Infant",
+        "sub_regions": [
+          {
+            "code": "123",
+            "name": "Mobile Skeletal Survey - Total Body"
+          }
+        ]
+      },
+      "MOBILE - SKULL": {
+        "code": "124",
+        "name": "MOBILE - SKULL",
+        "sub_regions": [
+          {
+            "code": "125",
+            "name": "Mobile Skull X Ray"
+          }
+        ]
+      },
+      "MOBILE - SPINE": {
+        "code": "126",
+        "name": "MOBILE - SPINE",
+        "sub_regions": [
+          {
+            "code": "127",
+            "name": "Mobile Spine Cervical"
+          },
+          {
+            "code": "128",
+            "name": "Mobile Spine Thoracic"
+          },
+          {
+            "code": "129",
+            "name": "Mobile Spine Thoraco Lumbar"
+          },
+          {
+            "code": "130",
+            "name": "Mobile Spine Lumbo Sacral"
+          },
+          {
+            "code": "131",
+            "name": "Mobile Spine Whole Spine"
+          }
+        ]
+      }
+    }
+  },
+  "CT": {
+    "code": "05",
+    "name": "CT",
+    "regions": {
+      "CT ABDOMEN": {
+        "code": "132",
+        "name": "CT ABDOMEN",
+        "sub_regions": [
+          {
+            "code": "133",
+            "name": "CT Abdomen / Pelvis"
+          },
+          {
+            "code": "134",
+            "name": "CT Abdomen / Pelvis - Multiphase"
+          },
+          {
+            "code": "135",
+            "name": "CT Urography (CTU)"
+          },
+          {
+            "code": "136",
+            "name": "CT Liver 4 phase"
+          },
+          {
+            "code": "137",
+            "name": "CT Renal"
+          },
+          {
+            "code": "138",
+            "name": "CT Adrenals"
+          },
+          {
+            "code": "869.0",
+            "name": "CT Pancreas"
+          }
+        ]
+      },
+      "CTA (CT ANGIOGRAPHY)": {
+        "code": "139",
+        "name": "CTA (CT ANGIOGRAPHY)",
+        "sub_regions": [
+          {
+            "code": "140",
+            "name": "CTA  Abdomen"
+          },
+          {
+            "code": "141",
+            "name": "CT Petrous Bone"
+          },
+          {
+            "code": "142",
+            "name": "CTA  Brain"
+          },
+          {
+            "code": "143",
+            "name": "CTA Aorta"
+          },
+          {
+            "code": "144",
+            "name": "CTA Carotid"
+          },
+          {
+            "code": "145",
+            "name": "CTA  Hepatobiliary"
+          },
+          {
+            "code": "146",
+            "name": "CTA  Lower Limbs"
+          },
+          {
+            "code": "147",
+            "name": "CTA  Renal"
+          },
+          {
+            "code": "148",
+            "name": "CTA  Upper Limb Left"
+          },
+          {
+            "code": "149",
+            "name": "CTA Upper Limb Right"
+          }
+        ]
+      },
+      "CT ARTHROGRAM": {
+        "code": "150",
+        "name": "CT ARTHROGRAM",
+        "sub_regions": [
+          {
+            "code": "151",
+            "name": "CT Arthrogram - Shoulder"
+          },
+          {
+            "code": "152",
+            "name": "CT Arthrogram - Wrist"
+          },
+          {
+            "code": "153",
+            "name": "CT Arthrogram - Elbow"
+          },
+          {
+            "code": "154",
+            "name": "CT Arthrogram - Hip"
+          },
+          {
+            "code": "155",
+            "name": "CT Arthrogram - Knee"
+          },
+          {
+            "code": "156",
+            "name": "CT Arthrogram - Ankle"
+          },
+          {
+            "code": "157",
+            "name": "CT Arthrogram - Others"
+          }
+        ]
+      },
+      "CT  EXTREMITIES": {
+        "code": "158",
+        "name": "CT  EXTREMITIES",
+        "sub_regions": [
+          {
+            "code": "159",
+            "name": "CT Ankle Joint Left"
+          },
+          {
+            "code": "160",
+            "name": "CT Ankle Joint Right"
+          },
+          {
+            "code": "161",
+            "name": "CT-Hand Left"
+          },
+          {
+            "code": "162",
+            "name": "CT-Hand Right"
+          },
+          {
+            "code": "163",
+            "name": "CT Elbow Joint Left"
+          },
+          {
+            "code": "164",
+            "name": "CT Elbow Joint Right"
+          },
+          {
+            "code": "165",
+            "name": "CT Hip Joints"
+          },
+          {
+            "code": "166",
+            "name": "CT Knee Joint Left"
+          },
+          {
+            "code": "167",
+            "name": "CT Knee Joint Right"
+          },
+          {
+            "code": "168",
+            "name": "CT Lower Limb Left"
+          },
+          {
+            "code": "169",
+            "name": "CT Lower Limb Right"
+          },
+          {
+            "code": "170",
+            "name": "CT Shoulder Joint Left"
+          },
+          {
+            "code": "171",
+            "name": "CT Shoulder Joint Right"
+          },
+          {
+            "code": "172",
+            "name": "CT Upper Limb Left"
+          },
+          {
+            "code": "173",
+            "name": "CT Upper Limb Right"
+          },
+          {
+            "code": "174",
+            "name": "CT Wrist Joint Left"
+          },
+          {
+            "code": "175",
+            "name": "CT Wrist Joint Right"
+          }
+        ]
+      },
+      "CT HEAD AND NECK": {
+        "code": "176",
+        "name": "CT HEAD AND NECK",
+        "sub_regions": [
+          {
+            "code": "177",
+            "name": "CT Brain - Contrast"
+          },
+          {
+            "code": "178",
+            "name": "CT Brain"
+          },
+          {
+            "code": "179",
+            "name": "CT Brain - Brain Suite"
+          },
+          {
+            "code": "180",
+            "name": "CT Maxillo-facial"
+          },
+          {
+            "code": "181",
+            "name": "CT Head & Neck"
+          },
+          {
+            "code": "182",
+            "name": "CT Skull"
+          },
+          {
+            "code": "183",
+            "name": "CT IAM (Int. Auditory Meatus)"
+          },
+          {
+            "code": "184",
+            "name": "CT Neck"
+          },
+          {
+            "code": "185",
+            "name": "CT - OMC (Osteo-Meatal Complex)"
+          },
+          {
+            "code": "186",
+            "name": "CT Orbits"
+          },
+          {
+            "code": "187",
+            "name": "CT Face"
+          },
+          {
+            "code": "188",
+            "name": "CT Face - Contrast"
+          },
+          {
+            "code": "189",
+            "name": "CT Facial Bone"
+          },
+          {
+            "code": "190",
+            "name": "CT Paranasal Sinuses"
+          },
+          {
+            "code": "191",
+            "name": "CT Temporal Bone (HRCT)"
+          },
+          {
+            "code": "192",
+            "name": "CT Cisternography"
+          },
+          {
+            "code": "193",
+            "name": "CT Pituitary Fossa"
+          },
+          {
+            "code": "194",
+            "name": "CT- TMJ (Temporo-Mandibular Joints)"
+          },
+          {
+            "code": "195",
+            "name": "CT Neck Thorax Abdomen"
+          },
+          {
+            "code": "870.0",
+            "name": "CT Petrous Bone"
+          }
+        ]
+      },
+      "CT PELVIS": {
+        "code": "196",
+        "name": "CT PELVIS",
+        "sub_regions": [
+          {
+            "code": "197",
+            "name": "CT Pelvis"
+          }
+        ]
+      },
+      "CT SPINES": {
+        "code": "198",
+        "name": "CT SPINES",
+        "sub_regions": [
+          {
+            "code": "199",
+            "name": "CT Myelogram - Cervical"
+          },
+          {
+            "code": "200",
+            "name": "CT Myelogram - Lumbar"
+          },
+          {
+            "code": "201",
+            "name": "CT Myelogram - Thoracic"
+          },
+          {
+            "code": "202",
+            "name": "CT Spine - Cervical"
+          },
+          {
+            "code": "203",
+            "name": "CT Spine - Lumbar"
+          },
+          {
+            "code": "204",
+            "name": "CT Spine - Sacrum & Coccyx"
+          },
+          {
+            "code": "205",
+            "name": "CT Spine -Thoracic"
+          }
+        ]
+      },
+      "CT - THORAX": {
+        "code": "206",
+        "name": "CT - THORAX",
+        "sub_regions": [
+          {
+            "code": "207",
+            "name": "CT Lungs (HRCT)"
+          },
+          {
+            "code": "208",
+            "name": "CT Thorax"
+          },
+          {
+            "code": "209",
+            "name": "CT Thorax and Abdomen"
+          },
+          {
+            "code": "210",
+            "name": "CT Thorax Abdomen Pelvis"
+          },
+          {
+            "code": "211",
+            "name": "CT Cardiac Ca Score"
+          },
+          {
+            "code": "212",
+            "name": "CTPA (CT Pulmonary Artery)"
+          },
+          {
+            "code": "213",
+            "name": "CT Cardiac"
+          }
+        ]
+      },
+      "CT OTHERS": {
+        "code": "214",
+        "name": "CT OTHERS",
+        "sub_regions": [
+          {
+            "code": "215",
+            "name": "PET/CT Imaging Request Form - Oncology"
+          },
+          {
+            "code": "216",
+            "name": "CT - Others"
+          }
+        ]
+      }
+    }
+  },
+  "MRI": {
+    "code": "11",
+    "name": "MRI",
+    "regions": {
+      "MRI ABDOMEN": {
+        "code": "217",
+        "name": "MRI ABDOMEN",
+        "sub_regions": [
+          {
+            "code": "218",
+            "name": "MRI Abdomen"
+          }
+        ]
+      },
+      "MRA (MR ANGIOGRAPHY)": {
+        "code": "219",
+        "name": "MRA (MR ANGIOGRAPHY)",
+        "sub_regions": [
+          {
+            "code": "220",
+            "name": "MRA - Cerebral"
+          },
+          {
+            "code": "221",
+            "name": "MRA - Carotids"
+          },
+          {
+            "code": "222",
+            "name": "MRA - Renal"
+          },
+          {
+            "code": "223",
+            "name": "MRA - Hepatobiliary"
+          },
+          {
+            "code": "224",
+            "name": "MRA - Upper Extremity Right"
+          },
+          {
+            "code": "225",
+            "name": "MRA - Upper Extremity Left"
+          },
+          {
+            "code": "226",
+            "name": "MRA - Lower Extremity"
+          },
+          {
+            "code": "227",
+            "name": "MRA - Abdomen"
+          },
+          {
+            "code": "228",
+            "name": "MRA - Thorax"
+          },
+          {
+            "code": "229",
+            "name": "MRA - Others"
+          }
+        ]
+      },
+      "MRV (MR Venography)": {
+        "code": "230",
+        "name": "MRV (MR Venography)",
+        "sub_regions": [
+          {
+            "code": "231",
+            "name": "MRV - Brain"
+          },
+          {
+            "code": "232",
+            "name": "MRV - Upper Extremity Right"
+          },
+          {
+            "code": "233",
+            "name": "MRV - Upper Extremity Left"
+          },
+          {
+            "code": "234",
+            "name": "MRV - Lower Extremity"
+          }
+        ]
+      },
+      "MRI ARTHROGRAM": {
+        "code": "235",
+        "name": "MRI ARTHROGRAM",
+        "sub_regions": [
+          {
+            "code": "236",
+            "name": "MRI Arthrogram - Shoulder"
+          },
+          {
+            "code": "237",
+            "name": "MRI Arthrogram - Wrist"
+          },
+          {
+            "code": "238",
+            "name": "MRI Arthrogram - Elbow"
+          },
+          {
+            "code": "239",
+            "name": "MRI Arthrogram - Hip"
+          },
+          {
+            "code": "240",
+            "name": "MRI Arthrogram - Knee"
+          },
+          {
+            "code": "241",
+            "name": "MRI Arthrogram - Ankle"
+          },
+          {
+            "code": "242",
+            "name": "MRI Arthrogram - Others"
+          }
+        ]
+      },
+      "MRI BREAST": {
+        "code": "243",
+        "name": "MRI BREAST",
+        "sub_regions": [
+          {
+            "code": "244",
+            "name": "MRI Breasts"
+          }
+        ]
+      },
+      "MRI DYNAMIC": {
+        "code": "245",
+        "name": "MRI DYNAMIC",
+        "sub_regions": [
+          {
+            "code": "246",
+            "name": "MR Dynamic - Spine - Cervical"
+          },
+          {
+            "code": "247",
+            "name": "MR Dynamic - Wrist Joints"
+          },
+          {
+            "code": "248",
+            "name": "MR Dynamic - Temporo-mandibular Joint"
+          },
+          {
+            "code": "249",
+            "name": "MR Dynamic - Others"
+          }
+        ]
+      },
+      "MRI EXTREMITIES": {
+        "code": "250",
+        "name": "MRI EXTREMITIES",
+        "sub_regions": [
+          {
+            "code": "251",
+            "name": "MRI Ankle Joint Left"
+          },
+          {
+            "code": "252",
+            "name": "MRI Ankle Joint Right"
+          },
+          {
+            "code": "253",
+            "name": "MRI Elbow Joint Left"
+          },
+          {
+            "code": "254",
+            "name": "MRI Elbow Joint Right"
+          },
+          {
+            "code": "255",
+            "name": "MRI Forearm Left"
+          },
+          {
+            "code": "256",
+            "name": "MRI Forearm Right"
+          },
+          {
+            "code": "257",
+            "name": "MRI Lower Leg Left"
+          },
+          {
+            "code": "258",
+            "name": "MRI Lower Leg Right"
+          },
+          {
+            "code": "259",
+            "name": "MRI Foot Left"
+          },
+          {
+            "code": "260",
+            "name": "MRI Foot Right"
+          },
+          {
+            "code": "261",
+            "name": "MRI Shoulder Joint Left"
+          },
+          {
+            "code": "262",
+            "name": "MRI Shoulder Joint Right"
+          },
+          {
+            "code": "263",
+            "name": "MRI Hand Left"
+          },
+          {
+            "code": "264",
+            "name": "MRI Hand Right"
+          },
+          {
+            "code": "265",
+            "name": "MRI Upper Arm Left"
+          },
+          {
+            "code": "266",
+            "name": "MRI Upper Arm Right"
+          },
+          {
+            "code": "267",
+            "name": "MRI Hip Joints"
+          },
+          {
+            "code": "268",
+            "name": "MRI Thigh Left"
+          },
+          {
+            "code": "269",
+            "name": "MRI Thigh Right"
+          },
+          {
+            "code": "270",
+            "name": "MRI Knee Joint Left"
+          },
+          {
+            "code": "271",
+            "name": "MRI Knee Joint Right"
+          },
+          {
+            "code": "272",
+            "name": "MRI Wrist Joint  Left"
+          },
+          {
+            "code": "273",
+            "name": "MRI Wrist Joint Right"
+          },
+          {
+            "code": "274",
+            "name": "MRI Brachial Plexus - Left"
+          },
+          {
+            "code": "275",
+            "name": "MRI Brachial Plexus - Right"
+          }
+        ]
+      },
+      "MRI FUNCTIONAL": {
+        "code": "276",
+        "name": "MRI FUNCTIONAL",
+        "sub_regions": [
+          {
+            "code": "277",
+            "name": "MRI Perfusion"
+          },
+          {
+            "code": "278",
+            "name": "MRI Spectroscopy"
+          },
+          {
+            "code": "279",
+            "name": "MRI Functional"
+          }
+        ]
+      },
+      "MRI HEAD & NECK": {
+        "code": "280",
+        "name": "MRI HEAD & NECK",
+        "sub_regions": [
+          {
+            "code": "281",
+            "name": "MRI Brain"
+          },
+          {
+            "code": "282",
+            "name": "MRI Brain Stem"
+          },
+          {
+            "code": "283",
+            "name": "MRI Brain - Advanced Neuro Imaging (Diffusion/Perfusion/Spectroscopy/ Functional)"
+          },
+          {
+            "code": "284",
+            "name": "MRI Face"
+          },
+          {
+            "code": "285",
+            "name": "MRI Cisternogram"
+          },
+          {
+            "code": "286",
+            "name": "MRI IAM (Internal Auditory Meatus)"
+          },
+          {
+            "code": "287",
+            "name": "MRI Neck"
+          },
+          {
+            "code": "288",
+            "name": "MRI Orbits"
+          },
+          {
+            "code": "289",
+            "name": "MRI Paranasal Sinuses"
+          },
+          {
+            "code": "290",
+            "name": "MRI Pituitary Fossa"
+          },
+          {
+            "code": "291",
+            "name": "MRI Temporal Lobe"
+          },
+          {
+            "code": "292",
+            "name": "MRI TMJ ( Temporo-Mandibular Joints)"
+          },
+          {
+            "code": "293",
+            "name": "MRI Salivary Glands"
+          }
+        ]
+      },
+      "MRI HEPATOBILLIARY SYSTEM": {
+        "code": "294",
+        "name": "MRI HEPATOBILLIARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "295",
+            "name": "MRI - Hepatobiliary"
+          },
+          {
+            "code": "296",
+            "name": "MRCP (MR Cholangio-Pancreatography)"
+          }
+        ]
+      },
+      "MRI PELVIS": {
+        "code": "297",
+        "name": "MRI PELVIS",
+        "sub_regions": [
+          {
+            "code": "298",
+            "name": "MRI Pelvimetry"
+          },
+          {
+            "code": "299",
+            "name": "MRI Pelvis"
+          },
+          {
+            "code": "300",
+            "name": "MRI Uterus (Genitourinary System)"
+          },
+          {
+            "code": "301",
+            "name": "MRI Feotus"
+          },
+          {
+            "code": "302",
+            "name": "MRI Rectum"
+          }
+        ]
+      },
+      "MRI SPINES": {
+        "code": "303",
+        "name": "MRI SPINES",
+        "sub_regions": [
+          {
+            "code": "304",
+            "name": "MRI Spine - Cervical"
+          },
+          {
+            "code": "305",
+            "name": "MRI Spine - Lumbar"
+          },
+          {
+            "code": "306",
+            "name": "MRI Spine - Thoracic"
+          },
+          {
+            "code": "307",
+            "name": "MRI Spine - Whole"
+          },
+          {
+            "code": "308",
+            "name": "MRI Sacroiliac Joint"
+          }
+        ]
+      },
+      "MRI THORAX": {
+        "code": "309",
+        "name": "MRI THORAX",
+        "sub_regions": [
+          {
+            "code": "310",
+            "name": "MRI Thorax"
+          },
+          {
+            "code": "311",
+            "name": "MRI - Cardiac"
+          }
+        ]
+      },
+      "MRI URINARY SYSTEM": {
+        "code": "312",
+        "name": "MRI URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "313",
+            "name": "MRI - Renal"
+          },
+          {
+            "code": "314",
+            "name": "MRI - Adrenals"
+          },
+          {
+            "code": "315",
+            "name": "MRI - Prostate"
+          },
+          {
+            "code": "316",
+            "name": "MRI - Urogram"
+          }
+        ]
+      },
+      "MRI OTHERS": {
+        "code": "317",
+        "name": "MRI OTHERS",
+        "sub_regions": [
+          {
+            "code": "318",
+            "name": "MRI AV Fistulogram"
+          },
+          {
+            "code": "319",
+            "name": "MRI - Others"
+          },
+          {
+            "code": "320",
+            "name": "MRI Wholebody"
+          }
+        ]
+      }
+    }
+  },
+  "MAMMOGRAPHY": {
+    "code": "10",
+    "name": "MAMMOGRAPHY",
+    "regions": {
+      "BREAST": {
+        "code": "321",
+        "name": "BREAST",
+        "sub_regions": [
+          {
+            "code": "322",
+            "name": "Mammogram Diagnostic - Bilateral"
+          },
+          {
+            "code": "323",
+            "name": "Mammogram Diagnostic - Left"
+          },
+          {
+            "code": "324",
+            "name": "Mammogram Diagnostic - Right"
+          },
+          {
+            "code": "325",
+            "name": "Mammogram - Specimen"
+          },
+          {
+            "code": "326",
+            "name": "Mammography - Screening"
+          },
+          {
+            "code": "871.0",
+            "name": "Mammogram - Additional View"
+          }
+        ]
+      }
+    }
+  },
+  "ULTRASOUND": {
+    "code": "13",
+    "name": "ULTRASOUND",
+    "regions": {
+      "U/S ANATOMICAL REGION": {
+        "code": "327",
+        "name": "U/S ANATOMICAL REGION",
+        "sub_regions": [
+          {
+            "code": "328",
+            "name": "U/S Cranium"
+          },
+          {
+            "code": "329",
+            "name": "U/S Abdomen"
+          },
+          {
+            "code": "330",
+            "name": "U/S Neck"
+          },
+          {
+            "code": "331",
+            "name": "U/S Head & Neck"
+          },
+          {
+            "code": "332",
+            "name": "U/S Face"
+          },
+          {
+            "code": "333",
+            "name": "U/S Pelvis"
+          }
+        ]
+      },
+      "U/S BREAST": {
+        "code": "334",
+        "name": "U/S BREAST",
+        "sub_regions": [
+          {
+            "code": "335",
+            "name": "U/S Breasts"
+          }
+        ]
+      },
+      "U/S CNS": {
+        "code": "336",
+        "name": "U/S CNS",
+        "sub_regions": [
+          {
+            "code": "337",
+            "name": "U/S Brain"
+          },
+          {
+            "code": "338",
+            "name": "U/S Brain - Doppler"
+          },
+          {
+            "code": "339",
+            "name": "U/S Spinal Cord"
+          }
+        ]
+      },
+      "U/S CIRCULATORY SYSTEM - ARTERIES": {
+        "code": "340",
+        "name": "U/S CIRCULATORY SYSTEM - ARTERIES",
+        "sub_regions": [
+          {
+            "code": "341",
+            "name": "U/S Abdominal Aorta"
+          },
+          {
+            "code": "342",
+            "name": "U/S Doppler -  Carotid Artery"
+          },
+          {
+            "code": "343",
+            "name": "U/S Doppler Aorta"
+          },
+          {
+            "code": "344",
+            "name": "U/S Doppler Lower Limb Artery Left"
+          },
+          {
+            "code": "345",
+            "name": "U/S Doppler Lower Limb Artery Right"
+          },
+          {
+            "code": "346",
+            "name": "U/S Doppler Renal Artery"
+          },
+          {
+            "code": "347",
+            "name": "U/S Doppler Upper Limb Artery Left"
+          },
+          {
+            "code": "348",
+            "name": "U/S Doppler Upper Limb Artery Right"
+          },
+          {
+            "code": "349",
+            "name": "U/S Doppler ArterioVenous Fistula"
+          },
+          {
+            "code": "350",
+            "name": "U/S Thoracic Aorta"
+          },
+          {
+            "code": "351",
+            "name": "U/S  - Other Arteries"
+          }
+        ]
+      },
+      "U/S CIRCULATORY SYSTEM - VEINS": {
+        "code": "352",
+        "name": "U/S CIRCULATORY SYSTEM - VEINS",
+        "sub_regions": [
+          {
+            "code": "353",
+            "name": "U/S Doppler Abdominal Veins"
+          },
+          {
+            "code": "354",
+            "name": "U/S Doppler Lower Limb Vein - Left"
+          },
+          {
+            "code": "355",
+            "name": "U/S Doppler Lower Limb Vein - Right"
+          },
+          {
+            "code": "356",
+            "name": "U/S Doppler Neck Vein"
+          },
+          {
+            "code": "357",
+            "name": "U/S Doppler Renal Vein - Left"
+          },
+          {
+            "code": "358",
+            "name": "U/S Doppler Renal Vein - Right"
+          },
+          {
+            "code": "359",
+            "name": "U/S Doppler Upper Limb Vein - Left"
+          },
+          {
+            "code": "360",
+            "name": "U/S Doppler Upper Limb Vein - Right"
+          },
+          {
+            "code": "361",
+            "name": "U/S Neck Vein"
+          },
+          {
+            "code": "362",
+            "name": "U/S  - Other Veins"
+          }
+        ]
+      },
+      "U/S DIGESTIVE SYSTEM": {
+        "code": "363",
+        "name": "U/S DIGESTIVE SYSTEM",
+        "sub_regions": [
+          {
+            "code": "364",
+            "name": "U/S Rectum"
+          }
+        ]
+      },
+      "U/S ENDOCRINE SYSTEM": {
+        "code": "365",
+        "name": "U/S ENDOCRINE SYSTEM",
+        "sub_regions": [
+          {
+            "code": "366",
+            "name": "U/S Adrenals"
+          },
+          {
+            "code": "367",
+            "name": "U/S Parathyroids"
+          },
+          {
+            "code": "368",
+            "name": "U/S Thyroid"
+          }
+        ]
+      },
+      "U/S HEPATOBILLIARY SYSTEM": {
+        "code": "369",
+        "name": "U/S HEPATOBILLIARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "370",
+            "name": "U/S Doppler - Liver"
+          },
+          {
+            "code": "371",
+            "name": "U/S Hepatobiliary System"
+          },
+          {
+            "code": "372",
+            "name": "U/S Pancreas"
+          }
+        ]
+      },
+      "US INTEGUMENT & MUSCULOSKELETAL SYSTEM &  SOFT TISSUES)": {
+        "code": "373",
+        "name": "US INTEGUMENT & MUSCULOSKELETAL SYSTEM &  SOFT TISSUES)",
+        "sub_regions": [
+          {
+            "code": "374",
+            "name": "U/S Abdominal Wall"
+          },
+          {
+            "code": "375",
+            "name": "U/S Chest Wall"
+          },
+          {
+            "code": "376",
+            "name": "U/S Axilla"
+          },
+          {
+            "code": "377",
+            "name": "U/S Limb - Lower"
+          },
+          {
+            "code": "378",
+            "name": "U/S Limb - Upper"
+          },
+          {
+            "code": "379",
+            "name": "U/S Tendon - Limb - Lower"
+          },
+          {
+            "code": "380",
+            "name": "U/S Tendon - Limb - Upper"
+          },
+          {
+            "code": "381",
+            "name": "U/S Inguinal region"
+          }
+        ]
+      },
+      "U/S MUSCULOSKELETAL SYSTEM (BONES & JOINTS)": {
+        "code": "382",
+        "name": "U/S MUSCULOSKELETAL SYSTEM (BONES & JOINTS)",
+        "sub_regions": [
+          {
+            "code": "383",
+            "name": "U/S Elbow Joints"
+          },
+          {
+            "code": "384",
+            "name": "U/S Hands"
+          },
+          {
+            "code": "385",
+            "name": "U/S Fingers"
+          },
+          {
+            "code": "386",
+            "name": "U/S Toes"
+          },
+          {
+            "code": "387",
+            "name": "U/S Hip Joints"
+          },
+          {
+            "code": "388",
+            "name": "U/S Knee Joints"
+          },
+          {
+            "code": "389",
+            "name": "U/S Shoulder Joints"
+          },
+          {
+            "code": "390",
+            "name": "U/S Spine - Cervical"
+          },
+          {
+            "code": "391",
+            "name": "U/S Spine - Lumbar"
+          },
+          {
+            "code": "392",
+            "name": "U/S Spine - Sacrum and Coccyx"
+          },
+          {
+            "code": "393",
+            "name": "U/S Spine -Thoracic"
+          },
+          {
+            "code": "394",
+            "name": "U/S Wrist Joints"
+          }
+        ]
+      },
+      "U/S REPRODUCTIVE SYSTEM - FEMALE": {
+        "code": "395",
+        "name": "U/S REPRODUCTIVE SYSTEM - FEMALE",
+        "sub_regions": [
+          {
+            "code": "396",
+            "name": "U/S Gynaecology"
+          },
+          {
+            "code": "397",
+            "name": "U/S Obstetric"
+          },
+          {
+            "code": "398",
+            "name": "U/S Transvaginal"
+          }
+        ]
+      },
+      "U/S REPRODUCTIVE SYSTEM - MALE": {
+        "code": "399",
+        "name": "U/S REPRODUCTIVE SYSTEM - MALE",
+        "sub_regions": [
+          {
+            "code": "400",
+            "name": "U/S Doppler Scrotum/Testes"
+          },
+          {
+            "code": "401",
+            "name": "U/S Penis"
+          },
+          {
+            "code": "402",
+            "name": "U/S Prostate and Seminal Vesicles"
+          },
+          {
+            "code": "403",
+            "name": "U/S Prostate and Seminal Vesicles - Transrectal"
+          },
+          {
+            "code": "404",
+            "name": "U/S Scrotum/Testes"
+          }
+        ]
+      },
+      "U/S RESPIRATORY SYSTEM": {
+        "code": "405",
+        "name": "U/S RESPIRATORY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "406",
+            "name": "U/S Diaphragm"
+          },
+          {
+            "code": "407",
+            "name": "U/S Thorax"
+          }
+        ]
+      },
+      "U/S URINARY SYSTEM": {
+        "code": "408",
+        "name": "U/S URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "409",
+            "name": "U/S Doppler - Kidneys"
+          },
+          {
+            "code": "410",
+            "name": "U/S Kidney Allograft"
+          },
+          {
+            "code": "411",
+            "name": "U/S Kidneys, Ureters and Bladder"
+          },
+          {
+            "code": "412",
+            "name": "U/S Bladder"
+          },
+          {
+            "code": "413",
+            "name": "U/S Kidney"
+          }
+        ]
+      },
+      "U/S OTHERS": {
+        "code": "414",
+        "name": "U/S OTHERS",
+        "sub_regions": [
+          {
+            "code": "415",
+            "name": "U/S Endoscopic"
+          },
+          {
+            "code": "416",
+            "name": "U/S Others"
+          }
+        ]
+      }
+    }
+  },
+  "MOBILE - ULTRASOUND": {
+    "code": "14",
+    "name": "MOBILE - ULTRASOUND",
+    "regions": {
+      "MOBILE U/S ANATOMICAL REGION": {
+        "code": "417",
+        "name": "MOBILE U/S ANATOMICAL REGION",
+        "sub_regions": [
+          {
+            "code": "418",
+            "name": "Mobile U/S Abdomen"
+          },
+          {
+            "code": "419",
+            "name": "Mobile U/S Head & Neck"
+          },
+          {
+            "code": "420",
+            "name": "Mobile U/S Pelvis"
+          }
+        ]
+      },
+      "MOBILE - U/S CNS": {
+        "code": "421",
+        "name": "MOBILE - U/S CNS",
+        "sub_regions": [
+          {
+            "code": "422",
+            "name": "Mobile U/S Brain"
+          },
+          {
+            "code": "423",
+            "name": "Mobile U/S Brain - Doppler"
+          },
+          {
+            "code": "424",
+            "name": "Mobile U/S Spinal Cord"
+          }
+        ]
+      },
+      "MOBILE U/S CIRCULATORY SYSTEM - ARTERIES": {
+        "code": "425",
+        "name": "MOBILE U/S CIRCULATORY SYSTEM - ARTERIES",
+        "sub_regions": [
+          {
+            "code": "426",
+            "name": "Mobile U/S Abdominal Aorta"
+          },
+          {
+            "code": "427",
+            "name": "Mobile U/S Doppler -  Carotid Artery"
+          },
+          {
+            "code": "428",
+            "name": "Mobile U/S Doppler Aorta"
+          },
+          {
+            "code": "429",
+            "name": "MobileU/S Doppler Lower Limb Artery Left"
+          },
+          {
+            "code": "430",
+            "name": "Mobile U/S Doppler Lower Limb Artery Right -"
+          },
+          {
+            "code": "431",
+            "name": "Mobile U/S Doppler Renal Artery"
+          },
+          {
+            "code": "432",
+            "name": "Mobile U/S Doppler Upper Limb Artery Left"
+          },
+          {
+            "code": "433",
+            "name": "Mobile U/S Doppler Upper Limb Artery Right"
+          },
+          {
+            "code": "434",
+            "name": "Mobile U/S Thoracic Aorta"
+          },
+          {
+            "code": "435",
+            "name": "Mobile U/S - Other Arteries"
+          }
+        ]
+      },
+      "MOBILE U/S CIRCULATORY SYSTEM - VEINS": {
+        "code": "436",
+        "name": "MOBILE U/S CIRCULATORY SYSTEM - VEINS",
+        "sub_regions": [
+          {
+            "code": "437",
+            "name": "Mobile U/S Doppler Abdominal Veins -"
+          },
+          {
+            "code": "438",
+            "name": "Mobile U/S Doppler Lower Limb Vein - Left"
+          },
+          {
+            "code": "439",
+            "name": "Mobile U/S Doppler Lower Limb Vein - Right"
+          },
+          {
+            "code": "440",
+            "name": "Mobile U/S Doppler Neck Vein"
+          },
+          {
+            "code": "441",
+            "name": "Mobile U/S Doppler Renal Vein"
+          },
+          {
+            "code": "442",
+            "name": "Mobile U/S Doppler Upper Limb Vein - Left"
+          },
+          {
+            "code": "443",
+            "name": "Mobile U/S Doppler Upper Limb Vein - Right"
+          },
+          {
+            "code": "444",
+            "name": "Mobile U/S - Other Veins"
+          },
+          {
+            "code": "445",
+            "name": "Mobile U/S Neck Vein"
+          }
+        ]
+      },
+      "MOBILE - U/S HEPATOBILLIARY SYSTEM": {
+        "code": "446",
+        "name": "MOBILE - U/S HEPATOBILLIARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "447",
+            "name": "Mobile U/S Doppler - Liver"
+          },
+          {
+            "code": "448",
+            "name": "Mobile U/S Guided Liver Aspiration"
+          },
+          {
+            "code": "449",
+            "name": "Mobile U/S Guided Liver Biopsy"
+          },
+          {
+            "code": "450",
+            "name": "Mobile U/S Hepatobiliary System"
+          }
+        ]
+      },
+      "MOBILE - U/S RESPIRATORY SYSTEM": {
+        "code": "451",
+        "name": "MOBILE - U/S RESPIRATORY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "452",
+            "name": "Mobile U/S Diaphragm"
+          },
+          {
+            "code": "453",
+            "name": "Mobile U/S Thorax -"
+          }
+        ]
+      },
+      "MOBILE - U/S URINARY SYSTEM": {
+        "code": "454",
+        "name": "MOBILE - U/S URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "455",
+            "name": "Mobile U/S Doppler - Kidneys"
+          },
+          {
+            "code": "456",
+            "name": "Mobile U/S Kidney Allograft"
+          },
+          {
+            "code": "457",
+            "name": "Mobile U/S Kidneys, Ureters and Bladder"
+          },
+          {
+            "code": "458",
+            "name": "Mobile U/S Bladder"
+          },
+          {
+            "code": "459",
+            "name": "Mobile U/S Kidney"
+          }
+        ]
+      }
+    }
+  },
+  "ANGIOGRAPHY": {
+    "code": "03",
+    "name": "ANGIOGRAPHY",
+    "regions": {
+      "ANGIOGRAM - ABDOMINAL / PELVIS": {
+        "code": "460",
+        "name": "ANGIOGRAM - ABDOMINAL / PELVIS",
+        "sub_regions": [
+          {
+            "code": "461",
+            "name": "Angiography – Aorta Abdominal"
+          },
+          {
+            "code": "462",
+            "name": "Angiography – Visceral"
+          },
+          {
+            "code": "463",
+            "name": "Angiography Renal"
+          },
+          {
+            "code": "464",
+            "name": "Angiography – Pelvis"
+          },
+          {
+            "code": "465",
+            "name": "Angiography – Kidney Allograft"
+          }
+        ]
+      },
+      "ANGIOGRAM - CEREBRAL": {
+        "code": "466",
+        "name": "ANGIOGRAM - CEREBRAL",
+        "sub_regions": [
+          {
+            "code": "467",
+            "name": "Angiography - Intracranial - 4 Vessel Study"
+          },
+          {
+            "code": "468",
+            "name": "Angiography - Intracranial - 6 Vessel Study"
+          },
+          {
+            "code": "469",
+            "name": "Angiography - Extracranial"
+          },
+          {
+            "code": "470",
+            "name": "Angiography Single Vessel (Specify)"
+          },
+          {
+            "code": "471",
+            "name": "Angiography – Aorta and Lower Extremities - Bilateral"
+          },
+          {
+            "code": "472",
+            "name": "Angiography – Lower Extremity  Right"
+          },
+          {
+            "code": "473",
+            "name": "Angiography – Lower Extremity Left"
+          },
+          {
+            "code": "474",
+            "name": "Angiography - Upper Extremities Bilateral"
+          },
+          {
+            "code": "475",
+            "name": "Angiography – Upper Extremity Right"
+          },
+          {
+            "code": "476",
+            "name": "Angiography – Upper Extremity Left"
+          }
+        ]
+      },
+      "ANGIOGRAM - THORACIC": {
+        "code": "477",
+        "name": "ANGIOGRAM - THORACIC",
+        "sub_regions": [
+          {
+            "code": "478",
+            "name": "Angiography -  Arch Aortogram"
+          },
+          {
+            "code": "479",
+            "name": "Angiography – Aorta Thoracic"
+          },
+          {
+            "code": "480",
+            "name": "Angiography – Aorta Thoraco-abdominal"
+          },
+          {
+            "code": "481",
+            "name": "Angiography – Intercostal and Bronchial"
+          },
+          {
+            "code": "482",
+            "name": "Angiography – Spinal"
+          },
+          {
+            "code": "483",
+            "name": "Angiography – Pulmonary"
+          }
+        ]
+      },
+      "VENOGRAPHY ABDOMINAL / PELVIS": {
+        "code": "484",
+        "name": "VENOGRAPHY ABDOMINAL / PELVIS",
+        "sub_regions": [
+          {
+            "code": "485",
+            "name": "Venography – Inferior Vena Cava"
+          },
+          {
+            "code": "486",
+            "name": "Venography Renal"
+          },
+          {
+            "code": "487",
+            "name": "Venography – Portal and Splanchnic / Mesentric"
+          },
+          {
+            "code": "488",
+            "name": "Venography – Pelvic Vein"
+          },
+          {
+            "code": "489",
+            "name": "Venography – Kidney  Allograft"
+          },
+          {
+            "code": "490",
+            "name": "Venography – Spinal"
+          },
+          {
+            "code": "491",
+            "name": "Venography – Others"
+          }
+        ]
+      },
+      "VENOGRAPHY EXTREMITIES": {
+        "code": "492",
+        "name": "VENOGRAPHY EXTREMITIES",
+        "sub_regions": [
+          {
+            "code": "493",
+            "name": "Venography – Lower Extremity Right"
+          },
+          {
+            "code": "494",
+            "name": "Venography – Lower Extremity Left"
+          },
+          {
+            "code": "495",
+            "name": "Venography – Lower Extremity - Both"
+          },
+          {
+            "code": "496",
+            "name": "Venography – Upper Extremity Central"
+          },
+          {
+            "code": "497",
+            "name": "Venography – Upper Extremity Right"
+          },
+          {
+            "code": "498",
+            "name": "Venography – Upper Extremity Left"
+          },
+          {
+            "code": "499",
+            "name": "Venography – Dialysis shunt / Fistula"
+          }
+        ]
+      },
+      "VENOGRAPHY HEAD & NECK": {
+        "code": "500",
+        "name": "VENOGRAPHY HEAD & NECK",
+        "sub_regions": [
+          {
+            "code": "501",
+            "name": "Venography – Jugular Vein Bilateral"
+          },
+          {
+            "code": "502",
+            "name": "Venography – Jugular Vein Right"
+          },
+          {
+            "code": "503",
+            "name": "Venography – Jugualr Vein Left"
+          }
+        ]
+      },
+      "VENOGRAPHY THORACIC": {
+        "code": "504",
+        "name": "VENOGRAPHY THORACIC",
+        "sub_regions": [
+          {
+            "code": "505",
+            "name": "Venography – Superior Vena Cava"
+          },
+          {
+            "code": "506",
+            "name": "Venography - Others"
+          }
+        ]
+      }
+    }
+  },
+  "INTERVENTIONAL RADIOLOGY": {
+    "code": "08",
+    "name": "INTERVENTIONAL RADIOLOGY",
+    "regions": {
+      "ANGIOPLASTY": {
+        "code": "507",
+        "name": "ANGIOPLASTY",
+        "sub_regions": [
+          {
+            "code": "508",
+            "name": "Angioplasty – Aorta Abdominal"
+          },
+          {
+            "code": "509",
+            "name": "Angioplasty – Renal Bilateral"
+          },
+          {
+            "code": "510",
+            "name": "Angioplasty – Renal Right"
+          },
+          {
+            "code": "511",
+            "name": "Angioplasty – Renal Left"
+          },
+          {
+            "code": "512",
+            "name": "Angioplasty –  Renal Allograft"
+          },
+          {
+            "code": "513",
+            "name": "Angioplasty Iliac Left"
+          },
+          {
+            "code": "514",
+            "name": "Angioplasty Iliac Right"
+          },
+          {
+            "code": "515",
+            "name": "Angioplasty - Abdomen / Pelvis - Others"
+          },
+          {
+            "code": "516",
+            "name": "Angioplasty Cerebral – Carotid  Common  Left"
+          },
+          {
+            "code": "517",
+            "name": "Angioplasty Cerebral – Carotid Common Right"
+          },
+          {
+            "code": "518",
+            "name": "Angioplasty Cerebral – Carotid External Left"
+          },
+          {
+            "code": "519",
+            "name": "Angioplasty Cerebral – Carotid External Right"
+          },
+          {
+            "code": "520",
+            "name": "Angioplasty Cerebral – Carotid Internal Left"
+          },
+          {
+            "code": "521",
+            "name": "Angioplasty Cerebral – Carotid Internal Right"
+          },
+          {
+            "code": "522",
+            "name": "Angioplasty Cerebral – Vertebral Left"
+          },
+          {
+            "code": "523",
+            "name": "Angioplasty Cerebral – Vertebral Right"
+          },
+          {
+            "code": "524",
+            "name": "Angioplasty Cerebral – Others"
+          },
+          {
+            "code": "525",
+            "name": "Angioplasty – Upper Extremity Right"
+          },
+          {
+            "code": "526",
+            "name": "Angioplasty – Upper Extremity Left"
+          },
+          {
+            "code": "527",
+            "name": "Angioplasty – Lower Extremity Right"
+          },
+          {
+            "code": "528",
+            "name": "Angioplasty – Lower Extremity Left"
+          },
+          {
+            "code": "529",
+            "name": "Angioplasty   - Thoracic"
+          }
+        ]
+      },
+      "ATHERECTOMY": {
+        "code": "530",
+        "name": "ATHERECTOMY",
+        "sub_regions": [
+          {
+            "code": "531",
+            "name": "Atherectomy Abdomen"
+          },
+          {
+            "code": "532",
+            "name": "Atherectomy Cerebral - Single"
+          },
+          {
+            "code": "533",
+            "name": "Atherectomy Extremity - Single"
+          },
+          {
+            "code": "534",
+            "name": "Atherectomy  Thorax - Single"
+          }
+        ]
+      },
+      "EMBOLISATION": {
+        "code": "535",
+        "name": "EMBOLISATION",
+        "sub_regions": [
+          {
+            "code": "536",
+            "name": "Embolisation - Visceral"
+          },
+          {
+            "code": "537",
+            "name": "Embolisation - Hepatic"
+          },
+          {
+            "code": "538",
+            "name": "Embolisation – Renal Right"
+          },
+          {
+            "code": "539",
+            "name": "Embolisation – Renal Left"
+          },
+          {
+            "code": "540",
+            "name": "Embolisation – Renal Allograft"
+          },
+          {
+            "code": "541",
+            "name": "Embolisation Iliac Left"
+          },
+          {
+            "code": "542",
+            "name": "Embolisation Iliac Right"
+          },
+          {
+            "code": "543",
+            "name": "Embolisation Uterine Artery"
+          },
+          {
+            "code": "544",
+            "name": "Chemo - Embolisation - Liver"
+          },
+          {
+            "code": "545",
+            "name": "Embolisation - Others"
+          },
+          {
+            "code": "546",
+            "name": "Embolisation Cerebral"
+          },
+          {
+            "code": "547",
+            "name": "Embolisation Extracranial"
+          },
+          {
+            "code": "548",
+            "name": "Embolisation – Upper Extremity Right"
+          },
+          {
+            "code": "549",
+            "name": "Embolisation – Upper Extremity Left"
+          },
+          {
+            "code": "550",
+            "name": "Embolisation – Lower Extremity Right"
+          },
+          {
+            "code": "551",
+            "name": "Embolisation – Lower Extremity Left"
+          },
+          {
+            "code": "552",
+            "name": "Embolisation Thorax"
+          }
+        ]
+      },
+      "ENDOVASCULAR BRACHYTHERAPY": {
+        "code": "553",
+        "name": "ENDOVASCULAR BRACHYTHERAPY",
+        "sub_regions": [
+          {
+            "code": "554",
+            "name": "Endovascular Brachytherapy - Lower Arteries"
+          },
+          {
+            "code": "555",
+            "name": "Endovascular Brachytherapy - Upper Arteries"
+          }
+        ]
+      },
+      "FIBRIN STRIPPING": {
+        "code": "556",
+        "name": "FIBRIN STRIPPING",
+        "sub_regions": [
+          {
+            "code": "557",
+            "name": "Fibrin Stripping - Lower Arteries"
+          },
+          {
+            "code": "558",
+            "name": "Fibrin Stripping - Upper Arteries"
+          }
+        ]
+      },
+      "FISTULOGRAM": {
+        "code": "559",
+        "name": "FISTULOGRAM",
+        "sub_regions": [
+          {
+            "code": "560",
+            "name": "Fistulogram / Sinogram - Abdomen / Pelvis"
+          },
+          {
+            "code": "561",
+            "name": "Fistulogram / Sinogram - Head / Neck"
+          },
+          {
+            "code": "562",
+            "name": "Fistulogram / Sinogram - Lower Extremity"
+          },
+          {
+            "code": "563",
+            "name": "Fistulogram / Sinogram - Upper Extremity"
+          }
+        ]
+      },
+      "FOREIGN BODY RETRIEVAL": {
+        "code": "564",
+        "name": "FOREIGN BODY RETRIEVAL",
+        "sub_regions": [
+          {
+            "code": "565",
+            "name": "Foreign Body Retrieval - Lower Arteries"
+          },
+          {
+            "code": "566",
+            "name": "Foreign Body Retrieval - Upper Arteries"
+          }
+        ]
+      },
+      "PORT PLACEMENT": {
+        "code": "567",
+        "name": "PORT PLACEMENT",
+        "sub_regions": [
+          {
+            "code": "568",
+            "name": "Port Placement - Vein"
+          }
+        ]
+      },
+      "STENTING": {
+        "code": "569",
+        "name": "STENTING",
+        "sub_regions": [
+          {
+            "code": "570",
+            "name": "Stenting – Aorta Abdominal"
+          },
+          {
+            "code": "571",
+            "name": "Stenting – Renal Allograft"
+          },
+          {
+            "code": "572",
+            "name": "Stenting – Renal Left"
+          },
+          {
+            "code": "573",
+            "name": "Stenting – Renal Right"
+          },
+          {
+            "code": "574",
+            "name": "Stenting Iliac Left"
+          },
+          {
+            "code": "575",
+            "name": "Stenting Iliac Right"
+          },
+          {
+            "code": "576",
+            "name": "Stenting - Others"
+          },
+          {
+            "code": "577",
+            "name": "Stenting Cerebral – Carotid Common Right"
+          },
+          {
+            "code": "578",
+            "name": "Stenting Cerebral –Carotid  Common  Left"
+          },
+          {
+            "code": "579",
+            "name": "Stenting Cerebral –  Carotid Internal Right"
+          },
+          {
+            "code": "580",
+            "name": "Stenting Cerebral – Carotid Internal Left"
+          },
+          {
+            "code": "581",
+            "name": "Stenting Cerebral – Carotid External Right"
+          },
+          {
+            "code": "582",
+            "name": "Stenting Cerebral – Carotid ExternalLeft"
+          },
+          {
+            "code": "583",
+            "name": "Stenting Cerebral – Vertebral Right"
+          },
+          {
+            "code": "584",
+            "name": "Stenting Cerebral – Vertebral Left"
+          },
+          {
+            "code": "585",
+            "name": "Stenting Cerebral - Others"
+          },
+          {
+            "code": "586",
+            "name": "Stenting – Upper Extremity Right"
+          },
+          {
+            "code": "587",
+            "name": "Stenting – UpperExtremity Left"
+          },
+          {
+            "code": "588",
+            "name": "Stenting – Lower Extremity Right"
+          },
+          {
+            "code": "589",
+            "name": "Stenting – Lower Extremity Left"
+          },
+          {
+            "code": "590",
+            "name": "Stenting – Thoracic"
+          }
+        ]
+      },
+      "THROMBOLYSIS": {
+        "code": "591",
+        "name": "THROMBOLYSIS",
+        "sub_regions": [
+          {
+            "code": "592",
+            "name": "Thrombolysis Abdominal Artery"
+          },
+          {
+            "code": "593",
+            "name": "Thrombolysis Abdominal Vein"
+          },
+          {
+            "code": "594",
+            "name": "Thrombolysis Cerebral  Artery"
+          },
+          {
+            "code": "595",
+            "name": "Thrombolysis Cerebral Vein"
+          },
+          {
+            "code": "596",
+            "name": "Thrombolysis – Lower Extremity Right Artery"
+          },
+          {
+            "code": "597",
+            "name": "Thrombolysis – Lower Extremity Right Vein"
+          },
+          {
+            "code": "598",
+            "name": "Thrombolysis – Upper Extremity Left Artery"
+          },
+          {
+            "code": "599",
+            "name": "Thrombolysis – Upper Extremity Left Vein"
+          },
+          {
+            "code": "600",
+            "name": "Thrombolysis – Upper Extremity Right Artery"
+          },
+          {
+            "code": "601",
+            "name": "Thrombolysis – Upper Extremity Right Vein"
+          },
+          {
+            "code": "602",
+            "name": "Thrombolysis –Lower Extremity Left Artery"
+          },
+          {
+            "code": "603",
+            "name": "Thrombolysis –Lower Extremity Left Vein"
+          },
+          {
+            "code": "604",
+            "name": "Thrombolysis - Thoracic Artery"
+          },
+          {
+            "code": "605",
+            "name": "Thrombolysis - Pulmonary"
+          },
+          {
+            "code": "606",
+            "name": "Thrombolysis - Thoracic Vein"
+          }
+        ]
+      },
+      "GASTROINTESTINAL SYSTEM": {
+        "code": "607",
+        "name": "GASTROINTESTINAL SYSTEM",
+        "sub_regions": [
+          {
+            "code": "608",
+            "name": "Oesophageal Dilatation"
+          },
+          {
+            "code": "609",
+            "name": "Oesophageal Stent Insertion"
+          },
+          {
+            "code": "610",
+            "name": "Fluoroscopy Guided GI - Dilatation"
+          },
+          {
+            "code": "611",
+            "name": "Gastrointestinal System - Others"
+          }
+        ]
+      },
+      "HEPATOBILIARY SYSTEM & PANCREAS": {
+        "code": "612",
+        "name": "HEPATOBILIARY SYSTEM & PANCREAS",
+        "sub_regions": [
+          {
+            "code": "613",
+            "name": "Biliary Dilatation"
+          },
+          {
+            "code": "614",
+            "name": "Biliary Dilatation & Stenting"
+          },
+          {
+            "code": "615",
+            "name": "Fluoroscopy Guided Biopsy -  Transjugular - Liver"
+          },
+          {
+            "code": "616",
+            "name": "Pancreatic Duct Stenting"
+          },
+          {
+            "code": "617",
+            "name": "Percutaneous Cholecystostomy"
+          },
+          {
+            "code": "618",
+            "name": "PTBD (Percutaneous Transhepatic Biliary Drainage)"
+          },
+          {
+            "code": "619",
+            "name": "PTC (Percutaneous Transhepatic Cholangiogram)"
+          },
+          {
+            "code": "620",
+            "name": "Removal of Calculus / Worm - Biliary - Percutaneous"
+          },
+          {
+            "code": "621",
+            "name": "Removal of Worms / Calculus - Biliary - Endoscopic"
+          },
+          {
+            "code": "622",
+            "name": "Hepatobiliary System - Others"
+          }
+        ]
+      },
+      "RESPIRATORY SYSTEM": {
+        "code": "623",
+        "name": "RESPIRATORY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "624",
+            "name": "Fluoroscopy Guided Biopsy - Lung left"
+          },
+          {
+            "code": "625",
+            "name": "Fluoroscopy Guided Biopsy - Lung right"
+          },
+          {
+            "code": "626",
+            "name": "Insertion of Bronchial Stent - Left"
+          },
+          {
+            "code": "627",
+            "name": "Insertion of Bronchial Stent - Right"
+          },
+          {
+            "code": "628",
+            "name": "Insertion of Tracheal Stent"
+          },
+          {
+            "code": "629",
+            "name": "Occlusion of Broncho-pleural Fistula - Left"
+          },
+          {
+            "code": "630",
+            "name": "Occlusion of Broncho-pleural Fistula Right"
+          }
+        ]
+      },
+      "URINARY SYSTEM": {
+        "code": "631",
+        "name": "URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "632",
+            "name": "APG (Antegrade Pyelogram) -  Left"
+          },
+          {
+            "code": "633",
+            "name": "APG (Antegrade Pyelogram) -  Right"
+          },
+          {
+            "code": "634",
+            "name": "Fluoroscopy Guided Cystostomy"
+          },
+          {
+            "code": "635",
+            "name": "Fluoroscopy Guided Nephrostomy - Bilateral"
+          },
+          {
+            "code": "636",
+            "name": "Fluoroscopy Guided Nephrostomy - Left"
+          },
+          {
+            "code": "637",
+            "name": "Fluoroscopy Guided Nephrostomy - Right"
+          },
+          {
+            "code": "638",
+            "name": "Percutaneous Nephrostomy"
+          },
+          {
+            "code": "639",
+            "name": "Percutaneous Antegrade Ureteroplasty/Stenting - Left"
+          },
+          {
+            "code": "640",
+            "name": "Percutaneous Antegrade Ureteroplasty/Stenting - Right"
+          },
+          {
+            "code": "641",
+            "name": "Percutaneous Removal of Urinary Calculus - Left"
+          },
+          {
+            "code": "642",
+            "name": "Percutaneous Removal of Urinary Calculus - Right"
+          },
+          {
+            "code": "643",
+            "name": "Retrograde Ureteroplasty/Stenting - Left"
+          },
+          {
+            "code": "644",
+            "name": "Retrograde Ureteroplasty/Stenting - Right"
+          },
+          {
+            "code": "645",
+            "name": "RPG (Retrograde Pyelogram) -  Bilateral"
+          },
+          {
+            "code": "646",
+            "name": "RPG (Retrograde Pyelogram) -  Left"
+          },
+          {
+            "code": "647",
+            "name": "RPG (Retrograde Pyelogram) -  Right"
+          }
+        ]
+      },
+      "VENOUS INTERVENTION AND ACCESS MANAGEMENT": {
+        "code": "648",
+        "name": "VENOUS INTERVENTION AND ACCESS MANAGEMENT",
+        "sub_regions": [
+          {
+            "code": "649",
+            "name": "Venography – IVC (Inf. Vena Cava) - Filter Insertion"
+          },
+          {
+            "code": "650",
+            "name": "TIPSS/DIPSS (Porto Systemic Shunt)"
+          },
+          {
+            "code": "651",
+            "name": "Venous Sampling - Petrosal"
+          },
+          {
+            "code": "652",
+            "name": "Venous Sampling - Adrenal"
+          },
+          {
+            "code": "653",
+            "name": "Venous Sampling - Pancreas"
+          },
+          {
+            "code": "654",
+            "name": "Insertion Venous Catheter"
+          }
+        ]
+      },
+      "BREAST": {
+        "code": "655",
+        "name": "BREAST",
+        "sub_regions": [
+          {
+            "code": "656",
+            "name": "Mammogram - Ductogram Left"
+          },
+          {
+            "code": "657",
+            "name": "Mammogram - Ductogram Right"
+          },
+          {
+            "code": "658",
+            "name": "Mammogram - Wire Localisation Left"
+          },
+          {
+            "code": "659",
+            "name": "Mammogram - Wire Localisation Right"
+          },
+          {
+            "code": "660",
+            "name": "Mammogram Stereotactic biopsy  Left"
+          },
+          {
+            "code": "661",
+            "name": "Mammogram Stereotactic  Biopsy Right"
+          }
+        ]
+      },
+      "CT GUIDED PROCEDURES": {
+        "code": "662",
+        "name": "CT GUIDED PROCEDURES",
+        "sub_regions": [
+          {
+            "code": "663",
+            "name": "CT Guided Procedure - Abdomen"
+          },
+          {
+            "code": "664",
+            "name": "CT Guided Procedures - Brain"
+          },
+          {
+            "code": "665",
+            "name": "CT Guided Procedure - Spine"
+          },
+          {
+            "code": "666",
+            "name": "CT Guided Procedure - Thorax"
+          },
+          {
+            "code": "667",
+            "name": "CT Guided Procedure - MSK"
+          },
+          {
+            "code": "668",
+            "name": "CT Guided Procedure - Others"
+          },
+          {
+            "code": "669",
+            "name": "CT - Image Guided Surgery (IGS)"
+          }
+        ]
+      },
+      "MRI GUIDED PROCEDURES": {
+        "code": "670",
+        "name": "MRI GUIDED PROCEDURES",
+        "sub_regions": [
+          {
+            "code": "671",
+            "name": "MRI guided Procedures"
+          }
+        ]
+      },
+      "US GUIDED PROCEDURES": {
+        "code": "672",
+        "name": "US GUIDED PROCEDURES",
+        "sub_regions": [
+          {
+            "code": "673",
+            "name": "U/S Guided Biopsy/Aspiration - Breast Left"
+          },
+          {
+            "code": "674",
+            "name": "U/S Guided Biopsy/Aspiration - Breast Right"
+          },
+          {
+            "code": "675",
+            "name": "U/S Guided Hookwire Localisation - Breast Left"
+          },
+          {
+            "code": "676",
+            "name": "U/S Guided Hoowire Localisation - Breast Right"
+          },
+          {
+            "code": "677",
+            "name": "U/S Guided Biopsy - Thyroid/Neck"
+          },
+          {
+            "code": "678",
+            "name": "U/S Guided Liver Aspiration"
+          },
+          {
+            "code": "679",
+            "name": "U/S Guided Liver Biopsy"
+          },
+          {
+            "code": "680",
+            "name": "U/S Guided Tumour Ablation Therapy"
+          },
+          {
+            "code": "681",
+            "name": "U/S Guided Biopsy / Aspiration Abdominal"
+          },
+          {
+            "code": "682",
+            "name": "U/S Guided Aspiration - Abdomen"
+          },
+          {
+            "code": "683",
+            "name": "U/S Guided Biopsy / Aspiration Chest  Wall"
+          },
+          {
+            "code": "684",
+            "name": "U/S Guided Biopsy / Aspiration Limb - Lower"
+          },
+          {
+            "code": "685",
+            "name": "U/S Guided Biopsy / Aspiration Limb - Upper"
+          },
+          {
+            "code": "686",
+            "name": "U/S Guided  Procedure - Elbow"
+          },
+          {
+            "code": "687",
+            "name": "U/S Guided  Procedure - Hip"
+          },
+          {
+            "code": "688",
+            "name": "U/S Guided  Procedure - Shoulder"
+          },
+          {
+            "code": "689",
+            "name": "U/S Guided Procedure - Knee"
+          },
+          {
+            "code": "690",
+            "name": "U/S Guided Procedure - Wrist Joints"
+          },
+          {
+            "code": "691",
+            "name": "U/S Guided Procedure - Thorax"
+          },
+          {
+            "code": "692",
+            "name": "U/S Guided Cystostomy"
+          },
+          {
+            "code": "693",
+            "name": "U/S Guided Nephrostomy - Left"
+          },
+          {
+            "code": "694",
+            "name": "U/S Guided Nephrostomy - Right"
+          },
+          {
+            "code": "695",
+            "name": "U/S Guided - MSK"
+          },
+          {
+            "code": "696",
+            "name": "U/S Thorax - marking for Pleural Tapping"
+          }
+        ]
+      },
+      "US GUIDED PROCEDURES (MOBILE)": {
+        "code": "697",
+        "name": "US GUIDED PROCEDURES (MOBILE)",
+        "sub_regions": [
+          {
+            "code": "698",
+            "name": "U/S Guided Liver Aspiration - Mobile"
+          },
+          {
+            "code": "699",
+            "name": "U/S Guided Liver Biopsy - Mobile"
+          },
+          {
+            "code": "700",
+            "name": "U/S Guided Procedure - Thorax - Mobile"
+          },
+          {
+            "code": "701",
+            "name": "U/S Guided Cystostomy - Mobile"
+          },
+          {
+            "code": "702",
+            "name": "U/S Guided Nephrostomy - Left - Mobile"
+          },
+          {
+            "code": "703",
+            "name": "U/S Guided Nephrostomy - Right - Mobile"
+          }
+        ]
+      }
+    }
+  },
+  "BMD": {
+    "code": "04",
+    "name": "BMD",
+    "regions": {
+      "BONE DENSITOMETRY": {
+        "code": "704",
+        "name": "BONE DENSITOMETRY",
+        "sub_regions": [
+          {
+            "code": "705",
+            "name": "BMD Hip Joint Left - AP"
+          },
+          {
+            "code": "706",
+            "name": "BMD Hip Joint Right - AP"
+          },
+          {
+            "code": "707",
+            "name": "BMD Wrist Joint Left - AP"
+          },
+          {
+            "code": "708",
+            "name": "BMD Wrist Joint Right - AP"
+          },
+          {
+            "code": "709",
+            "name": "BMD Whole Body Supine - AP"
+          },
+          {
+            "code": "710",
+            "name": "BMD Lumbar Spine -AP"
+          },
+          {
+            "code": "711",
+            "name": "BMD Lumbar Spine - Lateral"
+          },
+          {
+            "code": "712",
+            "name": "BMD Pelvis Supine - AP"
+          }
+        ]
+      }
+    }
+  },
+  "INTRAVENOUS UROGRAPHY (IVU)": {
+    "code": "09",
+    "name": "INTRAVENOUS UROGRAPHY (IVU)",
+    "regions": {
+      "URINARY SYSTEM": {
+        "code": "713",
+        "name": "URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "714",
+            "name": "IVU"
+          }
+        ]
+      }
+    }
+  },
+  "MOBILE C-ARM": {
+    "code": "12",
+    "name": "MOBILE C-ARM",
+    "regions": {
+      "CMR": {
+        "code": "715",
+        "name": "CMR",
+        "sub_regions": [
+          {
+            "code": "716",
+            "name": "II Check CMR Lower Limb - Right"
+          },
+          {
+            "code": "717",
+            "name": "II Check CMR Lower Limb - Left"
+          },
+          {
+            "code": "718",
+            "name": "II Check CMR Upper Limb - Right"
+          },
+          {
+            "code": "719",
+            "name": "II Check CMR Upper Limb - Left"
+          }
+        ]
+      },
+      "FIXATION": {
+        "code": "720",
+        "name": "FIXATION",
+        "sub_regions": [
+          {
+            "code": "721",
+            "name": "II Check Fixation External (Including Ilizarov) Femur Right"
+          },
+          {
+            "code": "722",
+            "name": "II Check Fixation External (Including Ilizarov) Femur Left"
+          },
+          {
+            "code": "723",
+            "name": "II Check Fixation External (Including Ilizarov) Tibia/Fibula Right"
+          },
+          {
+            "code": "724",
+            "name": "II Check Fixation External (Including Ilizarov) Tibia/Fibula Left"
+          },
+          {
+            "code": "725",
+            "name": "II Check Fixation External (Including Ilizarov) Foot Right"
+          },
+          {
+            "code": "726",
+            "name": "II Check Fixation External (Including Ilizarov) Foot Left"
+          },
+          {
+            "code": "727",
+            "name": "II Check Fixation Internal - Joint prosthesis - Ankle Right"
+          },
+          {
+            "code": "728",
+            "name": "II Check Fixation Internal - Joint prosthesis - Ankle Left"
+          },
+          {
+            "code": "729",
+            "name": "II Check Fixation Internal - Joint prosthesis - Elbow Right"
+          },
+          {
+            "code": "730",
+            "name": "II Check Fixation Internal - Joint prosthesis - Elbow Left"
+          },
+          {
+            "code": "731",
+            "name": "II Check Fixation Internal - Joint prosthesis - Hand Right"
+          },
+          {
+            "code": "732",
+            "name": "II Check Fixation Internal - Joint prosthesis - Hand Left"
+          },
+          {
+            "code": "733",
+            "name": "II Check Fixation Internal - Joint prosthesis - Hip Right"
+          },
+          {
+            "code": "734",
+            "name": "II Check Fixation Internal - Joint prosthesis - Hip Left"
+          },
+          {
+            "code": "735",
+            "name": "II Check Fixation Internal - Joint prosthesis - Knee Right"
+          },
+          {
+            "code": "736",
+            "name": "II Check Fixation Internal - Joint prosthesis - Knee Left"
+          },
+          {
+            "code": "737",
+            "name": "II Check Fixation Internal - Joint prosthesis - Shoulder Right"
+          },
+          {
+            "code": "738",
+            "name": "II Check Fixation Internal - Joint prosthesis - Shoulder Left"
+          },
+          {
+            "code": "739",
+            "name": "II Check Fixation Internal - Joint prosthesis - Wrist Right"
+          },
+          {
+            "code": "740",
+            "name": "II Check Fixation Internal - Joint prosthesis - Wrist Left"
+          },
+          {
+            "code": "741",
+            "name": "II Check Fixation Internal - K-wires - Upper Body Bones"
+          },
+          {
+            "code": "742",
+            "name": "II Check Fixation Internal - K-wires - Lower Body Bones"
+          },
+          {
+            "code": "743",
+            "name": "II Check Fixation Internal - Plates Upper Body Bones"
+          },
+          {
+            "code": "744",
+            "name": "II Check Fixation Internal - Plates - Lower Body Bones"
+          },
+          {
+            "code": "745",
+            "name": "II Check Fixation Internal - Rod - Radius / Ulna Right"
+          },
+          {
+            "code": "746",
+            "name": "II Check Fixation Internal - Rod - Radius / Ulna Left"
+          },
+          {
+            "code": "747",
+            "name": "II Check Fixation Internal - Rod - Spine"
+          },
+          {
+            "code": "748",
+            "name": "II Check Fixation Internal - Screws - Cannulated Screws - Upper Body Bones"
+          },
+          {
+            "code": "749",
+            "name": "II Check Fixation Internal - Screws - Cannulated Screws - Lower Body Bones"
+          },
+          {
+            "code": "750",
+            "name": "II Check Fixation Internal - Screws - DHS - Hip Right"
+          },
+          {
+            "code": "751",
+            "name": "II Check Fixation Internal - Screws - DHS - Hip Left"
+          },
+          {
+            "code": "752",
+            "name": "II Check Fixation Internal - Screws - Pedicle screw"
+          },
+          {
+            "code": "753",
+            "name": "II Check Fixation Internal Intramedullary Nails - Femur Right"
+          },
+          {
+            "code": "754",
+            "name": "II Check Fixation Internal Intramedullary Nails - Femur Left"
+          },
+          {
+            "code": "755",
+            "name": "II Check Fixation Internal Intramedullary Nails - Humerus - Right"
+          },
+          {
+            "code": "756",
+            "name": "II Check Fixation Internal Intramedullary Nails - Humerus Left"
+          },
+          {
+            "code": "757",
+            "name": "II Check Fixation Internal Intramedullary Nails - Radius/Ulna Right"
+          },
+          {
+            "code": "758",
+            "name": "II Check Fixation Internal Intramedullary Nails - Radius/Ulna Left"
+          },
+          {
+            "code": "759",
+            "name": "II Check Fixation Internal Intramedullary Nails - Tibia Right"
+          },
+          {
+            "code": "760",
+            "name": "II Check Fixation Internal Intramedullary Nails - Tibia Left"
+          },
+          {
+            "code": "761",
+            "name": "II Upper Limbs"
+          },
+          {
+            "code": "762",
+            "name": "II Lower Limbs"
+          }
+        ]
+      },
+      "OSTEOTOMY": {
+        "code": "763",
+        "name": "OSTEOTOMY",
+        "sub_regions": [
+          {
+            "code": "764",
+            "name": "II Check Osteotomy Lower Limb Right"
+          },
+          {
+            "code": "765",
+            "name": "II Check Osteotomy Lower Limb Left"
+          },
+          {
+            "code": "766",
+            "name": "II Check Osteotomy Upper Limb Right"
+          },
+          {
+            "code": "767",
+            "name": "II Check Osteotomy Upper Limb Left"
+          }
+        ]
+      },
+      "FB LOCATION": {
+        "code": "768",
+        "name": "FB LOCATION",
+        "sub_regions": [
+          {
+            "code": "769",
+            "name": "II Locate FB - Head and Neck"
+          },
+          {
+            "code": "770",
+            "name": "II Locate FB - Lower Limb"
+          },
+          {
+            "code": "771",
+            "name": "II Locate FB - Trunk"
+          },
+          {
+            "code": "772",
+            "name": "II Locate FB - Upper Limb"
+          }
+        ]
+      },
+      "II PCNL": {
+        "code": "773",
+        "name": "II PCNL",
+        "sub_regions": [
+          {
+            "code": "774",
+            "name": "II PCNL (Percutaneous-Nephrolithotripsy) Bilateral"
+          },
+          {
+            "code": "775",
+            "name": "II PCNL (Percutaneous-Nephrolithotripsy) Left"
+          },
+          {
+            "code": "776",
+            "name": "II PCNL (Percutaneous-Nephrolithotripsy) Right"
+          },
+          {
+            "code": "777",
+            "name": "II PCVL (Percutaneous Vesicolithotripsy)"
+          }
+        ]
+      },
+      "RIRS": {
+        "code": "778",
+        "name": "RIRS",
+        "sub_regions": [
+          {
+            "code": "779",
+            "name": "II RIRS (Retro Intra-Renal Surgery) - Bilateral"
+          },
+          {
+            "code": "780",
+            "name": "II RIRS (Retro Intra-Renal Surgery) - Left"
+          },
+          {
+            "code": "781",
+            "name": "II RIRS (Retro Intra-Renal Surgery) - Right"
+          },
+          {
+            "code": "782",
+            "name": "II RPG (Retrograde Pyelo-Ureterogram) Bilateral"
+          },
+          {
+            "code": "783",
+            "name": "II RPG (Retrograde Pyelo-Ureterogram) Left"
+          },
+          {
+            "code": "784",
+            "name": "II RPG (Retrograde Pyelo-Ureterogram) Right"
+          }
+        ]
+      },
+      "II STENTING": {
+        "code": "785",
+        "name": "II STENTING",
+        "sub_regions": [
+          {
+            "code": "786",
+            "name": "II Stenting Left Ureter"
+          },
+          {
+            "code": "787",
+            "name": "II Stenting Right Ureter"
+          },
+          {
+            "code": "788",
+            "name": "II Stenting Ureter Bilateral"
+          }
+        ]
+      },
+      "II URS": {
+        "code": "789",
+        "name": "II URS",
+        "sub_regions": [
+          {
+            "code": "790",
+            "name": "II URS (Uretero-Renoscopy) Bilateral"
+          },
+          {
+            "code": "791",
+            "name": "II URS (Uretero-Renoscopy) Left"
+          },
+          {
+            "code": "792",
+            "name": "II URS (Uretero-Renoscopy) Right"
+          }
+        ]
+      },
+      "II OTHERS": {
+        "code": "793",
+        "name": "II OTHERS",
+        "sub_regions": [
+          {
+            "code": "794",
+            "name": "II Vasogram"
+          },
+          {
+            "code": "795",
+            "name": "II OTC (Operative-Cholangiogram)"
+          },
+          {
+            "code": "796",
+            "name": "II Pacemaker Insertion"
+          },
+          {
+            "code": "797",
+            "name": "PermCath Insertion"
+          },
+          {
+            "code": "798",
+            "name": "II Pyelo-Nephrolithotomy Left"
+          },
+          {
+            "code": "799",
+            "name": "II Pyelo-Nephrolithotomy Right"
+          }
+        ]
+      },
+      "C-Arm Orthopaedic": {
+        "code": "872.0",
+        "name": "C-Arm Orthopaedic",
+        "sub_regions": [
+          {
+            "code": "873.0",
+            "name": "CMR"
+          },
+          {
+            "code": "874.0",
+            "name": "FIXATION"
+          },
+          {
+            "code": "875.0",
+            "name": "OSTEOTOMY"
+          },
+          {
+            "code": "876.0",
+            "name": "FB LOCATION"
+          }
+        ]
+      },
+      "C-Arm Urology": {
+        "code": "877.0",
+        "name": "C-Arm Urology",
+        "sub_regions": [
+          {
+            "code": "878.0",
+            "name": "II PCNL"
+          },
+          {
+            "code": "879.0",
+            "name": "RIRS"
+          },
+          {
+            "code": "880.0",
+            "name": "II STENTING"
+          },
+          {
+            "code": "881.0",
+            "name": "II URS"
+          }
+        ]
+      },
+      "C-Arm Medical/Cardiac": {
+        "code": "882.0",
+        "name": "C-Arm Medical/Cardiac",
+        "sub_regions": [
+          {
+            "code": "883.0",
+            "name": "II Pacemaker Insertion"
+          }
+        ]
+      },
+      "C-Arm Surgery": {
+        "code": "884.0",
+        "name": "C-Arm Surgery",
+        "sub_regions": [
+          {
+            "code": "885.0",
+            "name": "II OTC (Operative-Cholangiogram)"
+          }
+        ]
+      },
+      "C-Arm Neurosurgery": {
+        "code": "886.0",
+        "name": "C-Arm Neurosurgery",
+        "sub_regions": []
+      }
+    }
+  },
+  "CARDIAC  ANGIO": {
+    "code": "887.0",
+    "name": "CARDIAC  ANGIO",
+    "regions": {}
+  },
+  "HARD COPY": {
+    "code": "15",
+    "name": "HARD COPY",
+    "regions": {
+      "FILM": {
+        "code": "800",
+        "name": "FILM",
+        "sub_regions": [
+          {
+            "code": "801",
+            "name": "Print Image on Film"
+          },
+          {
+            "code": "802",
+            "name": "Digitise Image From Film"
+          }
+        ]
+      },
+      "CD / DVD": {
+        "code": "803",
+        "name": "CD / DVD",
+        "sub_regions": [
+          {
+            "code": "804",
+            "name": "Print Image on CD/DVD"
+          },
+          {
+            "code": "805",
+            "name": "Digitise Image from CD/DVD"
+          }
+        ]
+      }
+    }
+  },
+  "REPORTING (EXTERNAL)": {
+    "code": "16",
+    "name": "REPORTING (EXTERNAL)",
+    "regions": {
+      "FILM": {
+        "code": "806",
+        "name": "FILM",
+        "sub_regions": [
+          {
+            "code": "807",
+            "name": "External - General Radiography"
+          }
+        ]
+      },
+      "DVD / CD": {
+        "code": "808",
+        "name": "DVD / CD",
+        "sub_regions": [
+          {
+            "code": "809",
+            "name": "External Reporting - Mammography"
+          },
+          {
+            "code": "810",
+            "name": "External Reporting - CT"
+          },
+          {
+            "code": "811",
+            "name": "External Reporting - MRI"
+          },
+          {
+            "code": "812",
+            "name": "External Reporting - US"
+          },
+          {
+            "code": "813",
+            "name": "External Reporting - ANGIO / IR"
+          }
+        ]
+      }
+    }
+  },
+  "DENTAL": {
+    "code": "06",
+    "name": "DENTAL",
+    "regions": {
+      "SKULL AND FACIAL BONES": {
+        "code": "814",
+        "name": "SKULL AND FACIAL BONES",
+        "sub_regions": [
+          {
+            "code": "815",
+            "name": "OPG (Orthopantomogram)"
+          },
+          {
+            "code": "816",
+            "name": "CBCT (Cone Beam Computerized Tomography)"
+          },
+          {
+            "code": "817",
+            "name": "Skull - Lateral Cephalometry"
+          }
+        ]
+      }
+    }
+  },
+  "FLUOROSCOPY": {
+    "code": "07",
+    "name": "FLUOROSCOPY",
+    "regions": {
+      "DIGESTIVE SYSTEM": {
+        "code": "818",
+        "name": "DIGESTIVE SYSTEM",
+        "sub_regions": [
+          {
+            "code": "819",
+            "name": "Barium Swallow"
+          },
+          {
+            "code": "820",
+            "name": "Swallow - Water Soluble Contrast"
+          },
+          {
+            "code": "821",
+            "name": "Barium Meal"
+          },
+          {
+            "code": "822",
+            "name": "Barium Meal Follow Through"
+          },
+          {
+            "code": "823",
+            "name": "Duodenogram"
+          },
+          {
+            "code": "824",
+            "name": "Upper GI Study - Water Soluble Contrast"
+          },
+          {
+            "code": "825",
+            "name": "Enema - Small Bowel"
+          },
+          {
+            "code": "826",
+            "name": "Barium/Contrast - Small Bowel Enema"
+          },
+          {
+            "code": "827",
+            "name": "Barium Enema"
+          },
+          {
+            "code": "828",
+            "name": "Barium/Water Soluble Contrast -Studies"
+          },
+          {
+            "code": "829",
+            "name": "Enema - Water Soluble Contrast"
+          },
+          {
+            "code": "830",
+            "name": "Loopogram Distal - Barium"
+          },
+          {
+            "code": "831",
+            "name": "Loopogram Distal - Water Soluble Contrast"
+          },
+          {
+            "code": "832",
+            "name": "Loopogram Proximal - Barium"
+          },
+          {
+            "code": "833",
+            "name": "Loopogram Proximal - Water Soluble Contrast"
+          },
+          {
+            "code": "834",
+            "name": "Proctogram"
+          },
+          {
+            "code": "835",
+            "name": "Intussusseption Reduction - Hydrostatic"
+          },
+          {
+            "code": "836",
+            "name": "Intussusseption Reduction - Air"
+          }
+        ]
+      },
+      "HEPATOBILIARY SYSTEM & PANCREAS": {
+        "code": "837",
+        "name": "HEPATOBILIARY SYSTEM & PANCREAS",
+        "sub_regions": [
+          {
+            "code": "838",
+            "name": "ERCP (Endoscopic Retrograde Cholangio-Pancreatogram)"
+          },
+          {
+            "code": "839",
+            "name": "Operative Cholangiogram"
+          },
+          {
+            "code": "840",
+            "name": "Tubogram"
+          },
+          {
+            "code": "841",
+            "name": "T-Tube Cholangiography"
+          }
+        ]
+      },
+      "MUSCULOSKELETAL SYSTEM": {
+        "code": "842",
+        "name": "MUSCULOSKELETAL SYSTEM",
+        "sub_regions": [
+          {
+            "code": "843",
+            "name": "Myelogram - Cervical Spine"
+          },
+          {
+            "code": "844",
+            "name": "Myelogram - Thoracic Spine"
+          },
+          {
+            "code": "845",
+            "name": "Myelogram - Lumbar Spine"
+          },
+          {
+            "code": "846",
+            "name": "Arthrogram"
+          }
+        ]
+      },
+      "REPRODUCTIVE SYSTEM - FEMALE": {
+        "code": "847",
+        "name": "REPRODUCTIVE SYSTEM - FEMALE",
+        "sub_regions": [
+          {
+            "code": "848",
+            "name": "HSG (Hysterosalpingogram)"
+          }
+        ]
+      },
+      "RESPIRATORY SYSTEM": {
+        "code": "849",
+        "name": "RESPIRATORY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "850",
+            "name": "Diaphragmatic Movement"
+          }
+        ]
+      },
+      "URINARY SYSTEM": {
+        "code": "851",
+        "name": "URINARY SYSTEM",
+        "sub_regions": [
+          {
+            "code": "852",
+            "name": "Cystogram"
+          },
+          {
+            "code": "853",
+            "name": "MCU (Micturiting Cysto-urethrogram)"
+          },
+          {
+            "code": "854",
+            "name": "Ascending/Descending Urethrogram"
+          }
+        ]
+      },
+      "OTHERS": {
+        "code": "855",
+        "name": "OTHERS",
+        "sub_regions": [
+          {
+            "code": "856",
+            "name": "Dacryocystogram - Bilateral"
+          },
+          {
+            "code": "857",
+            "name": "Dacryocystogram - Left"
+          },
+          {
+            "code": "858",
+            "name": "Dacryocystogram - Right"
+          },
+          {
+            "code": "859",
+            "name": "Genitogram"
+          },
+          {
+            "code": "860",
+            "name": "Line Patency - Abdomen / Pelvis"
+          },
+          {
+            "code": "861",
+            "name": "Line Patency - Head / Neck"
+          },
+          {
+            "code": "862",
+            "name": "Line Patency - Lower Extremity"
+          },
+          {
+            "code": "863",
+            "name": "Line Patency - Upper Extremity"
+          },
+          {
+            "code": "864",
+            "name": "Sialogram Parotid Left"
+          },
+          {
+            "code": "865",
+            "name": "Sialogram Parotid Right"
+          },
+          {
+            "code": "866",
+            "name": "Sialogram Submandibular Left"
+          },
+          {
+            "code": "867",
+            "name": "Sialogram Submandibular Right"
+          },
+          {
+            "code": "868",
+            "name": "Pacemaker Insertion"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,13 +1,21 @@
 # Python virtual environment
 .venv/
+venv/
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
 
 # PyInstaller build files
 build/
 dist/
+*.spec
+!Daftar_Radiologi/DaftarRadiologi.spec
 pyinstaller.log
 pyinstaller_err.log
+*.log
 
 # OS generated files
 .DS_Store
@@ -18,18 +26,26 @@ pyinstaller_err.log
 ehthumbs.db
 Thumbs.db
 
-# KKM Patient Data / PII (CRITICAL: DO NOT PUSH PATIENT DATA TO GITHUB)
-**/Pendaftaran/**/*.xlsx
-**/Pendaftaran/**/*.json
-**/Pendaftaran/extra_phris_data.json
-**/Pendaftaran/config.json
-test_temp_registration.xlsx
+# KKM Patient Data & Local Configs (CRITICAL: DO NOT PUSH PATIENT DATA / PII TO GITHUB)
+**/Pendaftaran/
+**/Backups/
 *.xlsx
-# Allow blank template to be tracked (must come AFTER *.xlsx rule)
+*.xls
 !Daftar_Radiologi/template.xlsx
+!resources/criteria/smrp_orderable.xls
+*.db
+*.sqlite
+*.sqlite3
+sync_queue.json
+config.json
+extra_phris_data.json
+test_temp_registration.xlsx
 
-
-# UI UX Pro Max skills
-
-**/.agent
+# Agent / IDE scratch and temporary files
+.agents/
+.agent/
+.claude/
+.gemini/
+scratch/
+skills-lock.json
 .aider*

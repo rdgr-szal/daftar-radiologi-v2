@@ -1,801 +1,1236 @@
-<!DOCTYPE html>
-<html lang="ms">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Senarai Pesakit - Daftar Radiologi</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <style>
-    /* Patient List — Page-specific styles */
+{% block title %}Senarai Pesakit Buku Daftar - KKM{% endblock %}
+{% block header_title %}Senarai Pesakit{% endblock %}
 
-    .filter-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1.5fr;
-      gap: 20px;
-      align-items: flex-end;
-    }
+{% block content %}
+<style>
+  .filter-tabs-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    background: var(--bg-subtle);
+    padding: 4px 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+  }
 
-    @media (max-width: 900px) {
-      .filter-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+  .filter-tabs-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
 
-    .preset-container {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+  .filter-tab-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+  }
 
-    .preset-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+  .filter-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+  }
 
-    .custom-range-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+  .filter-tab:hover {
+    color: var(--text-main);
+  }
 
-    .custom-range-container input {
-      flex: 1;
-      font-size: 0.85rem;
-      padding: 8px 10px;
-      background-color: var(--input-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      height: 38px;
-    }
+  .filter-tab.active {
+    background: var(--bg-card) !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  }
 
-    .search-container {
-      position: relative;
-    }
+  .patient-parent-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
 
-    .search-container input {
-      width: 100%;
-      font-size: 0.85rem;
-      padding: 8px 36px 8px 12px;
-      background-color: var(--input-bg);
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      height: 38px;
-    }
+  .patient-parent-row td {
+    padding: 12px 14px !important;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
 
-    .search-icon {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-      pointer-events: none;
-    }
+  .patient-parent-row:hover {
+    background-color: var(--bg-subtle);
+  }
 
-    /* Patient table accordion */
-    .patient-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
+  .patient-parent-row.cancelled-row {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+    border-left: 3px solid #ef4444;
+  }
 
-    .patient-table th {
-      background-color: var(--table-header-bg);
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--panel-border);
-      cursor: pointer;
-      user-select: none;
-      transition: background-color var(--transition-speed);
-    }
+  .patient-parent-row.cancelled-row td {
+    color: #991b1b;
+  }
 
-    .patient-table th:hover {
-      background-color: rgba(0, 0, 0, 0.03);
-      color: var(--text-primary);
-    }
+  .exam-table th {
+    padding: 11px 14px !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    background: var(--bg-subtle);
+    border-bottom: 1.5px solid var(--border-subtle);
+    white-space: nowrap;
+  }
 
-    [data-theme="dark"] .patient-table th:hover {
-      background-color: rgba(255, 255, 255, 0.03);
-    }
+  .sub-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
 
-    .patient-table th .sort-indicator {
-      display: inline-block;
-      margin-left: 4px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
+  .sub-table th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-align: left;
+  }
 
-    .patient-row-header {
-      border-bottom: 1px solid var(--panel-border);
-      cursor: pointer;
-      transition: background-color var(--transition-speed);
-    }
+  .sub-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
 
-    .patient-row-header:hover { background-color: var(--table-row-hover); }
+  /* Kebab / Overflow Menu Styles */
+  .kebab-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .patient-row-header td {
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
+  .kebab-btn:hover {
+    background: var(--bg-subtle);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
 
-    .patient-name-cell {
-      font-weight: 700 !important;
-      text-transform: uppercase;
-    }
+  .kebab-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 100;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 130px;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
 
-    .expand-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform var(--transition-speed);
-      width: 24px;
-      height: 24px;
-    }
+  .kebab-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 7px 12px;
+    border: none;
+    background: transparent;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
 
-    .patient-row-header.open .expand-btn { transform: rotate(180deg); }
+  .kebab-item:hover {
+    background: var(--bg-subtle);
+  }
 
-    .patient-row-detail {
-      display: none;
-      background-color: rgba(0, 0, 0, 0.01);
-      border-bottom: 1px solid var(--panel-border);
-    }
+  .kebab-item.item-danger {
+    color: #dc2626;
+  }
 
-    [data-theme="dark"] .patient-row-detail {
-      background-color: rgba(255, 255, 255, 0.005);
-    }
+  /* Custom Week Date Picker Popover Styles */
+  .week-picker-trigger-btn {
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
 
-    .patient-row-detail.show { display: table-row; }
+  .week-picker-popover {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    padding: 0.85rem;
+    margin-top: 6px;
+    width: 310px;
+  }
 
-    .detail-container { padding: 16px 24px; }
+  .week-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--primary);
+  }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
+  .wp-nav-btns {
+    display: flex;
+    gap: 4px;
+  }
 
-    @media (max-width: 900px) {
-      .detail-grid { grid-template-columns: repeat(2, 1fr); }
-    }
+  .wp-nav-btn {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    @media (max-width: 600px) {
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
+  .wp-nav-btn:hover {
+    background: var(--primary);
+    color: #fff;
+  }
 
-<body>
-  <div class="container">
-    <header>
-      <div class="logo-section">
-        <h1>PATIENT LIST</h1>
-        <p>Senarai Pendaftaran Pesakit & Pemeriksaan</p>
-      </div>
-      <nav>
-        <a href="/" class="nav-link">DAFTAR</a>
-        <a href="/patient-list" class="nav-link active">PATIENT LIST</a>
-        <a href="/dashboard" class="nav-link">DASHBOARD</a>
-        <a href="/data-penuh" class="nav-link">ANALISIS REFERRALS</a>
-        <a href="/phris" class="nav-link">RETEN</a>
-        <a href="/settings" class="nav-link">TETAPAN</a>
-        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Tukar Tema">
-          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path
-              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
-            </path>
-          </svg>
-          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-          </svg>
-        </button>
-        <button type="button" class="nav-btn-shutdown" onclick="shutdownServer()" title="Shut Down">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-            <line x1="12" y1="2" x2="12" y2="12"></line>
-          </svg>
-        </button>
-      </nav>
-    </header>
+  .wp-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: center;
+  }
 
-    <!-- Tapisan Date Range Picker & Carian -->
-    <div class="card card--compact" style="margin-bottom: 24px;">
-      <div class="filter-grid">
-        <!-- Preset Date Range Segmented Control -->
-        <div class="preset-container">
-          <span class="preset-label">Date</span>
-          <div class="segmented-control">
-            <button type="button" class="preset-btn active" data-preset="today">Today</button>
-            <button type="button" class="preset-btn" data-preset="yesterday">Yesterday</button>
-            <button type="button" class="preset-btn" data-preset="week">Week</button>
-            <button type="button" class="preset-btn" data-preset="month">Month</button>
-            <button type="button" class="preset-btn" data-preset="year">Year</button>
-            <button type="button" class="preset-btn" data-preset="custom">Custom</button>
-          </div>
-        </div>
+  .wp-calendar-table th {
+    padding: 4px 2px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
 
-        <!-- Custom Date Picker Fields -->
-        <div class="preset-container">
-          <span class="preset-label">Custom Range</span>
-          <div class="custom-range-container">
-            <input type="date" id="startDate" name="startDate">
-            <span style="color: var(--text-secondary); font-weight: bold;">-</span>
-            <input type="date" id="endDate" name="endDate">
-          </div>
-        </div>
+  .wp-th-week {
+    border-right: 1px solid var(--border-subtle);
+    color: var(--primary);
+  }
 
-        <!-- Real-time Search Input -->
-        <div class="preset-container">
-          <span class="preset-label">Carian</span>
-          <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Cari Nama/ID/No. X-Ray (xxxx)">
-            <span class="search-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </span>
-          </div>
-        </div>
-      </div>
+  .wp-week-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .wp-week-row:hover {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+  }
+
+  .wp-week-row:hover td {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .wp-week-row.selected-week {
+    background-color: var(--primary) !important;
+  }
+
+  .wp-week-row.selected-week td {
+    color: #ffffff !important;
+    font-weight: 700;
+  }
+
+  .wp-week-row td {
+    padding: 6px 2px;
+    border-radius: 0;
+  }
+
+  .wp-week-num {
+    border-right: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.72rem;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+  }
+
+  .modal-dialog {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+  }
+
+  .modal-body-scrollable {
+    overflow-y: auto;
+    max-height: calc(100vh - 12rem);
+    padding-right: 4px;
+  }
+</style>
+
+<div class="card">
+  <div class="card-header-clean">
+    <div class="card-title-text">
+      <svg class="icon icon-lg" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      <span>Buku Daftar Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
     </div>
-
-    <!-- Accordion Patient List Table -->
-    <div class="card card--overflow" style="margin-bottom: 30px;">
-      <div
-        style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--panel-border); background-color: var(--table-header-bg); border-top-left-radius: 12px; border-top-right-radius: 12px; flex-wrap: wrap; gap: 10px;">
-        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Senarai Rekod Pemeriksaan</span>
-        <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600;">
-          <div
-            style="background-color: var(--input-bg); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--panel-border); color: var(--text-secondary);">
-            Jumlah Pesakit: <span id="summaryTotalPatients"
-              style="color: var(--accent-color); font-weight: 700;">0</span>
-          </div>
-          <div
-            style="background-color: var(--input-bg); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--panel-border); color: var(--text-secondary);">
-            Jumlah Kes: <span id="summaryTotalCases" style="color: var(--accent-color); font-weight: 700;">0</span>
-          </div>
-        </div>
-      </div>
-      <table class="patient-table">
-        <thead>
-          <tr id="tableHeaders">
-            <th style="width: 11%;" data-sort="tarikh">Tarikh <span class="sort-indicator"></span></th>
-            <th style="width: 14%;" data-sort="xray_no">No. X-Ray <span class="sort-indicator">▲</span></th>
-            <th style="width: 15%;" data-sort="id_number">ID <span class="sort-indicator"></span></th>
-            <th style="width: 25%;" data-sort="name">Nama <span class="sort-indicator"></span></th>
-            <th style="width: 8%;" data-sort="age">Umur <span class="sort-indicator"></span></th>
-            <th style="width: 10%;" data-sort="gender">Jantina <span class="sort-indicator"></span></th>
-            <th style="width: 12%;" data-sort="exam_part">Bahagian <span class="sort-indicator"></span></th>
-            <th style="width: 5%; text-align: center;">Info</th>
-          </tr>
-        </thead>
-        <tbody id="patientListBody">
-          <!-- Data dinamik diisi di sini -->
-        </tbody>
-      </table>
-
-      <!-- Pagination Container -->
-      <div class="pagination-container" id="paginationBar">
-        <div class="page-select-container">
-          <span>Baris setiap halaman:</span>
-          <select id="pageSizeSelect" class="page-select">
-            <option value="10">10</option>
-            <option value="15" selected>15</option>
-            <option value="30">30</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </div>
-        <div class="pagination-controls">
-          <button type="button" class="page-btn" id="btnPrevPage" disabled>Prev</button>
-          <span id="pageInfo" style="font-weight: 600; color: var(--text-secondary); margin: 0 8px;">Halaman 1 dari
-            1</span>
-          <button type="button" class="page-btn" id="btnNextPage" disabled>Next</button>
-        </div>
-      </div>
-
-      <div id="noRecords" class="no-records" style="display: none;">
-        Tiada rekod ditemui bagi tempoh tarikh dan carian yang dipilih.
-      </div>
-    </div>
-
-    <footer class="site-footer">
-      rdgr.szal.kkbbs
-    </footer>
-  </div>
-
-  <!-- Windows 11 Shutdown Modal Overlay -->
-  <div id="shutdownModalOverlay" class="shutdown-modal-overlay">
-    <div class="shutdown-modal">
-      <div class="shutdown-modal-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-          <line x1="12" y1="2" x2="12" y2="12"></line>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('export.print_buku_daftar', year=selected_year, month=selected_month) }}" target="_blank"
+        class="btn btn-outline" title="Cetak Buku Daftar Radiologi untuk salinan audit fizikal">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <polyline points="6 9 6 2 18 2 18 9" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" />
         </svg>
-        <h3>Shut Down</h3>
+        <span>Print</span>
+      </a>
+      <a href="{{ url_for('export.pdf_buku_daftar', year=selected_year, month=selected_month) }}" target="_blank"
+        class="btn btn-primary" title="Muat turun/Eksport salinan PDF Buku Daftar">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <polyline points="9 15 12 18 15 15" />
+        </svg>
+        <span>PDF</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter & Time Period Bar -->
+  <form id="patientFilterForm" method="GET" action="{{ url_for('patients.patient_directory') }}"
+    style="margin-bottom: 1rem;">
+    <input type="hidden" name="period" id="period" value="{{ period }}">
+    <input type="hidden" name="day_date" id="day_date" value="{{ selected_date }}">
+
+    <div class="filter-tabs-bar">
+      <!-- Left: Period Switcher Buttons -->
+      <div class="filter-tab-group">
+        <a href="{{ url_for('patients.patient_directory', period='day', day_date=selected_date, q=search_q) }}"
+          class="filter-tab {% if period == 'day' %}active{% endif %}">Hari</a>
+        <a href="{{ url_for('patients.patient_directory', period='week', day_date=selected_date, q=search_q) }}"
+          class="filter-tab {% if period == 'week' %}active{% endif %}">Minggu</a>
+        <a href="{{ url_for('patients.patient_directory', period='month', year=selected_year, month=selected_month, day_date=selected_date, q=search_q) }}"
+          class="filter-tab {% if period == 'month' %}active{% endif %}">Bulan</a>
+        <a href="{{ url_for('patients.patient_directory', period='year', year=selected_year, day_date=selected_date, q=search_q) }}"
+          class="filter-tab {% if period == 'year' %}active{% endif %}">Tahun</a>
       </div>
-      <div class="shutdown-modal-body">
-        <div class="shutdown-modal-prompt">
-          <div class="shutdown-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
+
+      <!-- Center / Controls: Period-Specific Controls -->
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        {% if period == 'day' %}
+        <input type="date" class="form-control" value="{{ selected_date }}"
+          style="width: auto; height: 30px; font-size: 0.8rem;" onchange="setDayDateValue(this.value)">
+        {% elif period == 'week' %}
+        <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
+          <button type="button" class="btn btn-outline week-picker-trigger-btn"
+            onclick="toggleWeekPickerCalendar(event)" title="Klik untuk membuka Kalendar Penapis Minggu">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
+            <span id="weekPickerTriggerLabel">({{ week_range_text }})</span>
+          </button>
+
+          <!-- Calendar Popover Menu -->
+          <div id="weekPickerPopover" class="week-picker-popover" onclick="event.stopPropagation()">
+            <div class="week-picker-header">
+              <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} Ogos</span>
+              <div class="wp-nav-btns">
+                <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(-1)">&lt;</button>
+                <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(1)">&gt;</button>
+              </div>
+            </div>
+
+            <table class="wp-calendar-table">
+              <thead>
+                <tr>
+                  <th class="wp-th-week">#</th>
+                  <th>Isnin</th>
+                  <th>Sel</th>
+                  <th>Rab</th>
+                  <th>Kha</th>
+                  <th>Jum</th>
+                  <th>Sab</th>
+                  <th>Ahd</th>
+                </tr>
+              </thead>
+              <tbody id="wpCalendarBody">
+                <!-- Dynamically generated rows via JS -->
+              </tbody>
+            </table>
           </div>
-          <p>Are you sure you want to close this application and shut down the server?</p>
         </div>
-        <div class="shutdown-dropdown-container">
-          <label for="shutdownActionSelect">Tindakan:</label>
-          <select id="shutdownActionSelect" class="shutdown-dropdown">
-            <option value="shutdown">Close Application & Server (Shut Down)</option>
-            <option value="cancel">Cancel</option>
-          </select>
-        </div>
+        {% elif period == 'month' %}
+        <select name="month" class="form-control"
+          style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;" onchange="this.form.submit()">
+          {% for m_idx in range(1, 13) %}
+          <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
+            {{ month_map[m_idx][1] }}
+          </option>
+          {% endfor %}
+        </select>
+        {% endif %}
+
+        <select name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+          onchange="this.form.submit()">
+          {% for y in available_years %}
+          <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
       </div>
-      <div class="shutdown-modal-footer">
-        <button type="button" class="shutdown-btn shutdown-btn-primary" onclick="confirmShutdown()">OK</button>
-        <button type="button" class="shutdown-btn shutdown-btn-secondary" onclick="closeShutdownModal()">Batal</button>
+
+      <!-- Right: Search Input -->
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <input type="text" name="q" class="form-control" placeholder="Cari Nama / IC / No X-Ray..."
+          value="{{ search_q }}" style="width: 200px; height: 30px; font-size: 0.8rem;">
+        <button type="submit" class="btn btn-outline" style="height: 30px; padding: 2px 8px; font-size: 0.8rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
       </div>
     </div>
+  </form>
+
+  <!-- Summary Stats Bar -->
+  <div
+    style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.83rem; color: var(--text-muted); align-items: center;">
+    <div>Pesakit: <strong style="color: var(--text-main); font-weight: 700;">{{ total_patients }}</strong></div>
+    <div>Kes: <strong style="color: var(--primary); font-weight: 700;">{{ total_cases }}</strong></div>
   </div>
 
-  <!-- Fullscreen Shutdown Screen -->
-  <div id="win11ShutdownScreen" class="win11-shutdown-screen">
-    <div class="win11-spinner-container">
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-      <div class="win11-spinner-dot"></div>
-    </div>
-    <div class="win11-shutdown-text">Closing...</div>
-    <div class="win11-shutdown-subtext">Please wait...</div>
-  </div>
-
-  <script>
-    // State management
-    let rawPatients = [];
-    let sortColumn = 'xray_no';
-    let sortAscending = true;
-    let currentPage = 1;
-    let pageSize = 15;
-
-    // Date range helpers
-    function getTodayISO() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    function calculateDatesForPreset(preset) {
-      const today = new Date();
-      let start = new Date();
-      let end = new Date();
-
-      switch (preset) {
-        case 'today':
-          // Start and end are today
-          break;
-        case 'yesterday':
-          start.setDate(today.getDate() - 1);
-          end.setDate(today.getDate() - 1);
-          break;
-        case 'week':
-          start.setDate(today.getDate() - 7);
-          break;
-        case 'month':
-          start.setDate(1); // 1st day of current month
-          break;
-        case 'year':
-          start.setMonth(0, 1); // 1st Jan
-          break;
-        case 'custom':
-        default:
-          return null;
-      }
-
-      return {
-        start: start.toISOString().split('T')[0],
-        end: end.toISOString().split('T')[0]
-      };
-    }
-
-    // Hash code for colors
-    function getGroupColor(id, name, date) {
-      const key = `${id.trim()}_${name.trim()}_${date.trim()}`;
-      let hash = 0;
-      for (let i = 0; i < key.length; i++) {
-        hash = key.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const h = Math.abs(hash % 360);
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const s = isDark ? 30 : 45;
-      const l = isDark ? 22 : 94;
-      return `hsl(${h}, ${s}%, ${l}%)`;
-    }
-
-    // Helper to format X-ray numbers to 4 digits (or 5 digits past 9999)
-    function formatXrayNo(xray) {
-      if (!xray) return '';
-      const numMatch = xray.match(/\d+$/);
-      if (!numMatch) return xray;
-
-      const numStr = numMatch[0];
-      const prefix = xray.substring(0, xray.length - numStr.length);
-      const num = parseInt(numStr, 10);
-      const paddedNum = String(num).padStart(Math.max(4, numStr.length), '0');
-      return `${prefix}${paddedNum}`;
-    }
-
-    // Render the table records
-    function renderTable() {
-      const tbody = document.getElementById('patientListBody');
-      const noRecords = document.getElementById('noRecords');
-      const search = document.getElementById('searchInput').value.trim().toLowerCase();
-
-      // Filter
-      let filtered = rawPatients.filter(p => {
-        if (!search) return true;
-        const formattedXray = formatXrayNo(p.xray_no).toLowerCase();
-        return p.name.toLowerCase().includes(search) ||
-          p.id_number.toLowerCase().includes(search) ||
-          p.xray_no.toLowerCase().includes(search) ||
-          formattedXray.includes(search);
-      });
-
-      // Sort
-      filtered.sort((a, b) => {
-        let valA = a[sortColumn];
-        let valB = b[sortColumn];
-
-        if (sortColumn === 'xray_no') {
-          // Extract trailing digits and compare numerically
-          const numA = parseInt(String(valA).match(/\d+$/)?.[0] || 0, 10);
-          const numB = parseInt(String(valB).match(/\d+$/)?.[0] || 0, 10);
-          if (numA !== numB) {
-            return sortAscending ? numA - numB : numB - numA;
-          }
-          // If digits are equal, fallback to string comparison of the whole string
-          valA = String(valA).toLowerCase();
-          valB = String(valB).toLowerCase();
-        } else if (sortColumn === 'age' || sortColumn === 'total_expose') {
-          valA = parseFloat(valA) || 0;
-          valB = parseFloat(valB) || 0;
-        } else {
-          valA = String(valA).toLowerCase();
-          valB = String(valB).toLowerCase();
-        }
-
-        if (valA < valB) return sortAscending ? -1 : 1;
-        if (valA > valB) return sortAscending ? 1 : -1;
-        return 0;
-      });
-
-      // Calculate and display total unique patients (by name) and total cases
-      const uniqueNames = new Set(filtered.map(p => p.name.trim().toUpperCase()));
-      document.getElementById('summaryTotalPatients').textContent = uniqueNames.size;
-      document.getElementById('summaryTotalCases').textContent = filtered.length;
-
-      // Calculate total pages based on filtered records
-      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-      if (currentPage > totalPages) {
-        currentPage = totalPages;
-      }
-
-      // Update Pagination Controls UI
-      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-      document.getElementById('btnPrevPage').disabled = (currentPage === 1);
-      document.getElementById('btnNextPage').disabled = (currentPage === totalPages);
-
-      const pagBar = document.getElementById('paginationBar');
-      if (filtered.length === 0) {
-        pagBar.style.display = 'none';
-      } else {
-        pagBar.style.display = 'flex';
-      }
-
-      // Slice the dataset for active page view
-      const startIdx = (currentPage - 1) * pageSize;
-      const endIdx = startIdx + pageSize;
-      const paginatedList = filtered.slice(startIdx, endIdx);
-
-      // Calculate registration groupings only for the visible rows to determine colors
-      const groupCounts = {};
-      paginatedList.forEach(p => {
-        const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
-        groupCounts[key] = (groupCounts[key] || 0) + 1;
-      });
-
-      tbody.innerHTML = '';
-      if (filtered.length === 0) {
-        noRecords.style.display = 'block';
-        return;
-      }
-      noRecords.style.display = 'none';
-
-      paginatedList.forEach((p, index) => {
-        const key = `${p.id_number.trim()}_${p.name.trim()}_${p.tarikh.trim()}`;
-        const hasGrouping = groupCounts[key] > 1;
-        const rowBgStyle = hasGrouping ? `style="background-color: ${getGroupColor(p.id_number, p.name, p.tarikh)}"` : '';
-
-        // Header Row
-        const trHeader = document.createElement('tr');
-        trHeader.className = 'patient-row-header';
-        trHeader.id = `header-${index}`;
-        if (rowBgStyle) {
-          trHeader.setAttribute('style', rowBgStyle.substring(7, rowBgStyle.length - 1));
-        }
-
-        trHeader.innerHTML = `
-          <td>${p.tarikh}</td>
-          <td style="font-weight: 700; font-family: monospace;">${formatXrayNo(p.xray_no)}</td>
-          <td>${p.id_number}</td>
-          <td class="patient-name-cell">${p.name}</td>
-          <td>${p.age !== null ? p.age : '-'}</td>
-          <td>${p.gender}</td>
-          <td>${p.exam_part}</td>
-          <td style="text-align: center;">
-            <button class="expand-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
+  <!-- Table Container -->
+  <div class="table-container">
+    <table class="exam-table">
+      <thead>
+        <tr>
+          <th style="white-space: nowrap; width: 95px;">TARIKH</th>
+          <th style="white-space: nowrap; width: 110px;">NO. X-RAY</th>
+          <th style="min-width: 170px;">NAMA</th>
+          <th style="white-space: nowrap; width: 140px;">ID</th>
+          <th style="width: 55px; text-align: center;">UMUR</th>
+          <th style="width: 65px; text-align: center;">JANTINA</th>
+          <th style="min-width: 180px;">BAHAGIAN</th>
+          <th style="min-width: 140px;">KLINIK</th>
+          <th style="text-align: right; width: 50px; white-space: nowrap;">TINDAKAN</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in patients %}
+        <!-- Baris Utama Pesakit (Accordion Header) -->
+        <tr class="patient-parent-row {% if p.is_cancelled %}cancelled-row{% endif %}"
+          onclick="toggleAccordion('{{ p.id }}')">
+          <td style="white-space: nowrap; font-size: 0.83rem;">{{ p.tarikh }}</td>
+          <td
+            style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
+            {{ p.xray_range_display }}</td>
+          <td style="font-weight: 700;">
+            {{ p.nama }}
+            {% if p.is_cancelled %}
+            <span style="font-size: 0.72rem; color: #dc2626; margin-left: 4px; font-weight: 700;">[BATAL]</span>
+            {% endif %}
           </td>
-        `;
-
-        // Accordion click trigger
-        trHeader.addEventListener('click', () => {
-          const detailRow = document.getElementById(`detail-${index}`);
-          const isOpen = trHeader.classList.toggle('open');
-          if (isOpen) {
-            detailRow.classList.add('show');
-          } else {
-            detailRow.classList.remove('show');
-          }
-        });
-
-        // Detail Row (Accordion Body)
-        const trDetail = document.createElement('tr');
-        trDetail.className = 'patient-row-detail';
-        trDetail.id = `detail-${index}`;
-        if (rowBgStyle) {
-          trDetail.setAttribute('style', rowBgStyle.substring(7, rowBgStyle.length - 1));
-        }
-
-        trDetail.innerHTML = `
-          <td colspan="8">
-            <div class="detail-container">
-              <div class="detail-grid">
-                <div class="detail-item">
-                  <span class="detail-label">Jenis Pemeriksaan</span>
-                  <span class="detail-val">${p.exam_type}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Laterally</span>
-                  <span class="detail-val">${p.laterality}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Klinik Rujukan</span>
-                  <span class="detail-val">${p.clinic}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Kategori</span>
-                  <span class="detail-val">${p.category}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Warganegara</span>
-                  <span class="detail-val">${p.citizen}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Kakitangan Kerajaan</span>
-                  <span class="detail-val">${p.gov_staff}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Bangsa / Kaum</span>
-                  <span class="detail-val">${p.race}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">LMP</span>
-                  <span class="detail-val">${p.lmp}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Media (CD/Filem)</span>
-                  <span class="detail-val">${p.cd_filem}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Total Expose (Dose)</span>
-                  <span class="detail-val">${p.total_expose}</span>
-                </div>
-                <div class="detail-item" style="grid-column: span 2;">
-                  <span class="detail-label">Alamat Kediaman</span>
-                  <span class="detail-val">${p.address || '-'}</span>
-                </div>
+          <td
+            style="white-space: nowrap; font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; font-size: 0.83rem;">
+            {{ p.ic_pasport or '-' }}</td>
+          <td style="text-align: center;">{{ p.umur }}</td>
+          <td style="text-align: center;">{{ p.jantina }}</td>
+          <td>{{ p.bahagian_summary }}</td>
+          <td>{{ p.klinik_rujukan }}</td>
+          <td style="text-align: right; white-space: nowrap;" onclick="event.stopPropagation()">
+            <!-- Kebab / Overflow Menu Dropdown -->
+            <div class="kebab-menu-container" style="position: relative; display: inline-block;">
+              <button type="button" class="kebab-btn" onclick="toggleKebabMenu(event, 'kebab-{{ p.id }}')"
+                title="Pilihan Tindakan">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: currentColor; fill: none; stroke-width: 2.2;">
+                  <circle cx="12" cy="12" r="1.5" />
+                  <circle cx="12" cy="6" r="1.5" />
+                  <circle cx="12" cy="18" r="1.5" />
+                </svg>
+              </button>
+              <div id="kebab-{{ p.id }}" class="kebab-dropdown">
+                <button type="button" class="kebab-item" data-patient='{{ p.examinations[0]|tojson|forceescape }}'
+                  data-all-exams='{{ p.examinations|tojson|forceescape }}'
+                  onclick="triggerEditFromKebab(this, 'kebab-{{ p.id }}')">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  <span>Kemaskini</span>
+                </button>
+                {% if not p.is_cancelled %}
+                <button type="button" class="kebab-item item-danger"
+                  onclick="triggerCancelFromKebab('{{ p.examinations[0].tarikh }}', '{{ p.examinations[0].nombor_xray }}', '{{ p.nama }}', 'kebab-{{ p.id }}')">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                  </svg>
+                  <span>Batalkan Kes</span>
+                </button>
+                {% endif %}
               </div>
             </div>
           </td>
-        `;
+        </tr>
 
-        tbody.appendChild(trHeader);
-        tbody.appendChild(trDetail);
-      });
-    }
+        <!-- Baris Sub-list Accordion Pesakit -->
+        <tr id="{{ p.id }}" class="patient-detail-row" style="display: none; background-color: var(--bg-subtle);">
+          <td colspan="9" style="padding: 0.85rem 1.25rem !important;">
+            <div
+              style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-subtle); padding: 0.85rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+              <div
+                style="font-weight: 700; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Butiran Pemeriksaan ({{ p.examinations|length }} Rekod X-Ray)</span>
+                <span style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 0.75rem;">Klik
+                  baris utama untuk tutup</span>
+              </div>
+              <table class="sub-table">
+                <thead>
+                  <tr>
+                    <th>NO. X-RAY</th>
+                    <th>BAHAGIAN PEMERIKSAAN</th>
+                    <th>CD / FILEM</th>
+                    <th>KLINIK RUJUKAN</th>
+                    <th>STAFF</th>
+                    <th>CATATAN / SEBAB BATAL</th>
+                    <th style="text-align: right;">TINDAKAN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in p.examinations %}
+                  <tr>
+                    <td
+                      style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
+                      {{ item.nombor_xray }}</td>
+                    <td style="font-weight: 600;">{{ item.bahagian_pemeriksaan }}</td>
+                    <td>{{ item.cd_filem or '-' }}</td>
+                    <td>{{ item.klinik_rujukan or '-' }}</td>
+                    <td>{{ item.operator or '-' }}</td>
+                    <td>
+                      {% if item.catatan %}
+                      <span style="color: #d97706; font-weight: 600; font-size: 0.8rem;">{{ item.catatan }}</span>
+                      {% else %}
+                      <span style="color: var(--text-muted);">-</span>
+                      {% endif %}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                      <button type="button" class="btn btn-outline"
+                        style="padding: 2px 8px; font-size: 0.72rem; height: 24px; font-weight: 600;"
+                        data-patient='{{ item|tojson|forceescape }}'
+                        data-all-exams='{{ p.examinations|tojson|forceescape }}'
+                        onclick="openEditModalFromSubRow(this)">
+                        Kemaskini
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 3rem !important; color: var(--text-muted);">
+            Tiada rekod pesakit ditemui bagi julat masa yang dipilih.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-    // Fetch patients from API
-    async function loadPatients() {
-      const tbody = document.getElementById('patientListBody');
-      const start = document.getElementById('startDate').value;
-      const end = document.getElementById('endDate').value;
+<!-- Modal 1: Edit Pesakit (Pembetulan Ralat Pendaftaran) -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal-dialog" style="max-width: 650px;">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+      <svg class="icon icon-lg" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+      <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">Pembetulan Ralat Pendaftaran
+        Maklumat</h3>
+    </div>
+    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Kemaskini sebarang kesilapan maklumat pesakit atau pemeriksaan. Perubahan direfleksikan terus ke fail Excel &
+      Database.
+    </p>
 
-      if (!start || !end) return;
+    <form id="editPatientForm" onsubmit="handleEditSubmit(event)"
+      style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1; overflow: hidden;">
+      <input type="hidden" id="edit_tarikh">
+      <input type="hidden" id="edit_xray_no">
 
-      // Show Skeleton loaders
-      tbody.innerHTML = `
-        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
-        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
-        <tr class="skeleton-row"><td colspan="8"><div class="skeleton-bar"></div></td></tr>
-      `;
+      <div class="modal-body-scrollable" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <!-- Section 1: Profil Pesakit -->
+        <div
+          style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <strong style="font-size: 0.8rem; color: var(--primary); display: block; margin-bottom: 0.5rem;">1. Profil
+            Pesakit</strong>
 
-      try {
-        const response = await fetch(`/api/patients?start_date=${start}&end_date=${end}`);
-        const data = await response.json();
-        if (data.error) {
-          tbody.innerHTML = `<tr><td colspan="8" class="no-records" style="color: var(--danger-color);">${data.error}</td></tr>`;
-          return;
-        }
-        rawPatients = data;
-        renderTable();
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" class="no-records" style="color: var(--danger-color);">Ralat menyambung ke pelayan. Gagal mengambil data.</td></tr>`;
-        console.error(err);
+          <!-- Dynamic Examination Selector (When patient has multiple exams) -->
+          <div id="edit_exam_selector_container" class="form-group"
+            style="display: none; margin-bottom: 0.6rem; background: var(--bg-card); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Pilih Rekod Pemeriksaan X-Ray
+              Untuk Dikemaskini:</label>
+            <select id="edit_exam_selector" class="form-control" style="font-size: 0.82rem; font-weight: 700;"
+              onchange="switchEditExamRecord(this.value)">
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">No. X-Ray (Siri)</label>
+              <input type="text" id="edit_xray_display" class="form-control" readonly
+                style="font-weight: 700; background: var(--bg-card); font-size: 0.82rem;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">No. IC / Pasport</label>
+              <input type="text" id="edit_ic" class="form-control" style="font-size: 0.82rem;">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.6rem;">
+            <label style="font-size: 0.78rem; font-weight: 600;">Nama Penuh Pesakit *</label>
+            <input type="text" id="edit_nama" class="form-control" required
+              style="text-transform: uppercase; font-size: 0.82rem;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Umur</label>
+              <input type="number" id="edit_umur" class="form-control" style="font-size: 0.82rem;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Jantina</label>
+              <select id="edit_jantina" class="form-control" style="font-size: 0.82rem;">
+                <option value="M">LELAKI</option>
+                <option value="F">PEREMPUAN</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Bangsa</label>
+              <select id="edit_bangsa" class="form-control" style="font-size: 0.82rem;">
+                <option value="MELAYU">MELAYU</option>
+                <option value="CINA">CINA</option>
+                <option value="INDIA">INDIA</option>
+                <option value="BUMIPUTERA">BUMIPUTERA</option>
+                <option value="WARGA ASING">WARGA ASING</option>
+                <option value="LAIN-LAIN">LAIN-LAIN</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Warganegara</label>
+              <select id="edit_warganegara" class="form-control" style="font-size: 0.82rem;">
+                <option value="YA">MALAYSIA</option>
+                <option value="TIDAK">WARGA ASING</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Kakitangan Kerajaan</label>
+              <select id="edit_kakitangan_kerajaan" class="form-control" style="font-size: 0.82rem;">
+                <option value="TIDAK">TIDAK</option>
+                <option value="YA">YA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">LMP (Tarikh Haid Terakhir)</label>
+              <input type="date" id="edit_lmp" class="form-control" style="font-size: 0.82rem;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-size: 0.78rem; font-weight: 600;">Alamat Kediaman / Tempat Kerja</label>
+            <input type="text" id="edit_alamat" class="form-control" placeholder="ALAMAT PESAKIT"
+              style="text-transform: uppercase; font-size: 0.82rem;">
+          </div>
+        </div>
+
+        <!-- Section 2: Butiran Pemeriksaan & Consumables -->
+        <div
+          style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <strong style="font-size: 0.8rem; color: var(--primary); display: block; margin-bottom: 0.5rem;">2.
+            Pemeriksaan
+            & Consumables</strong>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Jenis Pemeriksaan</label>
+              <input type="text" id="edit_jenis" class="form-control" placeholder="Contoh: CHEST"
+                style="font-size: 0.82rem; text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Bahagian Pemeriksaan</label>
+              <input type="text" id="edit_bahagian" class="form-control" placeholder="Contoh: Chest, Ankle Joint"
+                style="font-size: 0.82rem;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Lateraliti</label>
+              <select id="edit_lateraliti" class="form-control" style="font-size: 0.82rem;">
+                <option value="">--- (TIDAK BERKENAAN)</option>
+                <option value="RIGHT">RIGHT (KANAN)</option>
+                <option value="LEFT">LEFT (KIRI)</option>
+                <option value="BILATERAL">BILATERAL (KEDUA-DUA)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Consumables (CD / Filem)</label>
+              <select id="edit_cd_filem" class="form-control" style="font-size: 0.82rem;">
+                {% set active_consumables = config.consumables if config.consumables else ["-", "CD [1]", "CD [2]",
+                "FILEM 14X17 [1]", "FILEM 10X12 [1]"] %}
+                {% for c in active_consumables %}
+                <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Klinikal & Staff Operator -->
+        <div
+          style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <strong style="font-size: 0.8rem; color: var(--primary); display: block; margin-bottom: 0.5rem;">3. Klinikal &
+            Petugas Bertugas</strong>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Klinik Rujukan</label>
+              <input type="text" id="edit_klinik" class="form-control"
+                style="text-transform: uppercase; font-size: 0.82rem;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Keadaan Kedatangan / Kategori</label>
+              <select id="edit_kategori" class="form-control" style="font-size: 0.82rem;">
+                <option value="BERJALAN">BERJALAN (Mobile)</option>
+                <option value="WHEELCHAIR">WHEELCHAIR (Kerusi Roda)</option>
+                <option value="TROLI">TROLI (Stretcher)</option>
+                <option value="PESAKIT LUAR">PESAKIT LUAR</option>
+                <option value="PESAKIT DALAM">PESAKIT DALAM</option>
+                <option value="KECEMASAN">KECEMASAN</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Doktor Merujuk</label>
+              <input type="text" id="edit_pegawai" class="form-control" placeholder="NAMA DOKTOR"
+                style="text-transform: uppercase; font-size: 0.82rem;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Staff *</label>
+              <input type="text" id="edit_operator" class="form-control" required
+                style="text-transform: uppercase; font-size: 0.82rem;">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem; font-weight: 600;">Catatan / Comment</label>
+              <input type="text" id="edit_catatan" class="form-control"
+                style="text-transform: uppercase; font-size: 0.82rem;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+        <button type="button" class="btn btn-outline" onclick="closeEditModal()">Batal</button>
+        <button type="submit" class="btn btn-primary" style="font-weight: 700;">Simpan Kemaskini</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Batal Rekod (Audit Compliant) -->
+<div class="modal-backdrop" id="cancelModal">
+  <div class="modal-dialog">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <svg class="icon icon-lg" viewBox="0 0 24 24" style="stroke: #dc2626; fill: none; stroke-width: 2;">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+      </svg>
+      <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #dc2626;">Pembatalan Rekod Pesakit</h3>
+    </div>
+    <div
+      style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); padding: 0.75rem; border-radius: 6px; font-size: 0.78rem; margin-bottom: 1rem; color: var(--text-main);">
+      <strong>Pematuhan Kriteria Audit (PER.SS-RA 101):</strong><br>
+      Nombor X-Ray <strong id="cancel_xray_label"></strong> tidak akan dipadamkan daripada susunan siri tahunan. Rekod
+      akan ditandakan sebagai status BATAL bersama alasan audit.
+    </div>
+
+    <form id="cancelPatientForm" onsubmit="handleCancelSubmit(event)">
+      <input type="hidden" id="cancel_tarikh">
+      <input type="hidden" id="cancel_xray_no">
+
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label>Nama Pesakit</label>
+        <input type="text" id="cancel_nama_display" class="form-control" readonly
+          style="background: var(--bg-subtle); font-weight: 600;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label>Sebab Pembatalan *</label>
+        <select id="cancel_reason_select" class="form-control" onchange="checkCustomReason(this.value)">
+          <option value="PESAKIT TIDAK HADIR / ENGGAN">Pesakit Tidak Hadir / Enggan</option>
+          <option value="RALAT PENDAFTARAN MAKLUMAT">Ralat Pendaftaran Maklumat</option>
+          <option value="PEMBATALAN OLEH PEGAWAI PERUBATAN">Dibatalkan oleh Pegawai Perubatan (MO/Pakar)</option>
+          <option value="KES TIDAK SESUAI / KONTRAINDIKASI">Kontraindikasi Klinikal</option>
+          <option value="CUSTOM">Lain-lain (Nyatakan)...</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="customReasonBox" style="display: none; margin-bottom: 0.75rem;">
+        <label>Nyatakan Sebab Khusus *</label>
+        <input type="text" id="cancel_custom_reason" class="form-control"
+          placeholder="Contoh: Mesin mengalami kerosakan teknikal">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label>Nama Petugas Pengesah *</label>
+        <input type="text" id="cancel_staff" class="form-control"
+          value="{{ config.default_staff or config.default_juru_xray }}" required style="text-transform: uppercase;">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button type="button" class="btn btn-outline" onclick="closeCancelModal()">Batal</button>
+        <button type="submit" class="btn btn-primary" style="background: #dc2626; border-color: #dc2626;">Sahkan
+          Pembatalan</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function setPeriod(p) {
+    document.getElementById('period').value = p;
+    document.getElementById('patientFilterForm').submit();
+  }
+
+  function setDayDateValue(v) {
+    document.getElementById('day_date').value = v;
+    document.getElementById('patientFilterForm').submit();
+  }
+
+  let activeAccordions = [];
+
+  function toggleAccordion(patientId) {
+    const detailRow = document.getElementById(patientId);
+    if (!detailRow) return;
+
+    const isCurrentlyOpen = (detailRow.style.display === 'table-row');
+
+    if (isCurrentlyOpen) {
+      detailRow.style.display = 'none';
+      activeAccordions = activeAccordions.filter(id => id !== patientId);
+    } else {
+      if (activeAccordions.length >= 2) {
+        const oldestId = activeAccordions.shift();
+        const oldestRow = document.getElementById(oldestId);
+        if (oldestRow) oldestRow.style.display = 'none';
       }
+      detailRow.style.display = 'table-row';
+      activeAccordions.push(patientId);
     }
+  }
 
-    // Date picker elements and triggers
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
+  let currentEditingExams = [];
 
-    startDateInput.addEventListener('change', () => {
-      // Deactivate presets if customized
-      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector('[data-preset="custom"]').classList.add('active');
-      loadPatients();
+  function openEditModalFromBtn(btn) {
+    try {
+      const raw = btn.getAttribute('data-patient');
+      const record = JSON.parse(raw);
+      const rawAll = btn.getAttribute('data-all-exams');
+      currentEditingExams = rawAll ? JSON.parse(rawAll) : [record];
+      openEditModal(record, currentEditingExams);
+    } catch (err) {
+      console.error('Ralat parse rekod pesakit:', err);
+    }
+  }
+
+  function openEditModalFromSubRow(btn) {
+    openEditModalFromBtn(btn);
+  }
+
+  function toggleKebabMenu(e, id) {
+    e.stopPropagation();
+    document.querySelectorAll('.kebab-dropdown').forEach(el => {
+      if (el.id !== id) el.style.display = 'none';
     });
+    const menu = document.getElementById(id);
+    if (menu) {
+      menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
+    }
+  }
 
-    endDateInput.addEventListener('change', () => {
-      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector('[data-preset="custom"]').classList.add('active');
-      loadPatients();
-    });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.kebab-dropdown').forEach(el => el.style.display = 'none');
+  });
 
-    // Preset button trigger
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+  function triggerEditFromKebab(btn, menuId) {
+    const menu = document.getElementById(menuId);
+    if (menu) menu.style.display = 'none';
+    openEditModalFromBtn(btn);
+  }
 
-        const preset = btn.getAttribute('data-preset');
-        if (preset === 'custom') return; // Do nothing, user changes inputs manually
+  function triggerCancelFromKebab(tarikh, xrayNo, nama, menuId) {
+    const menu = document.getElementById(menuId);
+    if (menu) menu.style.display = 'none';
+    openCancelModal(tarikh, xrayNo, nama);
+  }
 
-        const range = calculateDatesForPreset(preset);
-        if (range) {
-          startDateInput.value = range.start;
-          endDateInput.value = range.end;
-          loadPatients();
-        }
-      });
-    });
+  function openEditModal(record, allExams) {
+    currentEditingExams = allExams || [record];
 
-    // Real-time search trigger
-    document.getElementById('searchInput').addEventListener('input', () => {
-      currentPage = 1;
-      renderTable();
-    });
+    const selectorContainer = document.getElementById('edit_exam_selector_container');
+    const selector = document.getElementById('edit_exam_selector');
 
-    // Sorting headers trigger
-    document.querySelectorAll('#tableHeaders th[data-sort]').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.getAttribute('data-sort');
-        if (sortColumn === col) {
-          sortAscending = !sortAscending;
-        } else {
-          sortColumn = col;
-          sortAscending = true;
-        }
-
-        // Update headers visuals
-        document.querySelectorAll('#tableHeaders th[data-sort]').forEach(header => {
-          const ind = header.querySelector('.sort-indicator');
-          if (header.getAttribute('data-sort') === sortColumn) {
-            ind.textContent = sortAscending ? '▲' : '▼';
-          } else {
-            ind.textContent = '';
+    if (selectorContainer && selector) {
+      if (currentEditingExams.length > 1) {
+        selectorContainer.style.display = 'block';
+        selector.innerHTML = '';
+        currentEditingExams.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.nombor_xray;
+          opt.textContent = `No. X-Ray ${item.nombor_xray} — ${item.bahagian_pemeriksaan || 'Pemeriksaan'}`;
+          if (item.nombor_xray === record.nombor_xray) {
+            opt.selected = true;
           }
+          selector.appendChild(opt);
         });
-
-        renderTable();
-      });
-    });
-
-    // Windows 11 Shutdown controls
-    function shutdownServer() {
-      document.getElementById("shutdownModalOverlay").style.display = "flex";
-    }
-
-    function closeShutdownModal() {
-      document.getElementById("shutdownModalOverlay").style.display = "none";
-    }
-
-    function confirmShutdown() {
-      const action = document.getElementById("shutdownActionSelect").value;
-      if (action === "shutdown") {
-        closeShutdownModal();
-        document.getElementById("win11ShutdownScreen").style.display = "flex";
-        fetch("/shutdown", { method: "POST" })
-          .then(() => {
-            setTimeout(() => {
-              window.close();
-            }, 3000);
-          })
-          .catch(err => {
-            console.error("Error shutting down:", err);
-          });
       } else {
-        closeShutdownModal();
+        selectorContainer.style.display = 'none';
       }
     }
 
-    // Init
-    document.addEventListener('DOMContentLoaded', () => {
-      // Default to Today
-      const todayISO = getTodayISO();
-      startDateInput.value = todayISO;
-      endDateInput.value = todayISO;
+    populateEditModalRecord(record);
+    document.getElementById('editModal').style.display = 'flex';
+  }
 
-      // Pagination Events registration
-      document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
-        pageSize = parseInt(e.target.value, 10);
-        currentPage = 1;
-        renderTable();
-      });
+  function switchEditExamRecord(xrayNo) {
+    const target = currentEditingExams.find(e => e.nombor_xray === xrayNo);
+    if (target) {
+      populateEditModalRecord(target);
+    }
+  }
 
-      document.getElementById('btnPrevPage').addEventListener('click', () => {
-        if (currentPage > 1) {
-          currentPage--;
-          renderTable();
+  function populateEditModalRecord(record) {
+    document.getElementById('edit_tarikh').value = record.tarikh || '';
+    document.getElementById('edit_xray_no').value = record.nombor_xray || '';
+    document.getElementById('edit_xray_display').value = record.nombor_xray || '';
+    document.getElementById('edit_nama').value = record.nama || '';
+    document.getElementById('edit_ic').value = record.ic_pasport || '';
+    document.getElementById('edit_umur').value = record.umur || '';
+    document.getElementById('edit_jantina').value = (record.jantina === 'F' || record.jantina === 'PEREMPUAN') ? 'F' : 'M';
+    document.getElementById('edit_bangsa').value = record.bangsa || 'MELAYU';
+    document.getElementById('edit_warganegara').value = record.warganegara || 'YA';
+    document.getElementById('edit_kakitangan_kerajaan').value = record.kakitangan_kerajaan || 'TIDAK';
+    document.getElementById('edit_lmp').value = record.lmp || '';
+    document.getElementById('edit_alamat').value = record.alamat || '';
+    document.getElementById('edit_jenis').value = record.jenis_pemeriksaan || '';
+    document.getElementById('edit_bahagian').value = record.bahagian_pemeriksaan || '';
+    document.getElementById('edit_lateraliti').value = record.lateraliti || '';
+    document.getElementById('edit_cd_filem').value = record.cd_filem || 'CD [1]';
+    document.getElementById('edit_klinik').value = record.klinik_rujukan || '';
+    document.getElementById('edit_kategori').value = record.kategori || 'BERJALAN';
+    document.getElementById('edit_pegawai').value = record.pegawai_rujukan || '';
+    document.getElementById('edit_operator').value = record.operator || '';
+    document.getElementById('edit_catatan').value = record.catatan || '';
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  function handleEditSubmit(e) {
+    e.preventDefault();
+    const tarikh = document.getElementById('edit_tarikh').value;
+    const xrayNo = document.getElementById('edit_xray_no').value;
+
+    const payload = {
+      tarikh: tarikh,
+      nombor_xray: xrayNo,
+      updated_data: {
+        nama: document.getElementById('edit_nama').value,
+        ic_pasport: document.getElementById('edit_ic').value,
+        umur: document.getElementById('edit_umur').value,
+        jantina: document.getElementById('edit_jantina').value,
+        bangsa: document.getElementById('edit_bangsa').value,
+        warganegara: document.getElementById('edit_warganegara').value,
+        kakitangan_kerajaan: document.getElementById('edit_kakitangan_kerajaan').value,
+        lmp: document.getElementById('edit_lmp').value,
+        alamat: document.getElementById('edit_alamat').value,
+        jenis_pemeriksaan: document.getElementById('edit_jenis').value,
+        bahagian_pemeriksaan: document.getElementById('edit_bahagian').value,
+        lateraliti: document.getElementById('edit_lateraliti').value,
+        cd_filem: document.getElementById('edit_cd_filem').value,
+        klinik_rujukan: document.getElementById('edit_klinik').value,
+        kategori: document.getElementById('edit_kategori').value,
+        pegawai_rujukan: document.getElementById('edit_pegawai').value,
+        operator: document.getElementById('edit_operator').value,
+        catatan: document.getElementById('edit_catatan').value
+      }
+    };
+
+    fetch('/api/patient/edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          closeEditModal();
+          showToast(data.message);
+          setTimeout(() => location.reload(), 800);
+        } else {
+          alert(data.message);
         }
-      });
+      })
+      .catch(err => alert('Ralat mengemaskini rekod.'));
+  }
 
-      document.getElementById('btnNextPage').addEventListener('click', () => {
-        const totalPages = Math.ceil(rawPatients.length / pageSize) || 1;
-        if (currentPage < totalPages) {
-          currentPage++;
-          renderTable();
+  function openCancelModal(tarikh, xrayNo, nama) {
+    document.getElementById('cancel_tarikh').value = tarikh;
+    document.getElementById('cancel_xray_no').value = xrayNo;
+    document.getElementById('cancel_xray_label').textContent = xrayNo;
+    document.getElementById('cancel_nama_display').value = nama;
+    document.getElementById('cancelModal').style.display = 'flex';
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancelModal').style.display = 'none';
+  }
+
+  function checkCustomReason(val) {
+    document.getElementById('customReasonBox').style.display = (val === 'CUSTOM') ? 'block' : 'none';
+  }
+
+  function handleCancelSubmit(e) {
+    e.preventDefault();
+    const tarikh = document.getElementById('cancel_tarikh').value;
+    const xrayNo = document.getElementById('cancel_xray_no').value;
+    const selectVal = document.getElementById('cancel_reason_select').value;
+    const reason = (selectVal === 'CUSTOM') ? document.getElementById('cancel_custom_reason').value : selectVal;
+    const staff = document.getElementById('cancel_staff').value;
+
+    fetch('/api/patient/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tarikh: tarikh,
+        nombor_xray: xrayNo,
+        reason: reason,
+        staff_name: staff
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          closeCancelModal();
+          showToast(data.message);
+          setTimeout(() => location.reload(), 800);
+        } else {
+          alert(data.message);
         }
-      });
+      })
+      .catch(err => alert('Ralat membatalkan rekod.'));
+  }
 
-      loadPatients();
-    });
-  </script>
-</body>
+  /* Custom Week Picker Popover Logic */
+  let wpYear = {{ selected_year }};
+  let wpMonth = {{ selected_month }};
+  let selectedDateStr = "{{ selected_date }}";
 
-</html>
+  const monthNamesMs = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+
+  function getISOWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  }
+
+  function formatYMD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function toggleWeekPickerCalendar(e) {
+    if (e) e.stopPropagation();
+    const pop = document.getElementById('weekPickerPopover');
+    if (!pop) return;
+    const isVisible = (pop.style.display === 'block');
+    pop.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+      renderWpCalendar(wpYear, wpMonth);
+    }
+  }
+
+  function navigateWpMonth(delta) {
+    wpMonth += delta;
+    if (wpMonth > 12) {
+      wpMonth = 1;
+      wpYear++;
+    } else if (wpMonth < 1) {
+      wpMonth = 12;
+      wpYear--;
+    }
+    renderWpCalendar(wpYear, wpMonth);
+  }
+
+  function renderWpCalendar(year, month) {
+    const label = document.getElementById('wpYearMonthLabel');
+    if (label) label.textContent = `${year} ${monthNamesMs[month - 1]}`;
+
+    const tbody = document.getElementById('wpCalendarBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const selectedDateParts = selectedDateStr.split('-');
+    const selectedDateObj = (selectedDateParts.length === 3)
+      ? new Date(parseInt(selectedDateParts[0], 10), parseInt(selectedDateParts[1], 10) - 1, parseInt(selectedDateParts[2], 10))
+      : new Date();
+
+    const selectedMon = new Date(selectedDateObj);
+    const selDay = selectedMon.getDay() || 7;
+    selectedMon.setDate(selectedMon.getDate() - (selDay - 1));
+    const selectedMonStr = formatYMD(selectedMon);
+
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    const dayOfWeek = firstDayOfMonth.getDay() || 7;
+
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(startDate.getDate() - (dayOfWeek - 1));
+
+    let curDate = new Date(startDate);
+
+    for (let r = 0; r < 6; r++) {
+      const monDate = new Date(curDate);
+      const weekNum = getISOWeekNumber(monDate);
+      const monStr = formatYMD(monDate);
+
+      const tr = document.createElement('tr');
+      tr.className = 'wp-week-row';
+      if (monStr === selectedMonStr) {
+        tr.classList.add('selected-week');
+      }
+
+      tr.onclick = function () {
+        window.location.href = "/patient-list?period=week&day_date=" + monStr + "&q={{ search_q }}";
+      };
+
+      const tdWeek = document.createElement('td');
+      tdWeek.className = 'wp-week-num';
+      tdWeek.textContent = weekNum;
+      tr.appendChild(tdWeek);
+
+      for (let c = 0; c < 7; c++) {
+        const td = document.createElement('td');
+        td.textContent = curDate.getDate();
+        if (curDate.getMonth() + 1 !== month) {
+          td.style.opacity = '0.35';
+        }
+        tr.appendChild(td);
+        curDate.setDate(curDate.getDate() + 1);
+      }
+
+      tbody.appendChild(tr);
+      if (r >= 4 && curDate.getMonth() + 1 !== month) break;
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    const pop = document.getElementById('weekPickerPopover');
+    if (pop && !pop.contains(e.target) && !e.target.closest('.week-picker-trigger-btn')) {
+      pop.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}

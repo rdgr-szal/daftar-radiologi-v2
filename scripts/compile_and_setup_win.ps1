@@ -39,8 +39,8 @@ if (Test-Path ".venv") {
     Draw-Progress 25 "Virtual environment not found. Creating a new one..."
     python -m venv .venv
     & .venv\Scripts\Activate.ps1
-    Draw-Progress 40 "Installing dependencies (Flask, openpyxl, pyinstaller)..."
-    pip install --quiet Flask openpyxl pyinstaller
+    Draw-Progress 40 "Installing dependencies (Flask, openpyxl, pyinstaller, pywebview)..."
+    pip install --quiet Flask openpyxl pyinstaller pywebview pypdf xlrd
 }
 
 # 3. Compile project using PyInstaller

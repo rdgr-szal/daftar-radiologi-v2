@@ -45,8 +45,14 @@ Langkah yang perlu dilakukan oleh pengguna pada komputer mereka:
    
    ⚠️ PENTING:
    - JANGAN PADAM ATAU GANTIKAN folder "Pendaftaran" sedia ada anda.
-   - Folder "Pendaftaran" mengandungi semua data rekod pesakit anda.
+   - Folder "Pendaftaran" mengandungi fail Excel setahun ("BUKU DAFTAR XRAY {Year}.xlsx") yang menyimpan semua rekod pesakit anda.
 
-4. Selesai:
+4. Ciri-ciri Baharu Versi Ini:
+   - Fail Excel Setahun (1 File = 1 Tahun, 12 Sheets JAN - DIS) dengan *Merged Title Banner* A1:Y1 dan *Executive Gold Header*.
+   - Tetapan senarai Juru X-Ray / Operator bertugas dengan pilihan *default* pada borang pendaftaran.
+   - Penjanaan Matriks Reten PHRIS 12-Bulan (RMS/PHRIS Compliance).
+   - Antaramuka Mod Gelap Charcoal Black (`#121212`, `#181818`, `#1e1e1e`).
+
+5. Selesai:
    - Buka aplikasi menggunakan shortcut seperti biasa. UI baharu sedia digunakan.
 ========================================================================

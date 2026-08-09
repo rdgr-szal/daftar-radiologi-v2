@@ -53,7 +53,8 @@ Bila anda buka aplikasi buat kali pertama, *browser* akan terbuka secara automat
 1. **Nama Fasiliti:** Masukkan nama penuh klinik (Cth: KK BANDAR BARU SELAYANG).
 2. **Singkatan Fasiliti:** Masukkan singkatan pendek (Cth: KKBBS).
 3. **Klinik Rujukan:** Taip nama klinik rujukan -> klik **Tambah** (atau tekan Enter).
-4. Klik **Start Now**. *(Sistem akan setup database Excel automatik mengikut singkatan klinik anda).*
+4. **Senarai Juru X-Ray:** Masukkan senarai nama Juru X-Ray bertugas dan tetapkan pilihan *default*.
+5. Klik **Start Now**. *(Sistem akan setup database Excel setahun `BUKU DAFTAR XRAY {Tahun}.xlsx` dengan 12 helaian bulanan).*
 
 ---
 
@@ -73,7 +74,7 @@ Untuk hari-hari seterusnya, prosesnya sangat mudah:
 2. **Download Update:** Dapatkan fail `.zip` update terbaru daripada *developer*.
 3. **Copy & Paste:** Buka folder `DaftarRadiologi_App` sedia ada di Desktop. Extract fail baru dari zip, kemudian **paste & overwrite** ke dalam folder tersebut.
 
-> ⚠️ **PENTING:** **JANGAN** padam atau ganti folder **`Pendaftaran`**. Folder ini menyimpan semua data rekod pesakit sedia ada anda!
+> ⚠️ **PENTING:** **JANGAN** padam atau ganti folder **`Pendaftaran`**. Folder ini menyimpan fail Excel setahun (`BUKU DAFTAR XRAY {Tahun}.xlsx`) yang mengandungi semua rekod pesakit anda!
 
 4. **Selesai:** Buka aplikasi seperti biasa menggunakan *shortcut*.
 

@@ -1,0 +1,160 @@
+name: Build & Release Desktop Installers
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag version for release (e.g. v2.0.0)'
+        required: false
+        default: 'v2.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS (.dmg)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build macOS App Bundle
+        run: |
+          cd Daftar_Radiologi
+          pyinstaller --clean -y DaftarRadiologi.spec
+
+      - name: Create DMG Installer
+        run: |
+          mkdir -p dist_dmg
+          cp -r Daftar_Radiologi/dist/DaftarRadiologi.app dist_dmg/
+          
+          # Create symbolic link to Applications folder
+          ln -s /Applications dist_dmg/Applications
+          
+          # Create DMG image
+          hdiutil create -volname "Daftar Radiologi v2" -srcfolder dist_dmg -ov -format UDZO DaftarRadiologi-v2-macOS.dmg
+          
+          # Also package zip for direct launch
+          cd Daftar_Radiologi/dist
+          zip -r ../../DaftarRadiologi-v2-macOS-App.zip DaftarRadiologi.app
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaftarRadiologi-macOS-Installer
+          path: |
+            DaftarRadiologi-v2-macOS.dmg
+            DaftarRadiologi-v2-macOS-App.zip
+
+  build-windows:
+    name: Build Windows (.zip)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build Windows Executable
+        run: |
+          cd Daftar_Radiologi
+          pyinstaller --clean -y DaftarRadiologi.spec
+
+      - name: Package Windows Portable ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-Windows.zip" -Force
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaftarRadiologi-Windows-Installer
+          path: |
+            DaftarRadiologi-v2-Windows.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-macos, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download macOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DaftarRadiologi-macOS-Installer
+          path: release_assets
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DaftarRadiologi-Windows-Installer
+          path: release_assets
+
+      - name: Determine Release Tag
+        id: tag_name
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.release_tag }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag_name.outputs.tag }}
+          name: "Daftar Radiologi ${{ steps.tag_name.outputs.tag }}"
+          body: |
+            ## 🚀 Daftar Radiologi V2 (${{ steps.tag_name.outputs.tag }})
+            
+            Sistem Pengurusan Buku Daftar Radiologi & Reten PHRIS KKM (PER.SS-RA 101 Compliance).
+            
+            ### 📥 Pakej Pemasang (Download Installers):
+            - 🍏 **macOS (DMG)**: `DaftarRadiologi-v2-macOS.dmg`
+            - 🍏 **macOS (ZIP)**: `DaftarRadiologi-v2-macOS-App.zip`
+            - 🪟 **Windows (ZIP Portable)**: `DaftarRadiologi-v2-Windows.zip` (ekstrak dan terus jalankan `DaftarRadiologi.exe`)
+            
+            ### ✨ Ciri-Ciri Utama:
+            - **Buku Daftar Radiologi**: Pendaftaran pesakit harian, auto-parse IC / Warganegara / Umur / Jantina mengikut piawaian KKM.
+            - **Pengurusan SMRP KKM**: Carian pantas & penambahan kategori jenis/bahagian pemeriksaan kustom.
+            - **Reten PHRIS Bulanan**: Matriks reten 12 bulan (JAN - DIS) dengan kiraan automatik mengikut kategori rasmi KKM.
+            - **Dashboard Interaktif & Statistik**: Analitik reten harian/mingguan/bulanan/tahunan, kiraan pergerakan jalan kaki, kerusi roda, troli, dan pecahan mengikut setiap fasiliti rujukan.
+            - **Penyelarasan Pangkalan Data & Backup Automatik**: Sokongan pangkalan data tempatan, sync offline, dan arkib harian MyGovUC.
+          files: |
+            release_assets/DaftarRadiologi-v2-macOS.dmg
+            release_assets/DaftarRadiologi-v2-macOS-App.zip
+            release_assets/DaftarRadiologi-v2-Windows.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
