@@ -14,7 +14,7 @@ A standalone offline desktop application engineered specifically for Radiology U
   - Patient mobilization tracking (Ambulatory / Walking, Wheelchair, Trolley, and RME).
   - Facility breakdowns (Internal vs. External referrals, with granular counts per referring facility).
   - Demographic breakdowns (Gender & Ethnicity) and consumable inventory tracking (CDs & X-ray Films).
-- **Automated Monthly PHRIS Census Matrix**: 12-month statistical grid (JAN – DEC) automatically calculated according to official KKM guidelines.
+- **Automated Monthly PHRIS Census Matrix**: 12-month statistical grid (JAN – DEC) automatically calculated according to official KKM guidelines. WIP Reject Analysis.
 - **Offline-First Data Security**: Blackout-proof "Excel-as-a-Database" architecture, local SQLite indexing, offline synchronization queue, and automatic daily backup archiving.
 - **Cross-Platform Packaging**: Automated CI/CD builds for macOS (`.dmg`) and Windows (`.exe` / `.zip`).
 
