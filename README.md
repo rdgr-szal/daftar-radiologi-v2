@@ -1,72 +1,82 @@
-# Sistem Input Buku Daftar Radiologi & Penjanaan Reten PHRIS V2 (PER.SS-RA 101 Compliance)
+# Radiology Register & PHRIS Monthly Census System V2 (PER.SS-RA 101 Compliance)
 
-Aplikasi berasaskan desktop & local web (localhost offline) yang direka khas untuk Unit Radiologi Klinik Kesihatan, Kementerian Kesihatan Malaysia (KKM). Sistem ini membantu staf Radiologi mendaftarkan pesakit secara digital, memantau analitik operasi di Dashboard, dan menjana reten statistik dalam format PHRIS secara automatik daripada pangkalan data fail Excel rasmi tanpa memerlukan sambungan internet.
-
----
-
-## 1. Ciri-Ciri Utama Sistem V2
-
-- **Pematuhan Penuh PER.SS-RA 101**: Format pendaftaran rasmi KKM dengan sokongan auto-parsing nombor MyKad/Pasport (Umur, Jantina, Warganegara).
-- **Format Tarikh Seragam DD/MM/YYYY**: Penyeragaman format tarikh di seluruh paparan borang, senarai pesakit, kalendar penapis, dan eksport cetakan.
-- **Katalog SMRP & Custom Orderables**: Taksonomi rasmi pemeriksaan KKM dengan kebolehan menambah Jenis Pemeriksaan (Kategori) dan Bahagian Pemeriksaan kustom.
-- **Dashboard Interaktif & Statistik Operasi**:
-  - Reten jenis pemeriksaan bersepadu (*Consolidated Pivot Table*).
-  - Kiraan pergerakan pesakit (Jalan Kaki, Wheelchair, Trolley, dan RME).
-  - Perbandingan fasiliti sendiri vs luar serta pecahan mengikut setiap fasiliti rujukan individu.
-  - Statistik Demografi (Jantina & Bangsa) dan inventori Consumables (CD & Filem X-Ray).
-- **Matriks Reten PHRIS Bulanan**: Matriks reten 12 bulan (JAN - DIS) dengan kiraan automatik mengikut kategori rasmi KKM.
-- **Keselamatan Data Tempatan (Offline-First)**: "Excel as a Database" kalis *blackout*, sokongan SQLite tempatan, giliran sinkronisasi (*offline sync queue*), dan arkib sandaran harian automatik.
-- **Kompilasi Cross-Platform**: Pemasang sedia ada untuk macOS (`.dmg`) dan Windows (`.exe` / `.zip`).
+A standalone offline desktop application engineered specifically for Radiology Units in Health Clinics under the Ministry of Health Malaysia (KKM). The system enables radiographers to digitally log daily patient examinations, monitor operational statistics on an interactive dashboard, and automatically generate official monthly PHRIS statistical reports directly from a local Excel database without requiring internet connectivity.
 
 ---
 
-## 2. Struktur Fail & Folder
+## 1. Key System Features
+
+- **Full PER.SS-RA 101 Compliance**: Official KKM registry format with automatic parsing of MyKad / Passport numbers (calculating Age, Gender, and Nationality).
+- **Standardized Date Formatting (`DD/MM/YYYY`)**: Uniform date format across registration forms, patient directories, filter pickers, and print exports.
+- **SMRP Taxonomy & Custom Orderables**: Official KKM examination catalog with the ability to dynamically add custom examination categories and anatomy sub-regions.
+- **Interactive Operational Dashboard**:
+  - Consolidated examination pivot tables (*Single Integrated Reten Table*).
+  - Patient mobilization tracking (Ambulatory / Walking, Wheelchair, Trolley, and RME).
+  - Facility breakdowns (Internal vs. External referrals, with granular counts per referring facility).
+  - Demographic breakdowns (Gender & Ethnicity) and consumable inventory tracking (CDs & X-ray Films).
+- **Automated Monthly PHRIS Census Matrix**: 12-month statistical grid (JAN – DEC) automatically calculated according to official KKM guidelines.
+- **Offline-First Data Security**: Blackout-proof "Excel-as-a-Database" architecture, local SQLite indexing, offline synchronization queue, and automatic daily backup archiving.
+- **Cross-Platform Packaging**: Automated CI/CD builds for macOS (`.dmg`) and Windows (`.exe` / `.zip`).
+
+---
+
+## 2. Directory Structure
 
 ```text
 ├── .github/
 │   └── workflows/
-│       └── build-release.yml       # GitHub Actions CI/CD (Auto-compile .dmg & .exe)
+│       └── build-release.yml       # GitHub Actions CI/CD (Auto-compiles .dmg & .exe)
 ├── Daftar_Radiologi/
-│   ├── DaftarRadiologi.py          # Enjin Aplikasi Utama (Flask & PyWebView)
-│   ├── DaftarRadiologi.spec        # Konfigurasi PyInstaller Cross-Platform
-│   ├── core/                       # Modul Teras (config, excel_engine, phris_engine, export_engine, db_engine, backup_engine)
-│   ├── icon/                       # Ikon Aplikasi (.ico & .icns)
-│   ├── routes/                     # Blueprint Flask (registration, patients, dashboard, phris, settings, export)
-│   ├── templates/                  # Templat Antara Muka HTML
-│   ├── static/                     # Fail CSS, JS (Chart.js), dan Aset Grafik
-│   └── template.xlsx               # Templat Master Excel 12-Bulan (PER.SS-RA 101)
-├── scripts/
-│   ├── compile_and_setup_mac.sh    # Skrip kompilasi macOS tempatan
-│   └── compile_and_setup_win.ps1   # Skrip kompilasi Windows tempatan
-├── Install_Mac.command             # Skrip pelancaran macOS
-├── Install_Windows.bat             # Skrip pelancaran Windows
-├── requirements.txt                # Dependensi Python
-└── README.md                       # Dokumentasi Projek
+│   ├── DaftarRadiologi.py          # Main Desktop Entrypoint (Flask + PyWebView + PySide6 Launcher)
+│   ├── DaftarRadiologi.spec        # Cross-Platform PyInstaller Spec Configuration
+│   ├── core/                       # Core Engines (config, excel_engine, phris_engine, export_engine, db_engine, backup_engine)
+│   ├── icon/                       # High-Resolution Application Icons (.ico & .icns)
+│   ├── routes/                     # Flask Blueprints (registration, patients, dashboard, phris, settings, export)
+│   ├── templates/                  # HTML Interface Templates
+│   └── static/                     # CSS (Charcoal Dark Theme), JS (Chart.js), and Graphic Assets
+│   └── template.xlsx               # Official 12-Month Excel Master Template (PER.SS-RA 101)
+├── requirements.txt                # Python Dependencies
+└── README.md                       # Documentation
 ```
 
 ---
 
-## 3. Panduan Pemasangan & Kompilasi
+## 3. Installation & Usage Guide
 
-### A. Muat Turun Pemasang Terus (Recommended)
-Pengguna boleh terus memuat turun pemasang rasmi dari bahagian [GitHub Releases](https://github.com/rdgr-szal/daftar-radiologi-v2/releases):
-- 🍏 **macOS**: Muat turun `DaftarRadiologi-v2-macOS.dmg`, buka fail dan seret fail aplikasi ke folder *Applications*.
-- 🪟 **Windows**: Muat turun `DaftarRadiologi-v2-Windows.zip`, ekstrak folder dan jalankan `DaftarRadiologi.exe`.
+### Option A: Direct Installer Download (Recommended for End Users)
+Download pre-compiled native installers directly from [GitHub Releases](https://github.com/rdgr-szal/daftar-radiologi-v2/releases):
+- 🍏 **macOS**: Download `DaftarRadiologi-v2-macOS.dmg`, double-click the DMG file, and drag `Daftar Radiologi` to your `/Applications` folder.
+- 🪟 **Windows**: Download `DaftarRadiologi-v2-Windows.zip`, extract the archive, and double-click `DaftarRadiologi.exe`.
 
-### B. Menjalankan Melalui Source Code (Developer Mode)
-1. Bina Virtual Environment:
+### Option B: Developer / Source Code Mode
+1. Create a Python Virtual Environment:
    ```bash
    python3 -m venv .venv
-   source .venv/bin/activate  # macOS/Linux
-   # atau .venv\Scripts\Activate.ps1 bagi Windows
+   source .venv/bin/activate  # macOS / Linux
+   # or .venv\Scripts\Activate.ps1 on Windows
    ```
-2. Pasang dependensi:
+2. Install required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Jalankan aplikasi:
+3. Launch the application:
    ```bash
    cd Daftar_Radiologi
    python3 DaftarRadiologi.py
    ```
-4. Buka pelayar web pada `http://127.0.0.1:5005` (atau aplikasi akan dibuka terus melalui tetingkap desktop native PyWebView).
+4. Access the web interface at `http://127.0.0.1:5005` or use the automatic desktop native window.
+
+---
+
+## 4. Installation Security Warning Bypass
+
+Because this software is built for internal clinic deployment without commercial vendor certificate signatures:
+
+- **macOS (Gatekeeper Warning)**:
+  1. Right-click (or `Control` + click) `Daftar Radiologi.app` in `/Applications`.
+  2. Click **Open**, then click **Open** again on the prompt. *(macOS permanently remembers this decision)*.
+  3. Alternatively, run `xattr -cr /Applications/DaftarRadiologi.app` in Terminal.
+
+- **Windows 10/11 (SmartScreen Warning)**:
+  1. Click **"More info"** on the blue popup.
+  2. Click **"Run anyway"**.
