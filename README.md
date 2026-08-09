@@ -1,4 +1,4 @@
-# Radiology Register & PHRIS Monthly Census System V2 (PER.SS-RA 101 Compliance)
+# Radiology Registeration with PHRIS Monthly Census System V2 (PER.SS-RA 101 Compliance)
 
 A standalone offline desktop application engineered specifically for Radiology Units in Health Clinics under the Ministry of Health Malaysia (KKM). The system enables radiographers to digitally log daily patient examinations, monitor operational statistics on an interactive dashboard, and automatically generate official monthly PHRIS statistical reports directly from a local Excel database without requiring internet connectivity.
 
