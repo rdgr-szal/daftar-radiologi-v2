@@ -32,7 +32,6 @@ Thumbs.db
 *.xlsx
 *.xls
 !Daftar_Radiologi/template.xlsx
-!resources/criteria/smrp_orderable.xls
 *.db
 *.sqlite
 *.sqlite3
@@ -40,6 +39,17 @@ sync_queue.json
 config.json
 extra_phris_data.json
 test_temp_registration.xlsx
+
+# Internal Developer Docs, Criteria & Local Launch Scripts
+resources/
+PRD.md
+UPDATE.txt
+update.txt
+INSTALLATION.txt
+installation.txt
+how to deploy.txt
+Install_Mac.command
+Install_Windows.bat
 
 # Agent / IDE scratch and temporary files
 .agents/

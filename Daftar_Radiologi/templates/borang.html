@@ -288,8 +288,8 @@
             <thead>
               <tr>
                 <th style="width: 16%;">No. X-Ray</th>
-                <th style="width: 24%;">Jenis Pemeriksaan</th>
-                <th style="width: 26%;">Bahagian Pemeriksaan</th>
+                <th style="width: 24%;">Pemeriksaan</th>
+                <th style="width: 26%;">Bahagian</th>
                 <th style="width: 14%;">Lateraliti</th>
                 <th style="width: 15%;">Consumables</th>
                 <th style="width: 5%; text-align: center;">Tindakan</th>
@@ -339,7 +339,7 @@
 {% block scripts %}
 <script>
   const activeModalities = {{ (config.active_modalities if config.active_modalities else["GENERAL RADIOGRAPHY", "MOBILE - GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"])| tojson }};
-  const activeConsumables = {{ (config.consumables if config.consumables else ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"])| tojson }};
+  const activeConsumables = {{ (config.consumables if config.consumables else["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"])| tojson }};
   const smrpOptionMap = {{ (smrp_option_map if smrp_option_map else { })| tojson }};
   const optionMap = Object.assign({}, smrpOptionMap);
 
@@ -810,7 +810,7 @@
     </div>
     <form onsubmit="submitCustomOrderable(event)">
       <div class="form-group" style="margin-bottom: 1rem;">
-        <label for="custom_jenis" style="font-weight: 600; font-size: 0.83rem;">Jenis Pemeriksaan (Region / Orderable)
+        <label for="custom_jenis" style="font-weight: 600; font-size: 0.83rem;">Jenis Pemeriksaan
           *</label>
         <select id="custom_jenis" class="form-control" required style="font-size: 0.85rem;">
         </select>

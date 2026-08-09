@@ -36,18 +36,15 @@ def main():
 
     port = 5005
     url = f"http://127.0.0.1:{port}"
-    
+
+    # Mulakan pelayan Flask di thread latar belakang
+    server_thread = threading.Thread(target=start_flask_server, args=(port,), daemon=True)
+    server_thread.start()
+
     # 1. Cuba jalankan sebagai PyWebView Native Desktop Window
     try:
         import webview
-        
-        # Mulakan pelayan Flask di thread latar belakang
-        server_thread = threading.Thread(target=start_flask_server, args=(port,), daemon=True)
-        server_thread.start()
-        
-        print(f"[DaftarRadiologi] Starting Desktop Native Window at {url}...")
-        
-        # Cipta Tetingkap Desktop Native (Nisbah Skrin 2580x1992 MacBook)
+        print(f"[DaftarRadiologi] Mulakan tetingkap PyWebView di {url}...")
         window = webview.create_window(
             title="Daftar Radiologi (PER.SS-RA 101 Compliance)",
             url=url,
@@ -56,15 +53,38 @@ def main():
             min_size=(648, 608),
             resizable=True
         )
-        
         webview.start()
-        print("[DaftarRadiologi] Apps closed. Exiting safely.")
+        print("[DaftarRadiologi] Aplikasi ditutup dengan selamat.")
         sys.exit(0)
+    except Exception as e1:
+        print(f"[DaftarRadiologi] PyWebView gagal dibuka ({e1}). Mencuba enjin PySide6 QtWebEngine...")
 
-    except Exception as e:
-        print(f"[DaftarRadiologi] Native window unavailable ({e}). Switching to browser fallback mode...")
-        threading.Timer(1.2, lambda: webbrowser.open(url)).start()
-        app.run(host='127.0.0.1', port=port, debug=False)
+    # 2. Cuba jalankan sebagai PySide6 QtWebEngine Window (Embedded Chromium)
+    try:
+        from PySide6.QtCore import QUrl
+        from PySide6.QtWidgets import QApplication, QMainWindow
+        from PySide6.QtWebEngineWidgets import QWebEngineView
+        
+        print(f"[DaftarRadiologi] Mulakan tetingkap PySide6 QtWebEngine di {url}...")
+        qt_app = QApplication(sys.argv)
+        main_win = QMainWindow()
+        browser = QWebEngineView()
+        browser.setUrl(QUrl(url))
+        main_win.setCentralWidget(browser)
+        main_win.setWindowTitle("Daftar Radiologi (PER.SS-RA 101 Compliance)")
+        main_win.resize(1152, 900)
+        main_win.show()
+        qt_app.exec()
+        print("[DaftarRadiologi] Aplikasi Qt ditutup dengan selamat.")
+        sys.exit(0)
+    except Exception as e2:
+        print(f"[DaftarRadiologi] QtWebEngine gagal dibuka ({e2}). Membuka pelayar web tempatan...")
+
+    # 3. Fallback terakhir ke pelayar web jika tiada enjin tetingkap GUI ditemui
+    threading.Timer(1.2, lambda: webbrowser.open(url)).start()
+    import time
+    while True:
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()
