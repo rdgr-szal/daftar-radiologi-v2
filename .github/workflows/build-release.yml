@@ -40,7 +40,7 @@ jobs:
           cd Daftar_Radiologi
           pyinstaller --clean -y DaftarRadiologi.spec
 
-      - name: Create DMG Installer
+      - name: Create DMG Installer & ZIP
         run: |
           mkdir -p dist_dmg
           cp -r Daftar_Radiologi/dist/DaftarRadiologi.app dist_dmg/
@@ -101,7 +101,6 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [build-macos, build-windows]
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -122,10 +121,12 @@ jobs:
       - name: Determine Release Tag
         id: tag_name
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.release_tag }}" ]; then
             TAG="${{ github.event.inputs.release_tag }}"
-          else
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG="${{ github.ref_name }}"
+          else
+            TAG="v2.0.0"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
@@ -135,21 +136,18 @@ jobs:
           tag_name: ${{ steps.tag_name.outputs.tag }}
           name: "Daftar Radiologi ${{ steps.tag_name.outputs.tag }}"
           body: |
-            ## 🚀 Daftar Radiologi V2 (${{ steps.tag_name.outputs.tag }})
+            ## 🚀 Daftar Radiologi V2 Release (${{ steps.tag_name.outputs.tag }})
             
             Sistem Pengurusan Buku Daftar Radiologi & Reten PHRIS KKM (PER.SS-RA 101 Compliance).
             
-            ### 📥 Pakej Pemasang (Download Installers):
-            - 🍏 **macOS (DMG)**: `DaftarRadiologi-v2-macOS.dmg`
-            - 🍏 **macOS (ZIP)**: `DaftarRadiologi-v2-macOS-App.zip`
-            - 🪟 **Windows (ZIP Portable)**: `DaftarRadiologi-v2-Windows.zip` (ekstrak dan terus jalankan `DaftarRadiologi.exe`)
+            ### 📥 Muat Turun Pemasang (Download Installers):
+            - 🍏 **macOS (DMG Pemasang)**: `DaftarRadiologi-v2-macOS.dmg`
+            - 🍏 **macOS (ZIP Portable)**: `DaftarRadiologi-v2-macOS-App.zip`
+            - 🪟 **Windows (ZIP Executable)**: `DaftarRadiologi-v2-Windows.zip` (ekstrak fail ini dan dwi-klik `DaftarRadiologi.exe`)
             
-            ### ✨ Ciri-Ciri Utama:
-            - **Buku Daftar Radiologi**: Pendaftaran pesakit harian, auto-parse IC / Warganegara / Umur / Jantina mengikut piawaian KKM.
-            - **Pengurusan SMRP KKM**: Carian pantas & penambahan kategori jenis/bahagian pemeriksaan kustom.
-            - **Reten PHRIS Bulanan**: Matriks reten 12 bulan (JAN - DIS) dengan kiraan automatik mengikut kategori rasmi KKM.
-            - **Dashboard Interaktif & Statistik**: Analitik reten harian/mingguan/bulanan/tahunan, kiraan pergerakan jalan kaki, kerusi roda, troli, dan pecahan mengikut setiap fasiliti rujukan.
-            - **Penyelarasan Pangkalan Data & Backup Automatik**: Sokongan pangkalan data tempatan, sync offline, dan arkib harian MyGovUC.
+            ### 📋 Cara Penggunaan:
+            1. **Windows**: Muat turun `DaftarRadiologi-v2-Windows.zip`, ekstrak ke komputer anda, dan dwi-klik `DaftarRadiologi.exe`.
+            2. **macOS**: Muat turun `DaftarRadiologi-v2-macOS.dmg`, dwi-klik fail `.dmg` dan seret ikon `Daftar Radiologi` ke folder `Applications`.
           files: |
             release_assets/DaftarRadiologi-v2-macOS.dmg
             release_assets/DaftarRadiologi-v2-macOS-App.zip
