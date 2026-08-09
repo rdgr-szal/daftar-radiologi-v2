@@ -6,7 +6,7 @@ A standalone offline desktop application engineered specifically for Radiology U
 
 ## 1. Key System Features
 
-- **Full PER.SS-RA 101 Compliance**: Official KKM registry format with automatic parsing of MyKad / Passport numbers (calculating Age, Gender, and Nationality).
+- **Fast Data Entry**: Official KKM registry format with automatic parsing of MyKad / Passport numbers (calculating Age, Gender, and Nationality).
 - **Standardized Date Formatting (`DD/MM/YYYY`)**: Uniform date format across registration forms, patient directories, filter pickers, and print exports.
 - **SMRP Taxonomy & Custom Orderables**: Official KKM examination catalog with the ability to dynamically add custom examination categories and anatomy sub-regions.
 - **Interactive Operational Dashboard**:
@@ -26,13 +26,14 @@ A standalone offline desktop application engineered specifically for Radiology U
 
 1. **Strict KKM Data Governance & Compliance (Offline-First)**:
    - Ministry of Health Malaysia (KKM) policies strictly prohibit storing unencrypted patient Personally Identifiable Information (PII) on public cloud servers.
-   - **"Excel-as-a-Database" Architecture**: Directly reading and writing to local `.xlsx` files guarantees 100% offline data sovereignty, zero cloud telemetry, and direct compatibility with physical clinical audit standards without complex SQL database conversion.
+   - **"Excel-as-a-Database" Pragmatism**: Directly reading and writing to local `.xlsx` files guarantees 100% offline data sovereignty, zero cloud telemetry, and direct compatibility with physical clinical audit standards without requiring complex database installation on clinic workstations.
+   - *Developer's Note on Data Architecture*: While I personally advocate for relational databases over Excel for core storage, this design pragmatically satisfies existing KKM audit workflows. To ensure solid data integrity, I implemented a hybrid resilience layer—incorporating a local SQLite index, LAN network database sync queue, and automated daily backup routines for extra data protection.
 
 2. **Blackout-Proof Write-Through Reliability**:
    - Every patient registration executes an immediate write-and-close operation (`openpyxl`) to disk. If a sudden power outage occurs in a rural health clinic, zero data is lost.
 
-3. **Ultra-Lightweight Desktop Footprint (PyWebView vs. Electron)**:
-   - By utilizing native OS rendering engines (WebKit on macOS, WebView2 on Windows) via **PyWebView** instead of bundling a heavy Chromium runtime, the installer size remains **~35MB** (vs 180MB+ for Electron) and RAM usage stays **under 60MB** (vs 300MB+ for Electron)—enabling smooth operation on low-spec government desktop PCs.
+3. **Ultra-Lightweight Desktop Footprint (PyWebView)**:
+   - By utilizing native OS rendering engines (WebKit on macOS, WebView2 on Windows) via **PyWebView** instead of bundling a heavy Chromium runtime, the installer size remains **~35MB** and RAM usage stays **under 60MB**—enabling smooth operation on low-spec government desktop PCs.
 
 4. **Multi-Tier Window Fallback Resilience**:
    - To guarantee zero application crashes on legacy or unpatched clinic PCs lacking pre-installed WebKit/WebView2 runtimes, the app features a 3-tier launcher:
