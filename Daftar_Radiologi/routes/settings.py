@@ -2,6 +2,10 @@ import os
 import sys
 import threading
 import datetime
+import json
+import urllib.request
+import urllib.error
+import zipfile
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, send_file
 from core.config import (
     load_config,
@@ -9,7 +13,9 @@ from core.config import (
     PENDAFTARAN_DIR,
     MONTH_MAP,
     ALL_MODALITIES_CATALOG,
-    load_sync_queue
+    load_sync_queue,
+    APP_VERSION,
+    GITHUB_REPO
 )
 from core.excel_engine import get_excel_path, repair_excel_file
 from core.db_engine import (
@@ -44,6 +50,7 @@ def settings_view():
         current_year=today.year,
         pending_sync_count=pending_sync_count,
         backups=backups,
+        app_version=APP_VERSION,
         current_page='settings'
     )
 
@@ -392,3 +399,200 @@ def api_shutdown():
         os._exit(0)
     threading.Timer(0.5, shutdown_server).start()
     return jsonify({"success": True, "message": "Aplikasi ditutup secara selamat."})
+
+@settings_bp.route('/api/update/apply-patch', methods=['POST'])
+def api_apply_update_patch():
+    """
+    Kemas kini Aplikasi via Patch File (.zip):
+    1. Ekstrak fail zip ke folder aplikasi (BUNDLE_DIR).
+    2. Lindungi & Jangan sentuh / padam folder Pendaftaran (Database & Config).
+    3. Jika update mengandungi major database schema changes (is_major=true),
+       jalankan Auto Backup -> Patch -> Auto Init DB Schema -> Restore Check.
+    """
+    if 'file' not in request.files:
+        return jsonify({"success": False, "message": "Tiada fail kemas kini (.zip) dimuat naik."}), 400
+        
+    file = request.files['file']
+    if not file.filename.endswith(".zip"):
+        return jsonify({"success": False, "message": "Sila muat naik fail format .zip sahaja."}), 400
+
+    is_major = request.form.get('is_major', 'false').lower() == 'true'
+    
+    from core.config import BUNDLE_DIR, load_config
+    import zipfile
+    
+    # 1. Langkah Auto-Backup jika major update atau atas pertimbangan keselamatan
+    backup_created = False
+    backup_msg = ""
+    if is_major:
+        try:
+            success_b, msg_b, _ = create_zip_backup()
+            if not success_b:
+                return jsonify({"success": False, "message": f"Gagal membuat auto backup sebelum major update: {msg_b}"}), 500
+            backup_created = True
+            backup_msg = " [Auto Backup Berjaya Dicipta]"
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Ralat Auto Backup: {str(e)}"}), 500
+
+    # 2. Simpan fail temp zip
+    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_update_patch.zip")
+    try:
+        file.save(temp_zip)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ralat menyimpan fail muat naik: {str(e)}"}), 500
+
+    # 3. Ekstrak & Terapkan Kemas Kini
+    try:
+        with zipfile.ZipFile(temp_zip, 'r') as zipf:
+            namelist = zipf.namelist()
+            # Keselamatan: Pastikan tiada fail di dalam folder Pendaftaran/ diretas / dipadamkan secara tidak sengaja
+            for member in namelist:
+                norm_path = os.path.normpath(member)
+                if norm_path.startswith("Pendaftaran") or norm_path.startswith("Pendaftaran/") or norm_path.startswith("Pendaftaran\\"):
+                    continue # Abaikan sebarang fail Pendaftaran dalam zip kemaskini untuk lindungi data
+                
+                zipf.extract(member, BUNDLE_DIR)
+                
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+            
+        # 4. Jika Major Update, pastikan skema DB dikemaskini secara selamat
+        if is_major:
+            try:
+                config = load_config()
+                if config.get("db_config", {}).get("enabled", False):
+                    init_db_schema(config)
+            except Exception as e_db:
+                print(f"[Update Major DB Schema Warning] {e_db}")
+
+        return jsonify({
+            "success": True,
+            "message": f"Kemas kini aplikasi berjaya diterap!{backup_msg} Sila muat semula halaman atau restart aplikasi jika perlu."
+        })
+        
+    except Exception as e:
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+        return jsonify({"success": False, "message": f"Ralat mengekstrak kemas kini: {str(e)}"}), 500
+
+@settings_bp.route('/api/update/check-github', methods=['GET'])
+def api_check_github_release():
+    """
+    Semak kemas kini terkini daripada GitHub Release API.
+    """
+    try:
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        req = urllib.request.Request(url, headers={'User-Agent': 'DaftarRadiologi-App'})
+        with urllib.request.urlopen(req, timeout=8) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                tag_name = data.get('tag_name', '').lstrip('v')
+                release_name = data.get('name', '')
+                body = data.get('body', '')
+                html_url = data.get('html_url', '')
+                
+                # Cari fail asset zip
+                zip_asset = None
+                assets = data.get('assets', [])
+                for a in assets:
+                    aname = a.get('name', '').lower()
+                    if aname.endswith('.zip') or aname.endswith('.dmg'):
+                        zip_asset = {
+                            "name": a.get('name'),
+                            "download_url": a.get('browser_download_url'),
+                            "size_mb": round(a.get('size', 0) / (1024 * 1024), 2)
+                        }
+                        # Utamakan fail .zip yang mengandungi App
+                        if "app" in aname or "windows" in aname or "macos" in aname:
+                            break
+
+                current_ver = APP_VERSION.lstrip('v')
+                # Perbandingan ringkas versi
+                has_update = tag_name != current_ver and tag_name > current_ver
+
+                return jsonify({
+                    "success": True,
+                    "current_version": APP_VERSION,
+                    "latest_version": tag_name,
+                    "release_name": release_name,
+                    "has_update": has_update,
+                    "body": body,
+                    "html_url": html_url,
+                    "asset": zip_asset
+                })
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return jsonify({"success": False, "message": f"No GitHub Release found for repository '{GITHUB_REPO}'."}), 404
+        elif e.code == 403:
+            return jsonify({"success": False, "message": f"GitHub API rate limit exceeded (403). Please try again in 1 hour or upload the update zip file manually."}), 403
+        return jsonify({"success": False, "message": f"GitHub API error ({e.code}): {e.reason}"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Failed to check online update: {str(e)}"}), 500
+
+@settings_bp.route('/api/update/apply-online', methods=['POST'])
+def api_apply_online_update():
+    """
+    Muat turun pakej update dari GitHub Release URL & pasang secara automatik.
+    """
+    data = request.get_json() or {}
+    download_url = data.get('download_url', '').strip()
+    is_major = data.get('is_major', False)
+
+    if not download_url:
+        return jsonify({"success": False, "message": "Pautan muat turun GitHub tidak sah."}), 400
+
+    from core.config import BUNDLE_DIR, load_config
+
+    # 1. Auto backup jika major update
+    backup_msg = ""
+    if is_major:
+        try:
+            success_b, msg_b, _ = create_zip_backup()
+            if not success_b:
+                return jsonify({"success": False, "message": f"Gagal membuat auto backup sebelum major update: {msg_b}"}), 500
+            backup_msg = " [Auto Backup Berjaya Dicipta]"
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Ralat Auto Backup: {str(e)}"}), 500
+
+    # 2. Muat turun fail zip dari GitHub
+    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_github_update.zip")
+    try:
+        req = urllib.request.Request(download_url, headers={'User-Agent': 'DaftarRadiologi-App'})
+        with urllib.request.urlopen(req, timeout=60) as resp, open(temp_zip, 'wb') as out_file:
+            out_file.write(resp.read())
+    except Exception as e:
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+        return jsonify({"success": False, "message": f"Ralat memuat turun dari GitHub: {str(e)}"}), 500
+
+    # 3. Ekstrak & Terapkan Kemas Kini
+    try:
+        with zipfile.ZipFile(temp_zip, 'r') as zipf:
+            namelist = zipf.namelist()
+            for member in namelist:
+                norm_path = os.path.normpath(member)
+                if norm_path.startswith("Pendaftaran") or norm_path.startswith("Pendaftaran/") or norm_path.startswith("Pendaftaran\\"):
+                    continue # Abaikan folder data
+                zipf.extract(member, BUNDLE_DIR)
+
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+
+        if is_major:
+            try:
+                config = load_config()
+                if config.get("db_config", {}).get("enabled", False):
+                    init_db_schema(config)
+            except Exception as e_db:
+                print(f"[Online Update Major DB Warning] {e_db}")
+
+        return jsonify({
+            "success": True,
+            "message": f"Kemas kini Online dari GitHub berjaya diterap!{backup_msg} Sila muat semula halaman."
+        })
+    except Exception as e:
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+        return jsonify({"success": False, "message": f"Ralat mengekstrak fail dari GitHub: {str(e)}"}), 500
+
+

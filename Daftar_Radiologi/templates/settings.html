@@ -264,6 +264,13 @@
           pending_sync_count }}</span>
         {% endif %}
       </button>
+
+      <button type="button" class="tab-btn" onclick="switchTab('tabUpdate')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+        <span>Updates</span>
+      </button>
     </div>
 
     <form id="settingsForm" onsubmit="handleSaveSettings(event)">
@@ -1042,6 +1049,143 @@
         </div>
       </div>
 
+      <!-- TAB 8: Kemas Kini (Update) -->
+      <div id="tabUpdate" class="tab-pane">
+        <div class="section-card-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+          <span>8. Updates</span>
+        </div>
+
+        <!-- Current Version Info Banner -->
+        <div
+          style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">
+              Current System Version</div>
+            <div
+              style="font-size: 1.4rem; font-weight: 800; color: var(--primary); font-family: monospace; display: flex; align-items: center; gap: 0.5rem;">
+              v{{ app_version if app_version else "2.1.0" }}
+              <span id="updateBadgeStatus"
+                style="font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: inherit;">LATEST</span>
+            </div>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+              Database & patient registration records are stored in the <code>Pendaftaran/</code> folder and are always
+              protected during the update process.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline" onclick="checkGitHubRelease(true)"
+              style="white-space: nowrap; font-size: 0.8rem; font-weight: 600;">
+              🔄 Check Online (GitHub)
+            </button>
+            <button type="button" class="btn btn-outline" onclick="openExcelFolder()"
+              style="white-space: nowrap; font-size: 0.8rem;">
+              📁 Data Folder
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode Selector Cards: Online vs Manual -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+
+          <!-- ONLINE UPDATE CARD -->
+          <div
+            style="background: var(--bg-card); padding: 1.15rem; border-radius: var(--radius-md); border: 2px solid var(--primary-border); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <div
+                  style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary); font-size: 0.95rem;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path
+                      d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  <span>1. Online Update</span>
+                </div>
+                <span
+                  style="background: rgba(37, 99, 235, 0.1); color: var(--primary); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;">AUTO</span>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-main); margin-bottom: 0.6rem; line-height: 1.5;">
+                Download and install updates directly from <strong>GitHub Release</strong> without manual download.
+              </p>
+
+              <!-- GitHub Info Box -->
+              <div id="githubReleaseInfoBox"
+                style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle); margin-bottom: 1rem; font-size: 0.78rem;">
+                <div style="color: var(--text-muted); font-style: italic;">Click "Semak Online" to see the Release
+                  version on GitHub...</div>
+              </div>
+            </div>
+
+            <div>
+              <button type="button" class="btn btn-primary" id="btnOnlineUpdateApply"
+                onclick="applyOnlineUpdateFromGitHub()" style="width: 100%; font-weight: 700;" disabled>
+                🚀 Install Update
+              </button>
+            </div>
+          </div>
+
+          <!-- MANUAL UPDATE CARD -->
+          <div
+            style="background: var(--bg-card); padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <div
+                  style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main); font-size: 0.95rem;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span>2. Update Manual (Fail Patch .ZIP)</span>
+                </div>
+                <span
+                  style="background: var(--bg-subtle); color: var(--text-muted); font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px;">OFFLINE</span>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-main); margin-bottom: 0.6rem; line-height: 1.5;">
+                Select and upload patch package file <code>.zip</code> received from developer or manually downloaded.
+              </p>
+
+              <ul
+                style="font-size: 0.76rem; color: var(--text-muted); padding-left: 1.1rem; margin: 0 0 1rem 0; display: flex; flex-direction: column; gap: 0.2rem;">
+                <li>Suitable for computers without internet access.</li>
+                <li>Does not delete Excel & database registration data.</li>
+                <li>Support <strong>Major Update (Auto Backup & Restore Schema)</strong>.</li>
+              </ul>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)"
+                style="flex: 1; font-weight: 600; font-size: 0.78rem;">
+                📦 Standard Patch (.zip)
+              </button>
+              <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(true)"
+                style="flex: 1; font-weight: 600; font-size: 0.78rem; color: #d97706; border-color: #f59e0b;">
+                ⚡ Major Patch (Auto Backup)
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Hidden File Input for Update Zip -->
+        <input type="file" id="updateZipInput" accept=".zip" style="display: none;"
+          onchange="handleUpdateZipSelected(event)">
+
+        <!-- Safety Notice Banner -->
+        <div class="gov-alert" style="margin-bottom: 0;">
+          <strong>ℹ️ Registration Data Security Guarantee:</strong><br>
+          All update methods (Online or Manual) automatically enforce the protection of the <code>Pendaftaran/</code>
+          folder. Patient records in the <em>BUKU DAFTAR XRAY {Year}.xlsx</em> and <em>radiologi_local.db</em> files are
+          fully retained.
+        </div>
+      </div>
+
       <!-- Action Buttons Bottom -->
       <div
         style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
@@ -1058,7 +1202,7 @@
             <polyline points="17 21 17 13 7 13 7 21" />
             <polyline points="7 3 7 8 15 8" />
           </svg>
-          <span>Simpan</span>
+          <span>Save</span>
         </button>
       </div>
     </form>
@@ -1070,21 +1214,21 @@
   style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999;">
   <div
     style="background: var(--bg-card); border-radius: 12px; width: 100%; max-width: 480px; padding: 1.5rem; border: 1px solid var(--border-subtle);">
-    <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">Pulihkan Data dari Fail
-      Backup (.zip)</h3>
+    <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">Restore Data from Backup
+      File (.zip)</h3>
     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-      Pilih fail backup `.zip` yang dieksport dari PC lama. Semua fail Excel Buku Daftar & Pangkalan Data akan
-      dipulihkan secara automatik.
+      Select the `.zip` backup file exported from your old PC. All Excel Buku Daftar & Database files will be
+      automatically restored.
     </p>
 
     <form id="restoreForm" onsubmit="handleRestoreSubmit(event)">
       <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Pilih Fail Backup (.zip) *</label>
+        <label>Select Backup File (.zip) *</label>
         <input type="file" id="restore_file" accept=".zip" class="form-control" required>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-        <button type="button" class="btn btn-outline" onclick="closeRestoreModal()">Batal</button>
+        <button type="button" class="btn btn-outline" onclick="closeRestoreModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Sahkan Pulihkan Data</button>
       </div>
     </form>
@@ -1950,9 +2094,187 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       });
   }
 
+  let isCurrentUpdateMajor = false;
+  let latestGitHubAsset = null;
+
+  function checkGitHubRelease(showFeedback = false) {
+    const box = document.getElementById('githubReleaseInfoBox');
+    const btn = document.getElementById('btnOnlineUpdateApply');
+    const badge = document.getElementById('updateBadgeStatus');
+
+    if (box) {
+      box.innerHTML = '<em>Menyemak repositori GitHub Release...</em>';
+    }
+
+    fetch('/api/update/check-github')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          latestGitHubAsset = data.asset;
+
+          if (data.has_update) {
+            if (badge) {
+              badge.innerText = `Update v${data.latest_version}`;
+              badge.style.background = 'rgba(239, 68, 68, 0.15)';
+              badge.style.color = '#ef4444';
+            }
+            if (box) {
+              box.innerHTML = `
+                <div style="font-weight: 700; color: #10b981; margin-bottom: 0.2rem;">✨ Versi Baru Ditemui: v${data.latest_version}</div>
+                <div style="color: var(--text-main); font-weight: 600;">${escapeHtml(data.release_name || 'Release Baru')}</div>
+                <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.25rem;">
+                  Fail: <strong>${data.asset ? data.asset.name : 'Pakej ZIP'}</strong> (${data.asset ? data.asset.size_mb + ' MB' : '-'})
+                </div>
+              `;
+            }
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = `Install v${data.latest_version} (Direct)`;
+            }
+            if (showFeedback && typeof showToast === 'function') {
+              showToast(`New version v${data.latest_version} found in GitHub!`);
+            }
+          } else {
+            if (badge) {
+              badge.innerText = 'LATEST';
+              badge.style.background = 'rgba(16, 185, 129, 0.15)';
+              badge.style.color = '#10b981';
+            }
+            if (box) {
+              box.innerHTML = `
+                <div style="color: #10b981; font-weight: 700;">✅ Versi aplikasi anda adalah TERKINI (v${data.current_version}).</div>
+                <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.2rem;">GitHub Latest Release Tag: <code>v${data.latest_version}</code></div>
+              `;
+            }
+            if (btn) {
+              btn.disabled = true;
+              btn.innerText = 'Apps Already Latest';
+            }
+            if (showFeedback && typeof showToast === 'function') {
+              showToast('Apps already on latest updates.');
+            }
+          }
+        } else {
+          if (box) {
+            box.innerHTML = `<div style="color: var(--text-muted); font-style: italic;">${escapeHtml(data.message)}</div>`;
+          }
+          if (showFeedback) alert(data.message);
+        }
+      })
+      .catch(err => {
+        if (box) box.innerHTML = '<div style="color: #ef4444;">Gagal menghubungi GitHub. Sila semak sambungan internet.</div>';
+        if (showFeedback && typeof showToast === 'function') showToast('Gagal menyemak GitHub.', 'error');
+      });
+  }
+
+  function applyOnlineUpdateFromGitHub() {
+    if (!latestGitHubAsset || !latestGitHubAsset.download_url) {
+      alert('Tiada fail muat turun GitHub ditemui.');
+      return;
+    }
+
+    const isMajor = confirm("Confirm Major Database Schema Update?\n\n[OK] = Major Update (Run Auto Backup first)\n[Cancel] = Standard Patch Update");
+
+    if (!confirm(`Confirm update from online?\n\nFile: ${latestGitHubAsset.name}\nSize: ${latestGitHubAsset.size_mb} MB`)) {
+      return;
+    }
+
+    const btn = document.getElementById('btnOnlineUpdateApply');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = '⏳ Downloading from GitHub...';
+    }
+
+    if (typeof showToast === 'function') {
+      showToast('Downloading & applying update from GitHub Release...', 'info');
+    }
+
+    fetch('/api/update/apply-online', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        download_url: latestGitHubAsset.download_url,
+        is_major: isMajor
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast(data.message);
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          alert('Online Update Error: ' + data.message);
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = 'Install Update Online Direct';
+          }
+        }
+      })
+      .catch(err => {
+        alert('Failed to download online update: ' + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'Install Update Online Direct';
+        }
+      });
+  }
+
+  function triggerUpdateUpload(isMajor = false) {
+    isCurrentUpdateMajor = isMajor;
+    const input = document.getElementById('updateZipInput');
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  }
+
+  function handleUpdateZipSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.zip')) {
+      alert('Please select update package in .zip format.');
+      return;
+    }
+
+    const typeMsg = isCurrentUpdateMajor
+      ? "MAJOR UPDATE: System will perform AUTO BACKUP > UPDATE > RESTORE CHECK."
+      : "STANDARD PATCH: Update feature/UI (Excel Data & DB remain unchanged).";
+
+    if (!confirm(`Confirm update applications?\n\nFile: ${file.name}\n${typeMsg}`)) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('is_major', isCurrentUpdateMajor ? 'true' : 'false');
+
+    if (typeof showToast === 'function') {
+      showToast(isCurrentUpdateMajor ? 'Running auto-backup & applying major update...' : 'Applying patch update...', 'info');
+    }
+
+    fetch('/api/update/apply-patch', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast(data.message);
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          alert('Update Error: ' + data.message);
+        }
+      })
+      .catch(err => {
+        alert('Failed to upload or apply update file: ' + err.message);
+      });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     handleProviderChangeSettings();
     updateQuickReferralChipsSettings('{{ config.facility_type if config.facility_type else "KK" }}');
+    checkGitHubRelease(false);
   });
 </script>
 {% endblock %}
