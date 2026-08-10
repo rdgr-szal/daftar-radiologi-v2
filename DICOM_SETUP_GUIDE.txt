@@ -1,0 +1,78 @@
+================================================================================
+DAFTAR RADIOLOGI - DICOM MODALITY WORKLIST (MWL) SETUP GUIDE (v2.1.2)
+================================================================================
+
+OVERVIEW:
+This application features a built-in DICOM Modality Worklist (MWL SCP) Server.
+When patients are registered at the Counter PC, their examination details are
+automatically queued in real-time into the DICOM Worklist pool.
+
+Modality workstations (DR, CR, Ultrasound, CT, MRI consoles from any vendor such
+as Carestream, Fujifilm, GE Healthcare, Siemens, Canon, Philips, Mindray, etc.)
+can perform a DICOM C-FIND query to automatically pull patient demographics and
+study details without requiring manual typing.
+
+--------------------------------------------------------------------------------
+1. NETWORK REQUIREMENTS
+--------------------------------------------------------------------------------
+- Counter PC and Modality Console must be on the same Local Area Network (LAN).
+- Internet connection is NOT required (works fully on isolated LAN networks).
+- Firewall Port: TCP Port 104 (or 11112) must be open on the Counter PC.
+
+Windows Firewall Command (Run once in Command Prompt as Administrator):
+netsh advfirewall firewall add rule name="DaftarRadiologi-MWL-104" dir=in action=allow protocol=TCP localport=104
+
+--------------------------------------------------------------------------------
+2. SETUP ON DAFTAR RADIOLOGI (COUNTER PC)
+--------------------------------------------------------------------------------
+1. Open Daftar Radiologi -> Settings -> DICOM Integration tab.
+2. Check "Enable DICOM Worklist Server".
+3. Server AE Title: Enter an AE Title (e.g. XRAY or RAD).
+4. Server Port: Enter 104 (or 11112).
+5. Default Modality Code: Select CR, DX, RG, US, CT, or MR.
+6. Click "Start Server". The status indicator will turn green: ● RUNNING.
+
+--------------------------------------------------------------------------------
+3. SETUP ON MODALITY CONSOLE (X-RAY / ULTRASOUND WORKSTATION)
+--------------------------------------------------------------------------------
+Go to System Administration / Network Setup / HIS-RIS Setup on your console:
+
+- HIS/RIS Server IP:  Enter Counter PC's IP address (shown on Settings page, e.g. 10.33.133.x).
+- HIS/RIS Server Port: 104 (matching Server Port above).
+- HIS/RIS AE Title:   Enter the exact Server AE Title configured above (e.g. XRAY).
+- Console AE Title:   Note down your machine's AE Title (e.g. CONSOLE_DR).
+- Auto Query / MWL Polling: Turn ON.
+
+--------------------------------------------------------------------------------
+4. HOW TO FIND IP ADDRESSES & TROUBLESHOOTING
+--------------------------------------------------------------------------------
+Finding Counter PC IP Address:
+- Displayed automatically in Daftar Radiologi Settings under "Counter PC LAN IP".
+- Or open Command Prompt (cmd) on Counter PC and type: ipconfig
+
+Finding Modality Console IP Address:
+- On your X-Ray/Ultrasound workstation screen, open Network Settings.
+- Or press Win+R -> type cmd -> press Enter -> type: ipconfig
+
+Testing Connection (C-ECHO Ping):
+- In Daftar Radiologi Settings under "2. Modality Console", enter the Console IP, Port (104), and Console AE Title.
+- Click "Test Connection (DICOM C-ECHO Ping)".
+- A successful ping will display [SUCCESS] with response time in milliseconds.
+
+--------------------------------------------------------------------------------
+5. DICOM DATA MAPPING REFERENCE
+--------------------------------------------------------------------------------
+Patient Name                    -> DICOM PatientName (VR PN)
+MyKad IC / ID                   -> DICOM PatientID (VR LO)
+Date of Birth                   -> DICOM PatientBirthDate (parsed from MyKad IC)
+Gender                          -> DICOM PatientSex (M/F/O)
+Age                             -> DICOM PatientAge (e.g. 035Y)
+X-Ray Serial No                 -> DICOM AccessionNumber & StudyID (VR SH)
+Exam Region + Laterality        -> DICOM RequestedProcedureDescription (VR LO)
+Modality Code                   -> DICOM Modality (CR/DX/RG/US/CT/MR)
+Operator Name                   -> DICOM ScheduledPerformingPhysicianName
+Referring Doctor                -> DICOM ReferringPhysicianName
+
+================================================================================
+Documented for Daftar Radiologi v2.1.2 Release
+================================================================================

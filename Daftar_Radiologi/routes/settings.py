@@ -163,6 +163,24 @@ def api_save_settings():
     if 'mygovuc_backup' in data and isinstance(data.get('mygovuc_backup'), dict):
         config["mygovuc_backup"] = data.get('mygovuc_backup')
 
+    if 'dicom_config' in data and isinstance(data.get('dicom_config'), dict):
+        config["dicom_config"] = data.get('dicom_config')
+        # Selaraskan status pelayan DICOM
+        try:
+            from core.dicom_engine import DicomMWLServerDaemon
+            d_cfg = config["dicom_config"]
+            daemon = DicomMWLServerDaemon.get_instance()
+            if d_cfg.get("enabled", False):
+                daemon.restart(
+                    host=d_cfg.get("host", "0.0.0.0"),
+                    port=d_cfg.get("port", 104),
+                    ae_title=d_cfg.get("ae_title", "KAUNTER")
+                )
+            else:
+                daemon.stop()
+        except Exception as e_d:
+            print(f"[Settings DICOM Sync Warning] {e_d}")
+
     save_config(config)
     return jsonify({"success": True, "message": "Semua tetapan berjaya dikemaskini!"})
 
@@ -634,5 +652,122 @@ def api_apply_online_update():
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
         return jsonify({"success": False, "message": f"Ralat mengekstrak fail dari GitHub: {str(e)}"}), 500
+
+# ==============================================================================
+# DICOM MODALITY WORKLIST (MWL) & CONSOLE INTEGRATION API
+# ==============================================================================
+
+@settings_bp.route('/api/dicom/status', methods=['GET'])
+def api_dicom_status():
+    """Mendapatkan status semasa DICOM MWL Server dan bilangan item worklist."""
+    try:
+        from core.dicom_engine import DicomMWLServerDaemon, get_local_lan_ip, load_dicom_worklist
+        daemon = DicomMWLServerDaemon.get_instance()
+        status = daemon.get_status()
+        config = load_config()
+        dicom_cfg = config.get("dicom_config", {})
+        
+        status["config_enabled"] = dicom_cfg.get("enabled", False)
+        status["config_port"] = dicom_cfg.get("port", 104)
+        status["config_ae"] = dicom_cfg.get("ae_title", "KAUNTER")
+        status["console_ae"] = dicom_cfg.get("console_ae_title", "CARESTREAM")
+        status["console_ip"] = dicom_cfg.get("console_ip", "")
+        status["console_port"] = dicom_cfg.get("console_port", 104)
+        return jsonify({"success": True, "data": status})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@settings_bp.route('/api/dicom/toggle', methods=['POST'])
+def api_dicom_toggle():
+    """Menghidupkan atau mematikan pelayan DICOM MWL."""
+    try:
+        data = request.get_json() or {}
+        enabled = bool(data.get('enabled', False))
+        
+        config = load_config()
+        if "dicom_config" not in config:
+            config["dicom_config"] = {}
+        config["dicom_config"]["enabled"] = enabled
+        if data.get('ae_title'):
+            config["dicom_config"]["ae_title"] = data.get('ae_title').strip()
+        if data.get('port'):
+            config["dicom_config"]["port"] = int(data.get('port'))
+        save_config(config)
+        
+        from core.dicom_engine import DicomMWLServerDaemon
+        daemon = DicomMWLServerDaemon.get_instance()
+        
+        if enabled:
+            host = config["dicom_config"].get("host", "0.0.0.0")
+            port = config["dicom_config"].get("port", 104)
+            ae_title = config["dicom_config"].get("ae_title", "KAUNTER")
+            ok, msg = daemon.start(host=host, port=port, ae_title=ae_title)
+            return jsonify({"success": ok, "message": msg, "running": daemon.is_running})
+        else:
+            ok, msg = daemon.stop()
+            return jsonify({"success": ok, "message": msg, "running": False})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+@settings_bp.route('/api/dicom/test-echo', methods=['POST'])
+def api_dicom_test_echo():
+    """Test DICOM C-ECHO connectivity to the Modality Console."""
+    try:
+        data = request.get_json() or {}
+        console_ip = data.get('console_ip', '').strip()
+        console_port = data.get('console_port', 104)
+        console_ae = data.get('console_ae_title', '').strip()
+        my_ae = data.get('ae_title', '').strip() or 'KAUNTER'
+        
+        if not console_ip or not console_ae:
+            config = load_config()
+            dicom_cfg = config.get("dicom_config", {})
+            if not console_ip:
+                console_ip = dicom_cfg.get("console_ip", "").strip()
+            if not console_ae:
+                console_ae = dicom_cfg.get("console_ae_title", "").strip()
+            if not my_ae:
+                my_ae = dicom_cfg.get("ae_title", "KAUNTER").strip() or "KAUNTER"
+
+        if not console_ip:
+            return jsonify({"success": False, "message": "Modality Console IP address is empty. Please enter the console IP address."})
+        if not console_ae:
+            return jsonify({"success": False, "message": "Modality Console AE Title is empty. Please enter the console AE Title."})
+
+        from core.dicom_engine import test_dicom_echo_scu
+        success, message, ms = test_dicom_echo_scu(
+            console_ip=console_ip,
+            console_port=console_port,
+            console_ae=console_ae,
+            my_ae=my_ae
+        )
+        return jsonify({
+            "success": success,
+            "message": message,
+            "elapsed_ms": ms
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": f"DICOM C-ECHO error: {str(e)}"}), 500
+
+@settings_bp.route('/api/dicom/worklist', methods=['GET'])
+def api_dicom_worklist():
+    """Get active patient examinations in the DICOM Worklist queue."""
+    try:
+        from core.dicom_engine import load_dicom_worklist
+        items = load_dicom_worklist()
+        return jsonify({"success": True, "count": len(items), "worklist": items})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@settings_bp.route('/api/dicom/clear-worklist', methods=['POST'])
+def api_dicom_clear_worklist():
+    """Clear the DICOM Worklist queue."""
+    try:
+        from core.dicom_engine import clear_dicom_worklist
+        clear_dicom_worklist()
+        return jsonify({"success": True, "message": "DICOM Worklist queue cleared successfully."})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 
 

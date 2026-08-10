@@ -34,6 +34,13 @@ def main():
     except Exception as e:
         print(f"[Main AutoBackup Warning] {e}")
 
+    # Mulakan Pelayan DICOM MWL (jika diaktifkan dalam tetapan)
+    try:
+        from core.dicom_engine import start_dicom_server_from_config
+        start_dicom_server_from_config()
+    except Exception as e:
+        print(f"[Main DICOM Server Warning] {e}")
+
     port = 5005
     url = f"http://127.0.0.1:{port}"
 

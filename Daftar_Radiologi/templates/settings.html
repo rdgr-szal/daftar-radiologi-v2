@@ -265,6 +265,18 @@
         {% endif %}
       </button>
 
+      <button type="button" class="tab-btn" onclick="switchTab('tabDicom')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+        <span>DICOM / Console</span>
+        <span id="dicomNavBadge"
+          style="display: none; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-left: 2px;"></span>
+      </button>
+
       <button type="button" class="tab-btn" onclick="switchTab('tabUpdate')">
         <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
           <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -1049,6 +1061,323 @@
         </div>
       </div>
 
+      <!-- TAB DICOM: Modality Worklist (MWL Server) & Console Integration -->
+      <div id="tabDicom" class="tab-pane">
+        <div class="section-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <span>DICOM Modality Worklist (MWL) & Console Integration</span>
+          </div>
+          <span id="dicomServerStatusBadge"
+            style="font-size: 0.72rem; padding: 3px 10px; border-radius: 12px; font-weight: 700; text-transform: uppercase; background: #e2e8f0; color: #64748b;">
+            OFFLINE
+          </span>
+        </div>
+
+        <!-- Live Server Status Card -->
+        <div
+          style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div>
+            <div
+              style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Local DICOM Worklist Server Status (SCP)
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
+              <span id="dicomLiveStatusText" style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">
+                Checking status...
+              </span>
+              <span
+                style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                Local LAN IP: <strong id="dicomLocalIpDisplay">{{ config.dicom_config.host if config.dicom_config and
+                  config.dicom_config.host != "0.0.0.0" else "127.0.0.1" }}</strong>
+              </span>
+            </div>
+            <p style="margin: 0.35rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+              Registered patients are automatically dispatched to the DICOM Worklist pool for queries (C-FIND) by
+              Carestream DR or any DICOM modality console.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btnToggleDicomServer" onclick="handleToggleDicomServer()"
+              style="font-size: 0.82rem; font-weight: 700; padding: 0.5rem 1rem;">
+              Start Server
+            </button>
+            <button type="button" class="btn btn-outline" onclick="fetchDicomStatus(true)"
+              style="font-size: 0.82rem; padding: 0.5rem 0.85rem;" title="Refresh DICOM status">
+              Refresh Status
+            </button>
+          </div>
+        </div>
+
+        <!-- 2 Column Configuration Grid -->
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+
+          <!-- CARD 1: LOCAL WORKLIST SERVER (KAUNTER PC) -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid var(--primary);">
+            <div
+              style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              </svg>
+              <span>1. Local Worklist Server (SCP)</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+              Configuration for the DICOM MWL server running on this counter workstation.
+            </p>
+
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="dicom_enabled" name="dicom_enabled" class="checkbox" {% if
+                  config.dicom_config and config.dicom_config.enabled %}checked{% endif %}>
+                <span style="font-weight: 700; font-size: 0.85rem;">Enable DICOM
+                  Worklist Server</span>
+              </label>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                <label for="dicom_ae_title" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                  Server AE Title (HIS/RIS AE Title)
+                </label>
+                <span style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                  title="Application Entity Title (max 16 uppercase chars). Enter this exact name as HIS/RIS AE Title on your modality console setup screen (e.g., XRAY or RAD).">?</span>
+              </div>
+              <input type="text" id="dicom_ae_title" class="form-input"
+                style="font-family: monospace; font-weight: 700;"
+                value="{{ config.dicom_config.ae_title if config.dicom_config and config.dicom_config.ae_title else '' }}"
+                placeholder="e.g. XRAY or RAD" maxlength="16">
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Enter this AE Title on your modality workstation HIS/RIS settings.</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                  <label for="dicom_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                    Server Port
+                  </label>
+                  <span style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                    title="Standard DICOM network port is 104 (or 11112).">?</span>
+                </div>
+                <input type="number" id="dicom_port" class="form-input" style="font-family: monospace;"
+                  value="{{ config.dicom_config.port if config.dicom_config and config.dicom_config.port else 104 }}"
+                  placeholder="104">
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Standard DICOM: 104</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="dicom_default_modality"
+                  style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
+                  Modality Code
+                </label>
+                <select id="dicom_default_modality" class="form-select" style="font-weight: 600;">
+                  <option value="CR" {% if not config.dicom_config or config.dicom_config.default_modality=='CR'
+                    %}selected{% endif %}>CR (Computed Radiography)</option>
+                  <option value="DX" {% if config.dicom_config and config.dicom_config.default_modality=='DX'
+                    %}selected{% endif %}>DX (Digital Radiography)</option>
+                  <option value="RG" {% if config.dicom_config and config.dicom_config.default_modality=='RG'
+                    %}selected{% endif %}>RG (General Radiography)</option>
+                  <option value="US" {% if config.dicom_config and config.dicom_config.default_modality=='US'
+                    %}selected{% endif %}>US (Ultrasound)</option>
+                  <option value="CT" {% if config.dicom_config and config.dicom_config.default_modality=='CT'
+                    %}selected{% endif %}>CT (Computed Tomography)</option>
+                  <option value="MR" {% if config.dicom_config and config.dicom_config.default_modality=='MR'
+                    %}selected{% endif %}>MR (Magnetic Resonance)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="dicom_auto_clear_hours"
+                style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
+                Worklist Auto-Retention Period
+              </label>
+              <select id="dicom_auto_clear_hours" class="form-select">
+                <option value="12" {% if config.dicom_config and config.dicom_config.auto_clear_hours==12 %}selected{%
+                  endif %}>Keep 12 Hours</option>
+                <option value="24" {% if not config.dicom_config or not config.dicom_config.auto_clear_hours or
+                  config.dicom_config.auto_clear_hours==24 %}selected{% endif %}>Keep 24 Hours (Recommended)</option>
+                <option value="48" {% if config.dicom_config and config.dicom_config.auto_clear_hours==48 %}selected{%
+                  endif %}>Keep 48 Hours (2 Days)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- CARD 2: REMOTE MODALITY CONSOLE (SCU) -->
+          <div
+            style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid #10b981;">
+            <div
+              style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: #10b981; fill: none; stroke-width: 2;">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span>2. Modality Console (SCU)</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+              Modality console details for connectivity verification via DICOM C-ECHO (Ping).
+            </p>
+
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                <label for="dicom_console_ae" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                  Console AE Title
+                </label>
+                <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                  title="The AE Title configured on your X-Ray/Ultrasound machine (e.g., CONSOLE_DR or RAD). Used to verify C-ECHO pings.">?</span>
+              </div>
+              <input type="text" id="dicom_console_ae" class="form-input"
+                style="font-family: monospace; font-weight: 700;"
+                value="{{ config.dicom_config.console_ae_title if config.dicom_config and config.dicom_config.console_ae_title else '' }}"
+                placeholder="e.g. CONSOLE_DR or RAD" maxlength="16">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                  <label for="dicom_console_ip" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                    Console IP Address
+                  </label>
+                  <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                    title="How to find Console IP: On your modality console screen, open Network Settings, or press Win+R > type cmd > ipconfig to view its IPv4 address on the LAN.">?</span>
+                </div>
+                <input type="text" id="dicom_console_ip" class="form-input" style="font-family: monospace;"
+                  value="{{ config.dicom_config.console_ip if config.dicom_config and config.dicom_config.console_ip else '' }}"
+                  placeholder="e.g. 10.33.133.4">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                  <label for="dicom_console_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                    Console Port
+                  </label>
+                  <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                    title="DICOM port of the console machine (usually 104).">?</span>
+                </div>
+                <input type="number" id="dicom_console_port" class="form-input" style="font-family: monospace;"
+                  value="{{ config.dicom_config.console_port if config.dicom_config and config.dicom_config.console_port else 104 }}"
+                  placeholder="104">
+              </div>
+            </div>
+
+            <div style="margin-top: 1.15rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                <button type="button" class="btn btn-outline" id="btnTestDicomEcho" onclick="handleTestDicomEcho()"
+                  style="font-size: 0.82rem; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  <span>Test Connection (DICOM C-ECHO Ping)</span>
+                </button>
+              </div>
+              <div id="dicomEchoFeedback" style="font-size: 0.76rem; margin-top: 0.5rem; min-height: 18px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Setup & Windows Firewall Guidance Box -->
+        <div
+          style="background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.15rem 1.25rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <strong style="font-size: 0.88rem; color: var(--text-main);">Quick Setup Guide for Modality Console &
+              Windows Firewall</strong>
+          </div>
+
+          <div
+            style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <div>
+              <strong style="color: var(--text-main);">1. On your Modality Console (HIS/RIS Setup Screen):</strong>
+              <ul style="margin: 0.35rem 0 0 1.2rem; padding: 0;">
+                <li><strong>HIS/RIS AE Title:</strong> <code id="guideAeText">KAUNTER</code> (Matches Server AE Title)
+                </li>
+                <li><strong>HIS/RIS IP or Name:</strong> <code id="guideIpText">10.33.133.x</code> (IP address of this
+                  Counter PC)</li>
+                <li><strong>HIS/RIS Port:</strong> <code id="guidePortText">104</code></li>
+                <li><strong>Enable Polling / Remote Query:</strong> <span
+                    style="color: #10b981; font-weight: 700;">ON</span></li>
+              </ul>
+            </div>
+            <div>
+              <strong style="color: var(--text-main);">2. Windows Inbound Firewall Rule (Run Once as
+                Administrator):</strong>
+              <p style="margin: 0.25rem 0 0.4rem 0; font-size: 0.74rem;">Open <em>Command Prompt as Administrator</em>
+                and execute this command:</p>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <input type="text" readonly id="cmdFirewallText" class="form-input"
+                  style="font-family: monospace; font-size: 0.72rem; padding: 0.4rem 0.6rem; background: var(--bg-card);"
+                  value='netsh advfirewall firewall add rule name="DaftarRadiologi-MWL-104" dir=in action=allow protocol=TCP localport=104'>
+                <button type="button" class="btn btn-secondary" onclick="copyFirewallCmd()"
+                  style="font-size: 0.75rem; padding: 0.4rem 0.75rem; white-space: nowrap;">
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active DICOM Worklist Queue Table (Real-Time Preview) -->
+        <div
+          style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.25rem;">
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+              <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
+                Active DICOM Worklist Queue (<span id="dicomWorklistCount">0</span>)
+              </div>
+              <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
+                List of registered patients ready to be pulled by modality consoles via C-FIND.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-outline" onclick="loadDicomWorklistTable()"
+                style="font-size: 0.78rem; padding: 0.4rem 0.75rem;">
+                Refresh Queue
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="handleClearDicomWorklist()"
+                style="font-size: 0.78rem; padding: 0.4rem 0.75rem; color: #ef4444;">
+                Clear Queue
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+            <table class="data-table" style="width: 100%; font-size: 0.8rem;">
+              <thead>
+                <tr>
+                  <th style="width: 90px;">X-Ray No</th>
+                  <th>Patient Name</th>
+                  <th style="width: 130px;">IC / ID</th>
+                  <th>Examination</th>
+                  <th style="width: 70px;">Modality</th>
+                  <th style="width: 100px;">Time</th>
+                </tr>
+              </thead>
+              <tbody id="dicomWorklistTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                    No patients currently in the DICOM Worklist. Newly registered patients will appear here
+                    automatically.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 8: Kemas Kini (Update) -->
       <div id="tabUpdate" class="tab-pane">
         <div class="section-card-title">
@@ -1526,6 +1855,11 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
     const targetPane = document.getElementById(tabId);
     if (targetPane) targetPane.classList.add('active');
+
+    if (tabId === 'tabDicom') {
+      fetchDicomStatus();
+      loadDicomWorklistTable();
+    }
   }
 
   function switchDbSubTab(subTabId) {
@@ -1969,6 +2303,20 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     };
   }
 
+  function getDicomConfigPayload() {
+    return {
+      enabled: document.getElementById('dicom_enabled') ? document.getElementById('dicom_enabled').checked : false,
+      ae_title: document.getElementById('dicom_ae_title') ? document.getElementById('dicom_ae_title').value.trim() : 'KAUNTER',
+      port: parseInt(document.getElementById('dicom_port').value) || 104,
+      host: '0.0.0.0',
+      default_modality: document.getElementById('dicom_default_modality') ? document.getElementById('dicom_default_modality').value : 'CR',
+      console_ae_title: document.getElementById('dicom_console_ae') ? document.getElementById('dicom_console_ae').value.trim() : 'CARESTREAM',
+      console_ip: document.getElementById('dicom_console_ip') ? document.getElementById('dicom_console_ip').value.trim() : '',
+      console_port: parseInt(document.getElementById('dicom_console_port').value) || 104,
+      auto_clear_hours: parseInt(document.getElementById('dicom_auto_clear_hours').value) || 24
+    };
+  }
+
   function testDbConnectionSettings() {
     const fb = document.getElementById('dbActionFeedback');
     fb.innerHTML = '<em>Menguji sambungan database...</em>';
@@ -2067,7 +2415,8 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
         active_modalities: activeMods,
         consumables: consumableList,
         db_config: getDbConfigPayload(),
-        mygovuc_backup: getMyGovUcBackupPayload()
+        mygovuc_backup: getMyGovUcBackupPayload(),
+        dicom_config: getDicomConfigPayload()
       })
     })
       .then(res => res.json())
@@ -2262,10 +2611,253 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       });
   }
 
+  // --- DICOM MODALITY WORKLIST & CONSOLE JAVASCRIPT ---
+
+  function fetchDicomStatus(showFeedback = false) {
+    fetch('/api/dicom/status')
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) return;
+        const data = res.data;
+
+        // Status Badge & Controls
+        const badge = document.getElementById('dicomServerStatusBadge');
+        const navBadge = document.getElementById('dicomNavBadge');
+        const liveText = document.getElementById('dicomLiveStatusText');
+        const btnToggle = document.getElementById('btnToggleDicomServer');
+        const ipDisplay = document.getElementById('dicomLocalIpDisplay');
+        const guideIp = document.getElementById('guideIpText');
+        const guideAe = document.getElementById('guideAeText');
+        const guidePort = document.getElementById('guidePortText');
+
+        if (ipDisplay && data.local_lan_ip) {
+          ipDisplay.textContent = data.local_lan_ip;
+        }
+        if (guideIp && data.local_lan_ip) {
+          guideIp.textContent = data.local_lan_ip;
+        }
+        if (guideAe && data.ae_title) {
+          guideAe.textContent = data.ae_title;
+        }
+        if (guidePort && data.port) {
+          guidePort.textContent = data.port;
+        }
+
+        if (data.running) {
+          if (badge) {
+            badge.textContent = 'ONLINE';
+            badge.style.background = 'rgba(16, 185, 129, 0.15)';
+            badge.style.color = '#10b981';
+          }
+          if (navBadge) navBadge.style.display = 'inline-block';
+          if (liveText) {
+            liveText.innerHTML = `<span style="color: #10b981;">● RUNNING (Port: ${data.port}, AE: ${data.ae_title})</span>`;
+          }
+          if (btnToggle) {
+            btnToggle.textContent = 'Stop Server';
+            btnToggle.className = 'btn btn-secondary';
+            btnToggle.style.color = '#ef4444';
+          }
+        } else {
+          if (badge) {
+            badge.textContent = 'OFFLINE';
+            badge.style.background = '#e2e8f0';
+            badge.style.color = '#64748b';
+          }
+          if (navBadge) navBadge.style.display = 'none';
+          if (liveText) {
+            liveText.innerHTML = `<span style="color: var(--text-muted);">○ STOPPED (Offline)</span>`;
+          }
+          if (btnToggle) {
+            btnToggle.textContent = 'Start Server';
+            btnToggle.className = 'btn btn-primary';
+            btnToggle.style.color = 'white';
+          }
+        }
+
+        // Worklist count
+        const countSpan = document.getElementById('dicomWorklistCount');
+        if (countSpan) countSpan.textContent = data.active_worklist_count || 0;
+
+        if (showFeedback) {
+          showToast('DICOM status updated.');
+        }
+      })
+      .catch(err => console.error('[DICOM Status Error]', err));
+  }
+
+  function handleToggleDicomServer() {
+    const badge = document.getElementById('dicomServerStatusBadge');
+    const isCurrentlyRunning = badge && badge.textContent.trim() === 'ONLINE';
+    const targetState = !isCurrentlyRunning;
+
+    const aeInp = document.getElementById('dicom_ae_title');
+    const portInp = document.getElementById('dicom_port');
+
+    if (targetState) {
+      if (aeInp && !aeInp.value.trim()) {
+        showToast('Please enter the Server AE Title first (e.g. KAUNTER).', 'error');
+        aeInp.focus();
+        return;
+      }
+      if (portInp && (!portInp.value.trim() || isNaN(portInp.value))) {
+        showToast('Please enter a valid Server Port number (e.g. 104).', 'error');
+        portInp.focus();
+        return;
+      }
+    }
+
+    const btn = document.getElementById('btnToggleDicomServer');
+    if (btn) btn.disabled = true;
+
+    fetch('/api/dicom/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        enabled: targetState,
+        ae_title: aeInp ? aeInp.value.trim() : 'KAUNTER',
+        port: portInp ? parseInt(portInp.value) : 104
+      })
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (btn) btn.disabled = false;
+        showToast(res.message, res.success ? 'info' : 'error');
+        const chk = document.getElementById('dicom_enabled');
+        if (chk) chk.checked = targetState;
+        fetchDicomStatus();
+      })
+      .catch(err => {
+        if (btn) btn.disabled = false;
+        showToast('Error changing DICOM server state: ' + err.message, 'error');
+      });
+  }
+
+  function handleTestDicomEcho() {
+    const fb = document.getElementById('dicomEchoFeedback');
+    const btn = document.getElementById('btnTestDicomEcho');
+    const consoleIp = document.getElementById('dicom_console_ip').value.trim();
+    const consolePort = document.getElementById('dicom_console_port').value.trim();
+    const consoleAe = document.getElementById('dicom_console_ae').value.trim();
+    const myAe = document.getElementById('dicom_ae_title').value.trim() || 'KAUNTER';
+
+    // Validation for empty fields
+    if (!consoleIp) {
+      fb.innerHTML = '<span style="color: #ef4444; font-weight: 600;">[Validation] Please enter the Modality Console IP address.</span>';
+      showToast('Please enter the Modality Console IP address.', 'error');
+      document.getElementById('dicom_console_ip').focus();
+      return;
+    }
+
+    if (!consoleAe) {
+      fb.innerHTML = '<span style="color: #ef4444; font-weight: 600;">[Validation] Please enter the Modality Console AE Title.</span>';
+      showToast('Please enter the Modality Console AE Title.', 'error');
+      document.getElementById('dicom_console_ae').focus();
+      return;
+    }
+
+    if (!consolePort || isNaN(consolePort)) {
+      fb.innerHTML = '<span style="color: #ef4444; font-weight: 600;">[Validation] Please enter a valid Console Port (e.g. 104).</span>';
+      showToast('Please enter a valid Console Port.', 'error');
+      document.getElementById('dicom_console_port').focus();
+      return;
+    }
+
+    btn.disabled = true;
+    fb.innerHTML = `<em>Sending DICOM C-ECHO verification ping to ${consoleAe}@${consoleIp}:${consolePort}...</em>`;
+    fb.style.color = 'var(--text-muted)';
+
+    fetch('/api/dicom/test-echo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        console_ip: consoleIp,
+        console_port: consolePort,
+        console_ae_title: consoleAe,
+        ae_title: myAe
+      })
+    })
+      .then(res => res.json())
+      .then(res => {
+        btn.disabled = false;
+        if (res.success) {
+          fb.innerHTML = `<strong style="color: #10b981;">[SUCCESS]</strong> ${res.message}`;
+          showToast(`DICOM C-ECHO Succeeded! (${res.elapsed_ms}ms)`);
+        } else {
+          fb.innerHTML = `<strong style="color: #ef4444;">[FAILED]</strong> ${res.message}`;
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        fb.innerHTML = `<strong style="color: #ef4444;">[ERROR]</strong> Failed to reach local backend server.`;
+      });
+  }
+
+  function loadDicomWorklistTable() {
+    fetch('/api/dicom/worklist')
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) return;
+        const list = res.worklist || [];
+        const tbody = document.getElementById('dicomWorklistTableBody');
+        const countSpan = document.getElementById('dicomWorklistCount');
+        if (countSpan) countSpan.textContent = list.length;
+        if (!tbody) return;
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                No patients currently in the DICOM Worklist. Newly registered patients will appear here automatically.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = list.map(item => {
+          const timeStr = item.scheduled_step_start_time ?
+            `${item.scheduled_step_start_time.substring(0, 2)}:${item.scheduled_step_start_time.substring(2, 4)}` : '-';
+          return `
+            <tr>
+              <td style="font-weight: 700; font-family: monospace; color: var(--primary);">${escapeHtml(item.accession_number || '')}</td>
+              <td style="font-weight: 600;">${escapeHtml(item.patient_name || '')}</td>
+              <td style="font-family: monospace; font-size: 0.78rem;">${escapeHtml(item.patient_id || '')}</td>
+              <td>${escapeHtml(item.requested_procedure_desc || '')}</td>
+              <td><span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">${escapeHtml(item.modality || 'CR')}</span></td>
+              <td style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${timeStr}</td>
+            </tr>
+          `;
+        }).join('');
+      });
+  }
+
+  function handleClearDicomWorklist() {
+    if (!confirm('Are you sure you want to clear all active patients in the DICOM Worklist queue?')) {
+      return;
+    }
+    fetch('/api/dicom/clear-worklist', { method: 'POST' })
+      .then(res => res.json())
+      .then(res => {
+        showToast(res.message);
+        loadDicomWorklistTable();
+      });
+  }
+
+  function copyFirewallCmd() {
+    const inp = document.getElementById('cmdFirewallText');
+    if (inp) {
+      navigator.clipboard.writeText(inp.value).then(() => {
+        showToast('Firewall command copied to clipboard!');
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     handleProviderChangeSettings();
     updateQuickReferralChipsSettings('{{ config.facility_type if config.facility_type else "KK" }}');
     checkGitHubRelease(false);
+    fetchDicomStatus(false);
   });
 </script>
 {% endblock %}

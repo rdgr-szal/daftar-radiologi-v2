@@ -480,6 +480,13 @@ def add_patient_record(patient_data):
         # Dwi-Storan: Hantar rekod ke pangkalan data jika diaktifkan (atau giliran offline)
         sync_patient_record(patient_data, synced_exam_records, config)
 
+        # DICOM MWL: Hantar rekod ke antrian DICOM Modality Worklist
+        try:
+            from core.dicom_engine import add_to_dicom_worklist
+            add_to_dicom_worklist(patient_data, synced_exam_records)
+        except Exception as e_dicom:
+            print(f"[ExcelEngine DICOM Warning] {e_dicom}")
+
         summary_xray = ", ".join(generated_xray_list)
         return True, f"Pesakit berjaya didaftarkan ({len(generated_xray_list)} pemeriksaan). No. X-ray: {summary_xray}", summary_xray
 
@@ -567,6 +574,13 @@ def edit_patient_record(tarikh_str, xray_no, updated_data):
         # Refleksikan ke Pangkalan Data
         config = load_config()
         update_patient_in_db(xray_no, updated_data, config)
+
+        # DICOM MWL: Kemaskini antrian DICOM Worklist jika berkaitan
+        try:
+            from core.dicom_engine import update_in_dicom_worklist
+            update_in_dicom_worklist(xray_no, updated_data)
+        except Exception as e_mwl:
+            print(f"[ExcelEngine DICOM Warning] {e_mwl}")
         
         return True, f"Rekod X-Ray {xray_no} berjaya dikemaskini dalam Excel dan Database."
     except Exception as e:
@@ -611,20 +625,17 @@ def cancel_patient_record(tarikh_str, xray_no, reason, staff_name):
             
         # 1. Kemaskini ruangan COMMENT (Col 23 / W) dengan status BATAL
         curr_comment = str(sheet.cell(row=target_row, column=23).value or "").strip()
-        batal_tag = f"[BATAL: {reason.strip().upper()}] (OLEH: {staff_name.strip().upper()})"
-        sheet.cell(row=target_row, column=23).value = f"{batal_tag} {curr_comment}".strip()
+        audit_tag = f"[BATAL: {reason.strip().upper()} OLEH {staff_name.strip().upper()}]"
+        new_comment = f"{audit_tag} {curr_comment}".strip()
+        sheet.cell(row=target_row, column=23).value = new_comment
         
-        # 2. Tandakan baris dengan warna pudar / strike untuk pandangan audit fizikal
-        batal_fill = PatternFill(start_color='FEE2E2', end_color='FEE2E2', fill_type='solid')
-        batal_font = Font(name='Arial', size=9, color='991B1B', strike=True)
-        
-        for col_i in range(1, 25):
-            c = sheet.cell(row=target_row, column=col_i)
-            c.fill = batal_fill
-            if col_i in [4, 6]:  # Kekalkan font jelas bagi nombor X-ray & nama untuk rujukan audit
-                c.font = Font(name='Arial', size=9, color='991B1B', bold=True)
-            else:
-                c.font = batal_font
+        # 2. Format visual baris yang dibatalkan
+        strike_font = Font(name="Arial", size=9, strike=True, color="6B7280")
+        cancel_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
+        for col_idx in range(1, 24):
+            c = sheet.cell(row=target_row, column=col_idx)
+            c.font = strike_font
+            c.fill = cancel_fill
 
         wb.save(filepath)
         wb.close()
@@ -633,6 +644,13 @@ def cancel_patient_record(tarikh_str, xray_no, reason, staff_name):
         # 3. Refleksikan ke Pangkalan Data
         config = load_config()
         cancel_patient_in_db(xray_no, reason, staff_name, config)
+
+        # DICOM MWL: Buang dari antrian jika kes dibatalkan
+        try:
+            from core.dicom_engine import remove_from_dicom_worklist
+            remove_from_dicom_worklist(xray_no)
+        except Exception as e_mwl:
+            print(f"[ExcelEngine DICOM Warning] {e_mwl}")
         
         return True, f"Kes X-Ray {xray_no} telah ditandakan BATAL mengikut kriteria audit KKM."
     except Exception as e:

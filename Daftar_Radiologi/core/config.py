@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 # Dynamic Versioning Info
-APP_VERSION = "2.1.1"
+APP_VERSION = "2.1.2"
 GITHUB_REPO = "rdgr-szal/daftar-radiologi-v2" # Format: username/repo
 
 # Tangani lokasi fail asas mengikut mod PyInstaller vs Dev
@@ -62,6 +62,7 @@ else:
 CONFIG_PATH = os.path.join(PENDAFTARAN_DIR, "config.json")
 EXTRA_DATA_PATH = os.path.join(PENDAFTARAN_DIR, "extra_phris_data.json")
 SYNC_QUEUE_PATH = os.path.join(PENDAFTARAN_DIR, "sync_queue.json")
+DICOM_WORKLIST_PATH = os.path.join(PENDAFTARAN_DIR, "dicom_worklist.json")
 SMRP_TAXONOMY_PATH = os.path.join(CORE_DIR, "smrp_taxonomy.json")
 
 # Pemetaan Bulan Bahasa Melayu untuk Folder & Nama Fail
@@ -221,6 +222,19 @@ def get_unconfigured_default():
             "endpoint_url": "",
             "api_key": "",
             "table_prefix": "rad_"
+        },
+        # Konfigurasi Integrasi DICOM Modality Worklist (MWL Server / Console)
+        "dicom_config": {
+            "enabled": False,
+            "ae_title": "",
+            "port": 104,
+            "host": "0.0.0.0",
+            "default_modality": "CR",
+            "console_name": "",
+            "console_ae_title": "",
+            "console_ip": "",
+            "console_port": 104,
+            "auto_clear_hours": 24
         }
     }
 
@@ -269,6 +283,19 @@ def load_config():
                     "endpoint_url": "",
                     "api_key": "",
                     "table_prefix": "rad_"
+                }
+            if "dicom_config" not in data:
+                data["dicom_config"] = {
+                    "enabled": False,
+                    "ae_title": "",
+                    "port": 104,
+                    "host": "0.0.0.0",
+                    "default_modality": "CR",
+                    "console_name": "",
+                    "console_ae_title": "",
+                    "console_ip": "",
+                    "console_port": 104,
+                    "auto_clear_hours": 24
                 }
             return data
     except Exception as e:
