@@ -1,9 +1,8 @@
 # Radiology Registration & PHRIS Monthly Census System V2 (PER.SS-RA 101 Compliance)
 
-<img width="1280" height="640" alt="image" src="https://github.com/user-attachments/assets/263d0179-ec07-4f49-ad25-07c753a0e8e2" />
-
-
 Daftar Radiologi V2 is an offline desktop application designed for Radiology Units in Ministry of Health Malaysia (KKM) health clinics. The application assists radiographers in logging daily patient examinations, monitoring clinic statistics, and generating monthly PHRIS census reports directly from local Excel files, structured according to PER.SS-RA 101 standards.
+
+<img width="1280" height="640" alt="image" src="https://github.com/user-attachments/assets/263d0179-ec07-4f49-ad25-07c753a0e8e2" />
 
 ---
 
