@@ -147,16 +147,16 @@ jobs:
             DaftarRadiologi-v2-win10.zip
 
   build-legacy-windows7:
-    name: Build Windows 7 (Legacy x64 - Python 3.8)
+    name: Build Windows 7 (Legacy x64 - Python 3.10)
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.8 (Last version natively supporting Windows 7)
+      - name: Setup Python (Python 3.10 for Windows 7 / 8 Legacy Build)
         uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.10'
           cache: 'pip'
 
       - name: Install Python Dependencies
