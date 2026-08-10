@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 
 # Dynamic Versioning Info
-APP_VERSION = "2.1.0"
-GITHUB_REPO = "SZAL/daftar-radiologi-v2" # Format: username/repo
+APP_VERSION = "2.1.1"
+GITHUB_REPO = "rdgr-szal/daftar-radiologi-v2" # Format: username/repo
 
 # Tangani lokasi fail asas mengikut mod PyInstaller vs Dev
 if getattr(sys, 'frozen', False):
@@ -26,8 +26,39 @@ TEMPLATE_FOLDER = os.path.join(BUNDLE_DIR, 'templates')
 STATIC_FOLDER = os.path.join(BUNDLE_DIR, 'static')
 APP_TEMPLATE_XLSX = os.path.join(BUNDLE_DIR, 'template.xlsx')
 
-# Folder Data Pendaftaran (Excel Database & Sync)
-PENDAFTARAN_DIR = os.path.join(BASE_DIR, "Pendaftaran")
+# Dapatkan lokasi folder data kekal mengikut OS (OS App Data Directory)
+def get_user_data_dir():
+    if sys.platform == 'win32':
+        appdata = os.getenv('LOCALAPPDATA') or os.getenv('APPDATA') or os.path.expanduser('~')
+        return os.path.join(appdata, 'DaftarRadiologi')
+    elif sys.platform == 'darwin':
+        return os.path.expanduser('~/Library/Application Support/DaftarRadiologi')
+    else:
+        return os.path.expanduser('~/.local/share/DaftarRadiologi')
+
+if getattr(sys, 'frozen', False):
+    USER_DATA_ROOT = get_user_data_dir()
+    PENDAFTARAN_DIR = os.path.join(USER_DATA_ROOT, "Pendaftaran")
+    
+    # Auto-migrasi data legacy dari lokasi BASE_DIR (jika ada)
+    legacy_pendaftaran = os.path.join(BASE_DIR, "Pendaftaran")
+    if os.path.exists(legacy_pendaftaran) and legacy_pendaftaran != PENDAFTARAN_DIR:
+        try:
+            os.makedirs(PENDAFTARAN_DIR, exist_ok=True)
+            import shutil
+            for item in os.listdir(legacy_pendaftaran):
+                s = os.path.join(legacy_pendaftaran, item)
+                d = os.path.join(PENDAFTARAN_DIR, item)
+                if not os.path.exists(d):
+                    if os.path.isdir(s):
+                        shutil.copytree(s, d)
+                    else:
+                        shutil.copy2(s, d)
+        except Exception as e_mig:
+            print(f"[Data Migration Warning] {e_mig}")
+else:
+    PENDAFTARAN_DIR = os.path.join(BASE_DIR, "Pendaftaran")
+
 CONFIG_PATH = os.path.join(PENDAFTARAN_DIR, "config.json")
 EXTRA_DATA_PATH = os.path.join(PENDAFTARAN_DIR, "extra_phris_data.json")
 SYNC_QUEUE_PATH = os.path.join(PENDAFTARAN_DIR, "sync_queue.json")

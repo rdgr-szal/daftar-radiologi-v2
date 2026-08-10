@@ -1055,47 +1055,57 @@
           <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
           </svg>
-          <span>8. Updates</span>
+          <span>Updates</span>
         </div>
 
         <!-- Current Version Header Card -->
-        <div style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+        <div
+          style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
           <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Current System Version</div>
-            <div style="font-size: 1.45rem; font-weight: 800; color: var(--primary); font-family: monospace; display: flex; align-items: center; gap: 0.6rem; margin-top: 0.15rem;">
+            <div
+              style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Current System Version</div>
+            <div
+              style="font-size: 1.45rem; font-weight: 800; color: var(--primary); font-family: monospace; display: flex; align-items: center; gap: 0.6rem; margin-top: 0.15rem;">
               v{{ app_version if app_version else "2.1.0" }}
-              <span id="updateBadgeStatus" style="font-size: 0.72rem; padding: 2px 9px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: inherit; text-transform: uppercase;">LATEST</span>
+              <span id="updateBadgeStatus"
+                style="font-size: 0.72rem; padding: 2px 9px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: inherit; text-transform: uppercase;">LATEST</span>
             </div>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-              Patient database records in <code>Pendaftaran/</code> are protected and preserved across all updates.
+              Patient database records in <code>Pendaftaran/</code> are protected and preserved across all updates. As a
+              safety precaution, perform a <strong>Backup</strong> before applying updates.
             </p>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-            <button type="button" class="btn btn-primary" onclick="checkGitHubRelease(true)" style="padding: 0.5rem 1rem; font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2; width: 14px; height: 14px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <button type="button" class="btn btn-primary" onclick="checkGitHubRelease(true)"
+              style="padding: 0.5rem 1rem; font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="stroke: currentColor; fill: none; stroke-width: 2; width: 14px; height: 14px;">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+              </svg>
               Check Update
-            </button>
-            <button type="button" class="btn btn-outline" onclick="openExcelFolder()" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">
-              Data Folder
             </button>
           </div>
         </div>
 
         <!-- Stacked Layout: 1. Online Update (Top) -->
         <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
-          
+
           <!-- SECTION 1: ONLINE UPDATE -->
-          <div style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
+          <div
+            style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
               <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2; width: 18px; height: 18px;">
+                <svg class="icon icon-md" viewBox="0 0 24 24"
+                  style="stroke: var(--primary); fill: none; stroke-width: 2; width: 18px; height: 18px;">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
-                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Online Update (GitHub Release)</span>
+                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Online Update</span>
               </div>
-              <span style="background: rgba(37, 99, 235, 0.1); color: var(--primary); font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 12px;">DIRECT FETCH</span>
             </div>
 
             <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
@@ -1104,13 +1114,17 @@
 
             <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
               <!-- GitHub Info Status Box -->
-              <div id="githubReleaseInfoBox" style="background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
-                <div style="color: var(--text-muted); font-style: italic;">Click "Check Update" to query GitHub for latest release tags...</div>
+              <div id="githubReleaseInfoBox"
+                style="background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
+                <div style="color: var(--text-muted); font-style: italic;">Click "Check Update" to query GitHub for
+                  latest release tags...</div>
               </div>
 
               <!-- Install Update Button -->
               <div>
-                <button type="button" class="btn btn-primary" id="btnOnlineUpdateApply" onclick="applyOnlineUpdateFromGitHub()" style="font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.85rem; min-width: 170px;" disabled>
+                <button type="button" class="btn btn-primary" id="btnOnlineUpdateApply"
+                  onclick="applyOnlineUpdateFromGitHub()"
+                  style="font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.85rem; min-width: 170px;" disabled>
                   Install Update
                 </button>
               </div>
@@ -1118,30 +1132,38 @@
           </div>
 
           <!-- SECTION 2: MANUAL UPDATE (Below Online Update) -->
-          <div style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
+          <div
+            style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--border-subtle);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
               <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: var(--text-main); fill: none; stroke-width: 2; width: 18px; height: 18px;">
+                <svg class="icon icon-md" viewBox="0 0 24 24"
+                  style="stroke: var(--text-main); fill: none; stroke-width: 2; width: 18px; height: 18px;">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Manual Update (.ZIP Patch File)</span>
+                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Manual Update</span>
               </div>
-              <span style="background: var(--bg-subtle); color: var(--text-muted); font-size: 0.72rem; font-weight: 600; padding: 2px 10px; border-radius: 12px;">OFFLINE FILE</span>
             </div>
 
             <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
-              Upload a patch package file (<code>.zip</code>). The system automatically inspects the patch package—if a major database schema change is detected, an automatic database backup is created before applying the update.
+              Upload a <code>.zip</code> package file downloaded from <a
+                href="https://github.com/rdgr-szal/daftar-radiologi-v2" target="_blank" rel="noopener noreferrer"
+                style="color: var(--primary); text-decoration: underline; font-weight: 600;">GitHub Repository</a>. The
+              system automatically inspects the patch package—if a major database schema change is detected, an
+              automatic database backup is created before applying the update.
             </p>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.78rem; color: var(--text-muted);">
                 Select <strong>.zip</strong> update file provided by developer.
               </div>
               <div>
-                <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)" style="font-weight: 700; padding: 0.55rem 1.25rem; font-size: 0.83rem;">
-                  Upload Patch (.zip)
+                <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)"
+                  style="font-weight: 700; padding: 0.55rem 1.25rem; font-size: 0.83rem;">
+                  Upload (.zip)
                 </button>
               </div>
             </div>
@@ -1150,24 +1172,20 @@
         </div>
 
         <!-- Hidden File Input for Update Zip -->
-        <input type="file" id="updateZipInput" accept=".zip" style="display: none;" onchange="handleUpdateZipSelected(event)">
+        <input type="file" id="updateZipInput" accept=".zip" style="display: none;"
+          onchange="handleUpdateZipSelected(event)">
 
         <!-- Safety Notice Banner -->
         <div class="gov-alert" style="margin-bottom: 0;">
           <strong>Registration Data Security Guarantee:</strong><br>
-          All update methods (Online or Manual) automatically enforce protection for the <code>Pendaftaran/</code> directory. Patient records in <em>BUKU DAFTAR XRAY {Year}.xlsx</em> and <em>radiologi_local.db</em> are safely preserved.
+          All update methods (Online or Manual) automatically enforce protection for the <code>Pendaftaran/</code>
+          directory. Patient records in <em>.xlsx</em> and <em>.db</em> are safely preserved.
         </div>
       </div>
 
       <!-- Action Buttons Bottom -->
       <div
         style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn btn-secondary" onclick="openExcelFolder()">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-          <span>Buka Folder Excel</span>
-        </button>
 
         <button type="submit" class="btn btn-primary" id="btnSaveSettings" style="min-width: 160px; font-weight: 700;">
           <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">

@@ -556,7 +556,7 @@ def api_check_github_release():
         if e.code == 404:
             return jsonify({"success": False, "message": f"No GitHub Release found for repository '{GITHUB_REPO}'."}), 404
         elif e.code == 403:
-            return jsonify({"success": False, "message": f"GitHub API rate limit exceeded (403). Please try again in 1 hour or upload the update zip file manually."}), 403
+            return jsonify({"success": False, "message": f"Error (403). Please try again in 1 hour or upload the update zip file manually."}), 403
         return jsonify({"success": False, "message": f"GitHub API error ({e.code}): {e.reason}"}), 500
     except Exception as e:
         return jsonify({"success": False, "message": f"Failed to check online update: {str(e)}"}), 500
