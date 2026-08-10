@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build-macos:
-    name: Build macOS (.dmg)
+    name: Build macOS Apple Silicon
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
@@ -49,22 +49,70 @@ jobs:
           ln -s /Applications dist_dmg/Applications
           
           # Create DMG image
-          hdiutil create -volname "Daftar Radiologi v2" -srcfolder dist_dmg -ov -format UDZO DaftarRadiologi-v2-macOS.dmg
+          hdiutil create -volname "Daftar Radiologi v2" -srcfolder dist_dmg -ov -format UDZO DaftarRadiologi-v2-mac-applesilicon.dmg
           
           # Also package zip for direct launch
           cd Daftar_Radiologi/dist
-          zip -r ../../DaftarRadiologi-v2-macOS-App.zip DaftarRadiologi.app
+          zip -r ../../DaftarRadiologi-v2-mac-applesilicon.zip DaftarRadiologi.app
 
       - name: Upload macOS Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DaftarRadiologi-macOS-Installer
           path: |
-            DaftarRadiologi-v2-macOS.dmg
-            DaftarRadiologi-v2-macOS-App.zip
+            DaftarRadiologi-v2-mac-applesilicon.dmg
+            DaftarRadiologi-v2-mac-applesilicon.zip
+
+  build-legacy-macos:
+    name: Build macOS Legacy (Intel)
+    runs-on: macos-13
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python (Python 3.10 for Legacy Intel macOS)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build Legacy macOS App Bundle
+        env:
+          MACOSX_DEPLOYMENT_TARGET: '10.15'
+        run: |
+          cd Daftar_Radiologi
+          pyinstaller --clean -y DaftarRadiologi.spec
+
+      - name: Create Legacy DMG Installer & ZIP
+        run: |
+          mkdir -p dist_dmg_legacy
+          cp -r Daftar_Radiologi/dist/DaftarRadiologi.app dist_dmg_legacy/
+          
+          # Create symbolic link to Applications folder
+          ln -s /Applications dist_dmg_legacy/Applications
+          
+          # Create DMG image
+          hdiutil create -volname "Daftar Radiologi v2 Legacy 2019" -srcfolder dist_dmg_legacy -ov -format UDZO DaftarRadiologi-v2-mac-intel.dmg
+          
+          # Also package zip for direct launch
+          cd Daftar_Radiologi/dist
+          zip -r ../../DaftarRadiologi-v2-mac-intel.zip DaftarRadiologi.app
+
+      - name: Upload Legacy macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaftarRadiologi-macOS-Legacy-Installer
+          path: |
+            DaftarRadiologi-v2-mac-intel.dmg
+            DaftarRadiologi-v2-mac-intel.zip
 
   build-windows:
-    name: Build Windows (.zip)
+    name: Build Windows 10/11 (Modern x64)
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
@@ -89,37 +137,86 @@ jobs:
       - name: Package Windows Portable ZIP
         shell: pwsh
         run: |
-          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-Windows.zip" -Force
+          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-win10.zip" -Force
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DaftarRadiologi-Windows-Installer
           path: |
-            DaftarRadiologi-v2-Windows.zip
+            DaftarRadiologi-v2-win10.zip
 
-  publish-release:
-    name: Publish GitHub Release
-    needs: [build-macos, build-windows]
-    runs-on: ubuntu-latest
+  build-legacy-windows7:
+    name: Build Windows 7 (Legacy x64 - Python 3.8)
+    runs-on: windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download macOS Artifacts
+      - name: Setup Python 3.8 (Last version natively supporting Windows 7)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build Windows 7 Compatible Executable
+        run: |
+          cd Daftar_Radiologi
+          pyinstaller --clean -y DaftarRadiologi.spec
+
+      - name: Package Windows 7 Portable ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-win-legacy.zip" -Force
+
+      - name: Upload Windows 7 Legacy Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaftarRadiologi-Windows7-Legacy-Installer
+          path: |
+            DaftarRadiologi-v2-win-legacy.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-macos, build-legacy-macos, build-windows, build-legacy-windows7]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository with Full History
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download macOS Modern Artifacts
         uses: actions/download-artifact@v4
         with:
           name: DaftarRadiologi-macOS-Installer
           path: release_assets
 
-      - name: Download Windows Artifacts
+      - name: Download macOS Legacy Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DaftarRadiologi-macOS-Legacy-Installer
+          path: release_assets
+
+      - name: Download Windows Modern Artifacts
         uses: actions/download-artifact@v4
         with:
           name: DaftarRadiologi-Windows-Installer
           path: release_assets
 
-      - name: Determine Release Tag
-        id: tag_name
+      - name: Download Windows 7 Legacy Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DaftarRadiologi-Windows7-Legacy-Installer
+          path: release_assets
+
+      - name: Determine Release Tag & Generate Changelog
+        id: release_info
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.release_tag }}" ]; then
             TAG="${{ github.event.inputs.release_tag }}"
@@ -130,66 +227,72 @@ jobs:
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
+          # Generate git commit changelog for current release
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES=$(git log --oneline ${PREV_TAG}..HEAD | head -n 25)
+          else
+            CHANGES=$(git log --oneline -n 15)
+          fi
+
+          if [ -z "$CHANGES" ]; then
+            CHANGES="Initial release build for version $TAG"
+          fi
+
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag_name.outputs.tag }}
-          name: "Daftar Radiologi ${{ steps.tag_name.outputs.tag }}"
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: "Daftar Radiologi ${{ steps.release_info.outputs.tag }}"
           body: |
-            ## 🚀 Daftar Radiologi V2 (${{ steps.tag_name.outputs.tag }})
+            ## Daftar Radiologi V2 (${{ steps.release_info.outputs.tag }})
+
+            `📋 Changelog for version ${{ steps.release_info.outputs.tag }}:`
+            ```
+            ${{ steps.release_info.outputs.CHANGELOG }}
+            ```
+
+            ---
+
+            ### 📥 Download Files
+
+            #### macOS
+            - **Apple Silicon (M1 / M2 / M3 / M4)**:
+              - `DaftarRadiologi-v2-mac-applesilicon.dmg` (DMG Package)
+              - `DaftarRadiologi-v2-mac-applesilicon.zip` (Portable Archive)
+            - **Intel Macs (macOS 10.15 Catalina or newer)**:
+              - `DaftarRadiologi-v2-mac-intel.dmg` (DMG Package)
+              - `DaftarRadiologi-v2-mac-intel.zip` (Portable Archive)
+
+            #### Windows
+            - **Windows 10 / Windows 11**:
+              - `DaftarRadiologi-v2-win10.zip` (extract ZIP and run `DaftarRadiologi.exe`)
+            - **Legacy Windows (Windows 7 / 8 / 8.1)**:
+              - `DaftarRadiologi-v2-win-legacy.zip` (built with Python 3.8 for older Windows systems)
             
-            Digital Radiology Register & PHRIS Monthly Census Management System for Ministry of Health Malaysia (KKM) Health Clinics (PER.SS-RA 101 Compliance).
-            
             ---
 
-            ### 📥 Download Installers:
-            - 🍏 **macOS (DMG Installer)**: `DaftarRadiologi-v2-macOS.dmg`
-            - 🍏 **macOS (ZIP Portable)**: `DaftarRadiologi-v2-macOS-App.zip`
-            - 🪟 **Windows (ZIP Executable)**: `DaftarRadiologi-v2-Windows.zip` (extract zip and double-click `DaftarRadiologi.exe`)
-            
-            ---
+            ### ℹ️ First-Time Launch Note
 
-            ### ⚠️ Installation Security Warning Bypass Guide:
+            As application binaries are distributed without a paid commercial certificate, your operating system may show a standard security prompt upon first opening:
 
-            #### 🍏 For macOS Users (Gatekeeper Warning):
-            When launching the app for the first time, if macOS displays *"App cannot be opened because it is from an unidentified developer"*:
-            - **Method 1 (Right-Click Open - Recommended)**:
-              1. Right-click (or `Control` + click) **Daftar Radiologi.app** inside your `/Applications` folder.
-              2. Select **Open**.
-              3. Click **Open** again on the confirmation prompt. *(macOS permanently remembers this decision)*.
-            - **Method 2 (Terminal Command)**:
-              Open Terminal and run:
-              ```bash
-              xattr -cr /Applications/DaftarRadiologi.app
-              ```
+            - **macOS (Gatekeeper)**: Right-click **Daftar Radiologi.app** in `/Applications` and select **Open**, or run `xattr -cr /Applications/DaftarRadiologi.app` in Terminal.
+            - **Windows (SmartScreen)**: Click **More info** on the blue prompt, then select **Run anyway**.
 
-            #### 🪟 For Windows 10/11 Users (SmartScreen Warning):
-            When executing `DaftarRadiologi.exe`, if Windows displays the blue *"Windows protected your PC / Unknown Publisher"* banner:
-            1. Click **"More info"**.
-            2. Click **"Run anyway"**.
-            3. *(Windows permanently remembers your approval and will not prompt again)*.
-
-            ---
-
-            ### ✨ Key Features in V2:
-            - **Full PER.SS-RA 101 Compliance**: Auto-parsing of MyKad/Passport (Age, Gender, Nationality) and standardized `DD/MM/YYYY` date format.
-            - **SMRP Taxonomy & Custom Orderables**: Instant search and dynamic addition of custom examination categories and anatomy sub-regions.
-            - **Interactive Operational Dashboard**: Consolidated examination pivot tables, patient mobilization counts (Ambulatory, Wheelchair, Trolley, RME), and breakdowns per referring facility.
-            - **Automated Monthly PHRIS Matrix**: 12-month census grid (JAN – DEC) with automatic category calculation.
-            - **Offline-First Data Security**: "Excel-as-a-Database" blackout-proof architecture, automatic daily backups, and multi-tier GUI window fallback (PyWebView & PySide6 Qt).
-
-            ---
-
-            ### 💡 Footnote: Why This Tech Stack Was Chosen
-            - **Strict KKM Data Governance (Offline-First)**: Direct write-through to local Excel (`.xlsx`) files ensures 100% offline patient data sovereignty with zero cloud dependency and direct physical audit readiness.
-            - **Kalis Blackout Reliability**: Synchronous disk writing guarantees zero patient data loss during sudden power outages in health clinics.
-            - **Ultra-Lightweight Footprint (PyWebView)**: Native OS rendering keeps installer size under **~35MB** and RAM usage under **60MB**—running fast on low-spec government PCs.
-            - **Multi-Tier Fail-Safe Resilience**: 3-tiered GUI launcher (PyWebView ➔ PySide6 Qt ➔ Local Browser Fallback) ensures zero application crashes even on legacy OS environments lacking pre-installed WebKit/WebView2 runtimes.
+            *(For full documentation, usage instructions, and system details, please refer to [README.md](https://github.com/rdgr-szal/daftar-radiologi-v2#readme).)*
           files: |
-            release_assets/DaftarRadiologi-v2-macOS.dmg
-            release_assets/DaftarRadiologi-v2-macOS-App.zip
-            release_assets/DaftarRadiologi-v2-Windows.zip
+            release_assets/DaftarRadiologi-v2-mac-applesilicon.dmg
+            release_assets/DaftarRadiologi-v2-mac-applesilicon.zip
+            release_assets/DaftarRadiologi-v2-mac-intel.dmg
+            release_assets/DaftarRadiologi-v2-mac-intel.zip
+            release_assets/DaftarRadiologi-v2-win10.zip
+            release_assets/DaftarRadiologi-v2-win-legacy.zip
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
