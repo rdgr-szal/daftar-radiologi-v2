@@ -65,12 +65,12 @@ jobs:
 
   build-legacy-macos:
     name: Build macOS Legacy (Intel)
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python (Python 3.10 for Legacy Intel macOS)
+      - name: Setup Python (Python 3.10 for Intel macOS)
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
