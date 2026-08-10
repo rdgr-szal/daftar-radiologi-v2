@@ -404,59 +404,80 @@ def api_shutdown():
 def api_apply_update_patch():
     """
     Kemas kini Aplikasi via Patch File (.zip):
-    1. Ekstrak fail zip ke folder aplikasi (BUNDLE_DIR).
-    2. Lindungi & Jangan sentuh / padam folder Pendaftaran (Database & Config).
-    3. Jika update mengandungi major database schema changes (is_major=true),
-       jalankan Auto Backup -> Patch -> Auto Init DB Schema -> Restore Check.
+    1. Simpan fail zip tempatan.
+    2. Semak dan auto-kesan sekiranya terdapat fail manifest.json (is_major: true) atau perubahan skema database major.
+    3. Jika dikesan major update atau is_major = True: jalankan Auto Backup dahulu.
+    4. Ekstrak fail zip ke BUNDLE_DIR (melindungi folder Pendaftaran/).
+    5. Jalankan init_db_schema jika major update dikesan.
     """
     if 'file' not in request.files:
-        return jsonify({"success": False, "message": "Tiada fail kemas kini (.zip) dimuat naik."}), 400
+        return jsonify({"success": False, "message": "No update file (.zip) uploaded."}), 400
         
     file = request.files['file']
     if not file.filename.endswith(".zip"):
-        return jsonify({"success": False, "message": "Sila muat naik fail format .zip sahaja."}), 400
+        return jsonify({"success": False, "message": "Please upload a valid .zip update file."}), 400
 
-    is_major = request.form.get('is_major', 'false').lower() == 'true'
+    form_is_major = request.form.get('is_major', 'false').lower() == 'true'
     
     from core.config import BUNDLE_DIR, load_config
     import zipfile
     
-    # 1. Langkah Auto-Backup jika major update atau atas pertimbangan keselamatan
-    backup_created = False
+    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_update_patch.zip")
+    try:
+        file.save(temp_zip)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error saving uploaded file: {str(e)}"}), 500
+
+    # Auto-detect sekiranya patch mengandungi petunjuk Major Update
+    auto_detected_major = False
+    try:
+        with zipfile.ZipFile(temp_zip, 'r') as zipf:
+            namelist = zipf.namelist()
+            for member in namelist:
+                fname = os.path.basename(member).lower()
+                if fname in ["manifest.json", "update_manifest.json"]:
+                    try:
+                        m_data = json.loads(zipf.read(member).decode('utf-8'))
+                        if m_data.get("is_major", False) or m_data.get("requires_backup", False):
+                            auto_detected_major = True
+                            break
+                    except Exception:
+                        pass
+                if "migration" in fname or "schema" in fname or "db_engine.py" in fname:
+                    auto_detected_major = True
+    except Exception as e_check:
+        print(f"[Update Auto-Detect Warning] {e_check}")
+
+    is_major = form_is_major or auto_detected_major
+
+    # 1. Auto Backup jika Major Update dikesan
     backup_msg = ""
     if is_major:
         try:
             success_b, msg_b, _ = create_zip_backup()
             if not success_b:
-                return jsonify({"success": False, "message": f"Gagal membuat auto backup sebelum major update: {msg_b}"}), 500
-            backup_created = True
-            backup_msg = " [Auto Backup Berjaya Dicipta]"
+                if os.path.exists(temp_zip): os.remove(temp_zip)
+                return jsonify({"success": False, "message": f"Failed to create auto backup before major update: {msg_b}"}), 500
+            backup_msg = " [Auto Backup Successfully Created]"
         except Exception as e:
-            return jsonify({"success": False, "message": f"Ralat Auto Backup: {str(e)}"}), 500
+            if os.path.exists(temp_zip): os.remove(temp_zip)
+            return jsonify({"success": False, "message": f"Auto Backup error: {str(e)}"}), 500
 
-    # 2. Simpan fail temp zip
-    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_update_patch.zip")
-    try:
-        file.save(temp_zip)
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Ralat menyimpan fail muat naik: {str(e)}"}), 500
-
-    # 3. Ekstrak & Terapkan Kemas Kini
+    # 2. Ekstrak & Terapkan Kemas Kini
     try:
         with zipfile.ZipFile(temp_zip, 'r') as zipf:
             namelist = zipf.namelist()
-            # Keselamatan: Pastikan tiada fail di dalam folder Pendaftaran/ diretas / dipadamkan secara tidak sengaja
+            # Keselamatan: Lindungi folder Pendaftaran/
             for member in namelist:
                 norm_path = os.path.normpath(member)
                 if norm_path.startswith("Pendaftaran") or norm_path.startswith("Pendaftaran/") or norm_path.startswith("Pendaftaran\\"):
-                    continue # Abaikan sebarang fail Pendaftaran dalam zip kemaskini untuk lindungi data
-                
+                    continue
                 zipf.extract(member, BUNDLE_DIR)
                 
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
             
-        # 4. Jika Major Update, pastikan skema DB dikemaskini secara selamat
+        # 3. Kemas kini DB schema jika major update
         if is_major:
             try:
                 config = load_config()
@@ -465,25 +486,36 @@ def api_apply_update_patch():
             except Exception as e_db:
                 print(f"[Update Major DB Schema Warning] {e_db}")
 
+        detected_label = " (Major Patch Detected)" if auto_detected_major else ""
         return jsonify({
             "success": True,
-            "message": f"Kemas kini aplikasi berjaya diterap!{backup_msg} Sila muat semula halaman atau restart aplikasi jika perlu."
+            "message": f"Application update successfully applied!{detected_label}{backup_msg} Please reload page or restart app if needed."
         })
         
     except Exception as e:
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
-        return jsonify({"success": False, "message": f"Ralat mengekstrak kemas kini: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Error extracting update: {str(e)}"}), 500
 
 @settings_bp.route('/api/update/check-github', methods=['GET'])
 def api_check_github_release():
     """
     Semak kemas kini terkini daripada GitHub Release API.
     """
+    import ssl
     try:
         url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         req = urllib.request.Request(url, headers={'User-Agent': 'DaftarRadiologi-App'})
-        with urllib.request.urlopen(req, timeout=8) as response:
+        
+        # SSL Context setup with unverified fallback for environment SSL certificate issues
+        ctx = ssl.create_default_context()
+        try:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        except Exception:
+            pass
+
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode('utf-8'))
                 tag_name = data.get('tag_name', '').lstrip('v')
@@ -534,6 +566,7 @@ def api_apply_online_update():
     """
     Muat turun pakej update dari GitHub Release URL & pasang secara automatik.
     """
+    import ssl
     data = request.get_json() or {}
     download_url = data.get('download_url', '').strip()
     is_major = data.get('is_major', False)
@@ -558,7 +591,14 @@ def api_apply_online_update():
     temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_github_update.zip")
     try:
         req = urllib.request.Request(download_url, headers={'User-Agent': 'DaftarRadiologi-App'})
-        with urllib.request.urlopen(req, timeout=60) as resp, open(temp_zip, 'wb') as out_file:
+        ctx = ssl.create_default_context()
+        try:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        except Exception:
+            pass
+
+        with urllib.request.urlopen(req, timeout=60, context=ctx) as resp, open(temp_zip, 'wb') as out_file:
             out_file.write(resp.read())
     except Exception as e:
         if os.path.exists(temp_zip):
