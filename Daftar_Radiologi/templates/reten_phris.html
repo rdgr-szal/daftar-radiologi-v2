@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Reten PHRIS{% endblock %}
-{% block header_title %}Reten Format PHRIS{% endblock %}
+{% block title %}Retention PHRIS{% endblock %}
+{% block header_title %}Retention Format PHRIS{% endblock %}
 
 {% block content %}
 <!-- Filter Bar & Print Button -->
@@ -9,7 +9,7 @@
   <form id="filterForm" method="GET" action="/phris" class="filter-form"
     style="display: flex; align-items: center; gap: 1rem;">
     <div class="form-group filter-group" style="display: flex; align-items: center; gap: 0.5rem;">
-      <label for="year" style="font-weight: 600;">Pilih Tahun Reten</label>
+      <label for="year" style="font-weight: 600;">Select Retention Year</label>
       <select id="year" name="year" class="form-control" style="width: 110px;" onchange="loadPhrisData()">
         {% for y in available_years %}
         <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
@@ -40,7 +40,7 @@
       <svg class="icon" viewBox="0 0 24 24">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
-      <span>Reten Bulanan <span id="current-year-label" style="color: var(--primary);">{{ selected_year
+      <span>Monthly Retention <span id="current-year-label" style="color: var(--primary);">{{ selected_year
           }}</span></span>
     </div>
   </div>
@@ -49,7 +49,7 @@
     <table id="phrisTable" class="data-table">
       <thead>
         <tr>
-          <th style="min-width: 250px;">Kategori</th>
+          <th style="min-width: 250px;">Category</th>
           <th>JAN</th>
           <th>FEB</th>
           <th>MAC</th>
@@ -68,7 +68,7 @@
       <tbody id="phrisTableBody">
         <tr>
           <td colspan="14" style="text-align: center; color: var(--text-muted); padding: 30px;">
-            Sedang memuatkan data reten dari fail Excel...
+            Loading retention data from Excel file...
           </td>
         </tr>
       </tbody>
@@ -88,7 +88,7 @@
     tbody.innerHTML = `
       <tr>
         <td colspan="14" style="text-align: center; color: var(--text-muted); padding: 30px;">
-          Sedang mengumpulkan data bagi tahun ${year}... Sila tunggu sebentar.
+          Gathering data for year ${year}... Please wait.
         </td>
       </tr>
     `;
@@ -100,13 +100,13 @@
       tbody.innerHTML = ''; // Clear loading message
 
       // 1. Seksyen: Bangsa Pesakit
-      renderSectionHeader("1. BANGSA PESAKIT");
+      renderSectionHeader("1. Patient Ethnicity");
       const races = ["MELAYU", "CINA", "INDIA", "BUMIPUTERA", "WARGA ASING", "LAIN-LAIN"];
       races.forEach(r => renderRow(r, data.bangsa[r]));
       renderSectionTotal("-", calculateTotals(races.map(r => data.bangsa[r])));
 
       // 2. Seksyen: Kedatangan
-      renderSectionHeader("2. KATEGORI KEDATANGAN");
+      renderSectionHeader("2. Arrival Category");
       renderRow("Trolley", data.kedatangan["TROLLEY"]);
       renderRow("Wheelchair", data.kedatangan["WHEELCHAIR"]);
       renderRow("Rujuk Terus (Klinik Luar)", data.kedatangan["RUJUK TERUS"]);
@@ -115,13 +115,13 @@
       renderSectionTotal("-", calculateTotals(arrivalKeys.map(k => data.kedatangan[k])));
 
       // 3. Seksyen: Pemeriksaan AM
-      renderSectionHeader("3. PEMERIKSAAN AM (X-RAY)");
+      renderSectionHeader("3. General Examination (X-ray)");
       const examAm = ["DADA", "ABDOMEN", "EXTREMITI", "RANGKA KEPALA", "SPINA VERTEBRA", "PELVIS", "SKELETAL SURVEY", "DEXA", "OPG", "LAIN-LAIN"];
       examAm.forEach(e => renderRow(capitalizeEachWord(e), data.pemeriksaan_am[e]));
       renderSectionTotal("-", calculateTotals(examAm.map(e => data.pemeriksaan_am[e])));
 
       // 4. Seksyen: Pemeriksaan Lain
-      renderSectionHeader("4. PEMERIKSAAN LAIN");
+      renderSectionHeader("4. Other Examinations");
       renderRow("RME (Radiation Medical Exam)", data.pemeriksaan_lain["RME"]);
       renderRow("PTB (Pulmonary Tuberculosis Screening)", data.pemeriksaan_lain["PTB"]);
       renderRow("Kes-Kes Lain", data.pemeriksaan_lain["KES LAIN"]);
@@ -131,7 +131,7 @@
       renderSectionTotal("-", calculateTotals(examOtherKeys.map(k => data.pemeriksaan_lain[k])));
 
       // 5. Seksyen: Temujanji
-      renderSectionHeader("5. PENJADUALAN / TEMUJANJI");
+      renderSectionHeader("5. Scheduling / Appointments");
       renderRow("Ultrasound (USG)", data.temujanji["USG"]);
       renderRow("Mammogram", data.temujanji["MAMMO"]);
       renderRow("CT-Scan", data.temujanji["CT-SCAN"]);
@@ -140,7 +140,7 @@
       renderSectionTotal("-", calculateTotals(appointmentKeys.map(k => data.temujanji[k])));
 
       // 6. Seksyen: Consumable
-      renderSectionHeader("6. BAHAN HABIS GUNA (CONSUMABLES)");
+      renderSectionHeader("6. Consumables");
       renderRow("CD-R", data.consumable["CD-R"]);
       renderRow("Filem 10x12", data.consumable["FILEM 10X12"]);
       renderRow("Filem 14x17", data.consumable["FILEM 14X17"]);
@@ -148,7 +148,7 @@
       renderSectionTotal("-", calculateTotals(consumableKeys.map(k => data.consumable[k])));
 
       // 7. Seksyen: Penolakan Imej (Reject Analysis)
-      renderSectionHeader("7. ANALISIS PENOLAKAN IMEJ (REJECT ANALYSIS)");
+      renderSectionHeader("7. Reject Analysis");
       const rejections = [
         "OVER EXPOSURE", "UNDER EXPOSURE", "DOUBLE EXPOSURE", "WRONG TECHNIQUE",
         "WRONG PATIENT", "WRONG MARKER", "COLLIMATION ERROR", "PATIENT MOVEMENT",
@@ -158,8 +158,8 @@
       rejections.forEach(r => renderRow(capitalizeEachWord(r), data.penolakan[r]));
 
       // Baris khas untuk Reject Analysis
-      renderRow("Jumlah Imej Diambil (a)", data.penolakan["JUMLAH IMEJ"]);
-      renderRow("Bilangan Pengulangan (b)", data.penolakan["PENGULANGAN"]);
+      renderRow("Total Images Captured (a)", data.penolakan["JUMLAH IMEJ"]);
+      renderRow("Number of Repeats (b)", data.penolakan["PENGULANGAN"]);
 
       // Hitung Peratusan Penolakan (%) harian/bulanan = (b / a) * 100
       const percentageRow = [];
@@ -174,13 +174,13 @@
       const totalB = data.penolakan["PENGULANGAN"].reduce((x, y) => x + y, 0);
       const totalPercentage = totalA > 0 ? ((totalB / totalA) * 100).toFixed(2) + '%' : '0.00%';
 
-      renderCustomRow("Peratusan Penolakan (%)", percentageRow, totalPercentage);
+      renderCustomRow("Reject Percentage (%)", percentageRow, totalPercentage);
 
     } catch (err) {
       tbody.innerHTML = `
         <tr>
           <td colspan="14" style="text-align: center; color: #ef4444; padding: 30px;">
-            Gagal mengagregat data PHRIS! Sila pastikan fail Excel wujud dan tidak dibuka oleh program lain.
+            Failed to aggregate PHRIS data! Please ensure the Excel file exists and is not open in another program.
           </td>
         </tr>
       `;

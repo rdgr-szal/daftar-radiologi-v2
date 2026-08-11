@@ -20,7 +20,7 @@ Daftar Radiologi V2 is an offline desktop application designed for Radiology Uni
 - **Automated Monthly PHRIS Census**: 12-month statistical matrix (JAN – DEC) automatically calculated according to official KKM reporting guidelines.
 - **DICOM Modality Worklist (MWL) & MPPS SCP Server**:
   - Integrated DICOM Worklist SCP (port 104, AE title `KAUNTER` / `XRAY`) providing worklist queries (C-FIND) and connectivity verification (C-ECHO).
-  - Built-in **Modality Performed Procedure Step (MPPS SCP)** receiving `N-CREATE` (In Progress) and `N-SET` (Completed / Discontinued) from console modalities (e.g. **Carestream DRX-Compass**, AE `KK3SB`).
+  - Built-in **Modality Performed Procedure Step (MPPS SCP)** receiving `N-CREATE` (In Progress) and `N-SET` (Completed / Discontinued) from console modalities.
   - Automatic classification of image rejections into official 14 PHRIS categories (*Section 7: Analisis Penolakan Imej*) and live audit logs in Settings.
 - **Local File System Storage**: Direct read and write operations on local `.xlsx` files with daily automatic backups created locally.
 
@@ -131,7 +131,7 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 
 ### 🚀 Version 2.1.3 (DICOM MPPS SCP & Logs Tab Upgrade)
 - **Modality Performed Procedure Step (MPPS) SCP Server**:
-  - Integrated DICOM MPPS SCP support (`N-CREATE` / `N-SET`) for modality consoles (e.g. Carestream DRX-Compass, AE `KK3SB`).
+  - Integrated DICOM MPPS SCP support (`N-CREATE` / `N-SET`) for modality consoles.
   - Real-time procedure tracking (`IN PROGRESS`, `COMPLETED`, `DISCONTINUED`).
 - **Reject Analysis & KKM PHRIS Section 7**:
   - Auto-classification of image rejections into standard **14 KKM PHRIS Reject Categories** (*Laporan Analisa Filem Ditolak*).

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Pendaftaran Pesakit Radiologi - KKM{% endblock %}
-{% block header_title %}Pendaftaran{% endblock %}
+{% block title %}Radiology Patient Registration - KKM{% endblock %}
+{% block header_title %}Registration{% endblock %}
 
 {% block content %}
 <style>
@@ -74,6 +74,7 @@
 
 <form id="patientForm" onsubmit="handleFormSubmit(event)">
   <!-- Card 1: Maklumat Pendaftaran & Staff -->
+  <!-- Card 1: Registration & Staff Info -->
   <div class="card">
     <div class="card-header-clean">
 
@@ -102,13 +103,13 @@
 
     <div style="display: flex; flex-direction: column; gap: 0.85rem;">
       <div class="form-group">
-        <label for="tarikh">Tarikh *</label>
+        <label for="tarikh">Date *</label>
         <input type="date" id="tarikh" name="tarikh" class="form-control" value="{{ today }}" required
           onchange="fetchNextXray()" title="Pilih tarikh pendaftaran kes pesakit">
       </div>
 
       <div class="form-group">
-        <label for="nombor_xray">No. X-Ray *</label>
+        <label for="nombor_xray">X-Ray No. *</label>
         <input type="text" id="nombor_xray" name="nombor_xray" class="form-control" value="{{ next_xray }}" required
           readonly style="font-weight: 700; color: var(--primary); background-color: var(--bg-subtle);"
           title="Nombor rujukan X-Ray automatik bagi pemeriksaan kes ini">
@@ -124,21 +125,21 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
-        <span>Profil Pesakit</span>
+        <span>Patient Profile</span>
       </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 0.85rem;">
       <!-- Row 1: IC / Pasport -->
       <div class="form-group">
-        <label for="ic_pasport">No. IC / Pasport *</label>
+        <label for="ic_pasport">IC/Passport No. *</label>
         <input type="text" id="ic_pasport" name="ic_pasport" class="form-control" placeholder="850403105001" required
           oninput="handleIcAutoFill(this.value)" title="No. IC (12 digit)">
       </div>
 
       <!-- Row 2: Nama Penuh -->
       <div class="form-group">
-        <label for="nama">Nama Penuh *</label>
+        <label for="nama">Full Name *</label>
         <input type="text" id="nama" name="nama" class="form-control" placeholder="NAMA PESAKIT" required
           style="text-transform: uppercase;" title="Nama penuh pesakit">
       </div>
@@ -146,12 +147,12 @@
       <!-- Row 3: 2 Column (Pendek) - Umur & Jantina -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
         <div class="form-group">
-          <label for="umur">Umur (Tahun) *</label>
+          <label for="umur">Age (Years) *</label>
           <input type="number" id="umur" name="umur" class="form-control" placeholder="" required title="Umur pesakit"
             oninput="checkLmpRequirement()">
         </div>
         <div class="form-group">
-          <label for="jantina">Jantina *</label>
+          <label for="jantina">Gender *</label>
           <select id="jantina" name="jantina" class="form-control" required title="Jantina pesakit"
             onchange="checkLmpRequirement()">
             <option value="M">LELAKI</option>
@@ -163,7 +164,7 @@
       <!-- Row 4: 2 Column - Kakitangan Kerajaan & Warganegara -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
         <div class="form-group">
-          <label for="kakitangan_kerajaan">Kakitangan Kerajaan</label>
+          <label for="kakitangan_kerajaan">Government Staff</label>
           <select id="kakitangan_kerajaan" name="kakitangan_kerajaan" class="form-control"
             title="Status Kakitangan Kerajaan">
             <option value="TIDAK">TIDAK</option>
@@ -171,7 +172,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="warganegara">Warganegara</label>
+          <label for="warganegara">Nationality</label>
           <select id="warganegara" name="warganegara" class="form-control" title="Status kewarganegaraan">
             <option value="YA">MALAYSIA</option>
             <option value="TIDAK" selected>WARGA ASING</option>
@@ -182,7 +183,7 @@
       <!-- Row 5: 2 Column - Bangsa & Alamat Kediaman -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
         <div class="form-group">
-          <label for="bangsa">Bangsa *</label>
+          <label for="bangsa">Ethnicity *</label>
           <select id="bangsa" name="bangsa" class="form-control" title="Kategori etnik/bangsa">
             <option value="MELAYU">MELAYU</option>
             <option value="CINA">CINA</option>
@@ -192,7 +193,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="alamat">Alamat</label>
+          <label for="alamat">Address</label>
           <input type="text" id="alamat" name="alamat" class="form-control" placeholder=""
             style="text-transform: uppercase;" title="Alamat kediaman pesakit">
         </div>
@@ -218,13 +219,13 @@
         <svg class="icon icon-sm" viewBox="0 0 24 24">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
-        <span>Pemeriksaan & Klinikal</span>
+        <span>Examination & Clinical</span>
       </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 0.85rem;">
       <div class="form-group">
-        <label for="klinik_rujukan">Klinik Rujukan *</label>
+        <label for="klinik_rujukan">Referral Clinic *</label>
         <select id="klinik_rujukan" name="klinik_rujukan" class="form-control" required
           title="Klinik yang membuat permohonan pemeriksaan">
           <option value="{{ config.klinik_asal }}">{{ config.klinik_asal }}</option>
@@ -238,7 +239,7 @@
       <div
         style="display: grid; grid-template-columns: {% if config.facility_type == 'HOSPITAL' %}1fr 1fr 1fr{% else %}1fr 1fr{% endif %}; gap: 0.85rem;">
         <div class="form-group">
-          <label for="kategori">Keadaan *</label>
+          <label for="kategori">Condition *</label>
           <select id="kategori" name="kategori" class="form-control" title="Keadaan kedatangan pesakit">
             <option value="BERJALAN">BERJALAN</option>
             <option value="WHEELCHAIR">WHEELCHAIR</option>
@@ -248,7 +249,7 @@
 
         {% if config.facility_type == 'HOSPITAL' %}
         <div class="form-group">
-          <label for="jenis_pesakit_hospital">Kategori Pesakit</label>
+          <label for="jenis_pesakit_hospital">Patient Category</label>
           <select id="jenis_pesakit_hospital" name="jenis_pesakit_hospital" class="form-control"
             title="Jenis pendaftaran pesakit hospital">
             <option value="PESAKIT LUAR">PESAKIT LUAR</option>
@@ -259,7 +260,7 @@
         {% endif %}
 
         <div class="form-group">
-          <label for="pegawai_rujukan">Doktor</label>
+          <label for="pegawai_rujukan">Doctor</label>
           <input type="text" id="pegawai_rujukan" name="pegawai_rujukan" class="form-control"
             placeholder="NAMA DOKTOR YANG MEMOHON" style="text-transform: uppercase;" title="Nama doktor merujuk">
         </div>
@@ -303,7 +304,7 @@
       </div>
 
       <div class="form-group" style="margin-top: 0.5rem;">
-        <label for="catatan">Catatan </label>
+        <label for="catatan">Notes </label>
         <input type="text" id="catatan" name="catatan" class="form-control" placeholder="(Jika ada)"
           title="Catatan tambahan">
       </div>
@@ -318,7 +319,7 @@
           <path d="M23 4v6h-6" />
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
         </svg>
-        <span>Set Semula</span>
+        <span>Reset</span>
       </button>
       <button type="submit" class="btn btn-primary" id="btnSubmit"
         style="flex: 2; justify-content: center; height: 42px; font-size: 0.95rem; font-weight: 700;"

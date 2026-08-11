@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Senarai Pesakit Buku Daftar - KKM{% endblock %}
-{% block header_title %}Senarai Pesakit{% endblock %}
+{% block title %}Patient List Register - KKM{% endblock %}
+{% block header_title %}Patient List{% endblock %}
 
 {% block content %}
 <style>
@@ -344,27 +344,17 @@
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
-      <span>Buku Daftar Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
+      <span>Daftar Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
     </div>
     <div style="display: flex; gap: 0.5rem;">
       <a href="{{ url_for('export.print_buku_daftar', year=selected_year, month=selected_month) }}" target="_blank"
-        class="btn btn-outline" title="Cetak Buku Daftar Radiologi untuk salinan audit fizikal">
+        class="btn btn-outline" title="Print or save PDF copy of Buku Daftar Radiologi">
         <svg class="icon icon-sm" viewBox="0 0 24 24">
           <polyline points="6 9 6 2 18 2 18 9" />
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <rect x="6" y="14" width="12" height="8" />
         </svg>
-        <span>Print</span>
-      </a>
-      <a href="{{ url_for('export.pdf_buku_daftar', year=selected_year, month=selected_month) }}" target="_blank"
-        class="btn btn-primary" title="Muat turun/Eksport salinan PDF Buku Daftar">
-        <svg class="icon icon-sm" viewBox="0 0 24 24">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="12" y1="18" x2="12" y2="12" />
-          <polyline points="9 15 12 18 15 15" />
-        </svg>
-        <span>PDF</span>
+        <span>Print / PDF</span>
       </a>
     </div>
   </div>
@@ -379,13 +369,13 @@
       <!-- Left: Period Switcher Buttons -->
       <div class="filter-tab-group">
         <a href="{{ url_for('patients.patient_directory', period='day', day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'day' %}active{% endif %}">Hari</a>
+          class="filter-tab {% if period == 'day' %}active{% endif %}">Day</a>
         <a href="{{ url_for('patients.patient_directory', period='week', day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'week' %}active{% endif %}">Minggu</a>
+          class="filter-tab {% if period == 'week' %}active{% endif %}">Week</a>
         <a href="{{ url_for('patients.patient_directory', period='month', year=selected_year, month=selected_month, day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'month' %}active{% endif %}">Bulan</a>
+          class="filter-tab {% if period == 'month' %}active{% endif %}">Month</a>
         <a href="{{ url_for('patients.patient_directory', period='year', year=selected_year, day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'year' %}active{% endif %}">Tahun</a>
+          class="filter-tab {% if period == 'year' %}active{% endif %}">Year</a>
       </div>
 
       <!-- Center / Controls: Period-Specific Controls -->
@@ -396,7 +386,7 @@
         {% elif period == 'week' %}
         <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
           <button type="button" class="btn btn-outline week-picker-trigger-btn"
-            onclick="toggleWeekPickerCalendar(event)" title="Klik untuk membuka Kalendar Penapis Minggu">
+            onclick="toggleWeekPickerCalendar(event)" title="Click to open Week Picker Calendar">
             <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -409,7 +399,7 @@
           <!-- Calendar Popover Menu -->
           <div id="weekPickerPopover" class="week-picker-popover" onclick="event.stopPropagation()">
             <div class="week-picker-header">
-              <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} Ogos</span>
+              <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} August</span>
               <div class="wp-nav-btns">
                 <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(-1)">&lt;</button>
                 <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(1)">&gt;</button>
@@ -420,13 +410,13 @@
               <thead>
                 <tr>
                   <th class="wp-th-week">#</th>
-                  <th>Isnin</th>
-                  <th>Sel</th>
-                  <th>Rab</th>
-                  <th>Kha</th>
-                  <th>Jum</th>
-                  <th>Sab</th>
-                  <th>Ahd</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                  <th>Sun</th>
                 </tr>
               </thead>
               <tbody id="wpCalendarBody">
@@ -456,7 +446,7 @@
 
       <!-- Right: Search Input -->
       <div style="display: flex; align-items: center; gap: 0.4rem;">
-        <input type="text" name="q" class="form-control" placeholder="Cari Nama / IC / No X-Ray..."
+        <input type="text" name="q" class="form-control" placeholder="Search Name / IC / X-Ray No..."
           value="{{ search_q }}" style="width: 200px; height: 30px; font-size: 0.8rem;">
         <button type="submit" class="btn btn-outline" style="height: 30px; padding: 2px 8px; font-size: 0.8rem;">
           <svg class="icon icon-sm" viewBox="0 0 24 24">
@@ -471,8 +461,8 @@
   <!-- Summary Stats Bar -->
   <div
     style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.83rem; color: var(--text-muted); align-items: center;">
-    <div>Pesakit: <strong style="color: var(--text-main); font-weight: 700;">{{ total_patients }}</strong></div>
-    <div>Kes: <strong style="color: var(--primary); font-weight: 700;">{{ total_cases }}</strong></div>
+    <div>Patients: <strong style="color: var(--text-main); font-weight: 700;">{{ total_patients }}</strong></div>
+    <div>Cases: <strong style="color: var(--primary); font-weight: 700;">{{ total_cases }}</strong></div>
   </div>
 
   <!-- Table Container -->
@@ -480,15 +470,15 @@
     <table class="exam-table">
       <thead>
         <tr>
-          <th style="white-space: nowrap; width: 95px;">TARIKH</th>
-          <th style="white-space: nowrap; width: 110px;">NO. X-RAY</th>
-          <th style="min-width: 170px;">NAMA</th>
+          <th style="white-space: nowrap; width: 95px;">Date</th>
+          <th style="white-space: nowrap; width: 110px;">X‑Ray No.</th>
+          <th style="min-width: 170px;">Name</th>
           <th style="white-space: nowrap; width: 140px;">ID</th>
-          <th style="width: 55px; text-align: center;">UMUR</th>
-          <th style="width: 65px; text-align: center;">JANTINA</th>
-          <th style="min-width: 180px;">BAHAGIAN</th>
-          <th style="min-width: 140px;">KLINIK</th>
-          <th style="text-align: right; width: 50px; white-space: nowrap;">TINDAKAN</th>
+          <th style="width: 55px; text-align: center;">Age</th>
+          <th style="width: 65px; text-align: center;">Gender</th>
+          <th style="min-width: 180px;">Section</th>
+          <th style="min-width: 140px;">Clinic</th>
+          <th style="text-align: right; width: 50px; white-space: nowrap;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -503,7 +493,7 @@
           <td style="font-weight: 700;">
             {{ p.nama }}
             {% if p.is_cancelled %}
-            <span style="font-size: 0.72rem; color: #dc2626; margin-left: 4px; font-weight: 700;">[BATAL]</span>
+            <span style="font-size: 0.72rem; color: #dc2626; margin-left: 4px; font-weight: 700;">[CANCELLED]</span>
             {% endif %}
           </td>
           <td
@@ -517,7 +507,7 @@
             <!-- Kebab / Overflow Menu Dropdown -->
             <div class="kebab-menu-container" style="position: relative; display: inline-block;">
               <button type="button" class="kebab-btn" onclick="toggleKebabMenu(event, 'kebab-{{ p.id }}')"
-                title="Pilihan Tindakan">
+                title="Action Options">
                 <svg class="icon icon-sm" viewBox="0 0 24 24"
                   style="stroke: currentColor; fill: none; stroke-width: 2.2;">
                   <circle cx="12" cy="12" r="1.5" />
@@ -534,7 +524,7 @@
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
-                  <span>Kemaskini</span>
+                  <span>Edit</span>
                 </button>
                 {% if not p.is_cancelled %}
                 <button type="button" class="kebab-item item-danger"
@@ -544,7 +534,7 @@
                     <circle cx="12" cy="12" r="10" />
                     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
                   </svg>
-                  <span>Batalkan Kes</span>
+                  <span>Cancel Case</span>
                 </button>
                 {% endif %}
               </div>
@@ -559,20 +549,21 @@
               style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-subtle); padding: 0.85rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
               <div
                 style="font-weight: 700; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
-                <span>Butiran Pemeriksaan ({{ p.examinations|length }} Rekod X-Ray)</span>
-                <span style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 0.75rem;">Klik
-                  baris utama untuk tutup</span>
+                <span>Examination Details ({{ p.examinations|length }} X-Ray Records)</span>
+                <span
+                  style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 0.75rem;">Click
+                  main row to collapse</span>
               </div>
               <table class="sub-table">
                 <thead>
                   <tr>
-                    <th>NO. X-RAY</th>
-                    <th>BAHAGIAN PEMERIKSAAN</th>
-                    <th>CD / FILEM</th>
-                    <th>KLINIK RUJUKAN</th>
+                    <th>X-RAY NO.</th>
+                    <th>EXAMINATION PART</th>
+                    <th>CD / FILM</th>
+                    <th>REFERRING CLINIC</th>
                     <th>STAFF</th>
-                    <th>CATATAN / SEBAB BATAL</th>
-                    <th style="text-align: right;">TINDAKAN</th>
+                    <th>REMARKS / CANCEL REASON</th>
+                    <th style="text-align: right;">ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -598,7 +589,7 @@
                         data-patient='{{ item|tojson|forceescape }}'
                         data-all-exams='{{ p.examinations|tojson|forceescape }}'
                         onclick="openEditModalFromSubRow(this)">
-                        Kemaskini
+                        Edit
                       </button>
                     </td>
                   </tr>
@@ -610,8 +601,9 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="9" style="text-align: center; padding: 3rem !important; color: var(--text-muted);">
-            Tiada rekod pesakit ditemui bagi julat masa yang dipilih.
+          <td colspan="9">
+            <div style="text-align: center; padding: 3rem !important; color: var(--text-muted);">No patient records
+              found for the selected period.</div>
           </td>
         </tr>
         {% endfor %}
