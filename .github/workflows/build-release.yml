@@ -129,6 +129,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Download WebView2 Evergreen Installer for Offline Setup
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe"
+
       - name: Build Windows Executable
         run: |
           cd Daftar_Radiologi
@@ -163,6 +168,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Download WebView2 Evergreen Installer for Offline Setup
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe"
 
       - name: Build Windows 7 Compatible Executable
         run: |

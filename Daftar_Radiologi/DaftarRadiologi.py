@@ -26,6 +26,58 @@ def start_flask_server(port=5005):
     """Menjalankan pelayan Flask tempatan."""
     app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
 
+def ensure_windows_webview2():
+    """Memeriksa dan memasang Microsoft Edge WebView2 Runtime secara senyap jika dijalankan pada Windows."""
+    if sys.platform != 'win32':
+        return
+
+    # Check registry for WebView2 Runtime
+    has_webview2 = False
+    try:
+        import winreg
+        key_paths = [
+            r"SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
+            r"SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+        ]
+        for path in key_paths:
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+                winreg.CloseKey(key)
+                has_webview2 = True
+                break
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"[WebView2 Check Warning] {e}")
+
+    if has_webview2:
+        print("[DaftarRadiologi] WebView2 Runtime dikesan.")
+        return
+
+    print("[DaftarRadiologi] WebView2 Runtime tidak dijumpai. Memulakan muat turun & pemasangan automatik...")
+    try:
+        import urllib.request
+        import subprocess
+
+        # 1. Semak fail installer terbina jika ada
+        installer_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "MicrosoftEdgeWebview2Setup.exe")
+        
+        # 2. Jika tidak ada fail terbina, muat turun dari Microsoft jika ada talian internet
+        if not os.path.exists(installer_path):
+            temp_dir = os.environ.get("TEMP", os.path.dirname(os.path.abspath(__file__)))
+            installer_path = os.path.join(temp_dir, "MicrosoftEdgeWebview2Setup.exe")
+            url = "https://go.microsoft.com/fwlink/p/?LinkId=2124703" # Microsoft Evergreen Installer
+            print(f"[WebView2 AutoInstall] Muat turun installer dari {url}...")
+            urllib.request.urlretrieve(url, installer_path)
+
+        # 3. Jalankan silent installation
+        if os.path.exists(installer_path):
+            print("[WebView2 AutoInstall] Memasang WebView2 Runtime secara senyap (silent mode)...")
+            subprocess.run([installer_path, "/silent", "/install"], check=True)
+            print("[WebView2 AutoInstall] Pemasangan WebView2 berjaya!")
+    except Exception as err:
+        print(f"[WebView2 AutoInstall Warning] Gagal memasang WebView2 secara automatik: {err}")
+
 def main():
     # Semakan & Cipta Backup Harian Automatik MyGovUC
     try:
@@ -47,6 +99,9 @@ def main():
     # Mulakan pelayan Flask di thread latar belakang
     server_thread = threading.Thread(target=start_flask_server, args=(port,), daemon=True)
     server_thread.start()
+
+    # Pastikan WebView2 tersedia jika di Windows
+    ensure_windows_webview2()
 
     # 1. Cuba jalankan sebagai PyWebView Native Desktop Window
     try:

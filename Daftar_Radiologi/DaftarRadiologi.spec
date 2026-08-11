@@ -19,7 +19,8 @@ a = Analysis(
         ('static', 'static'),
         ('template.xlsx', '.'),
         ('core/smrp_taxonomy.json', 'core'),
-        ('icon', 'icon')
+        ('icon', 'icon'),
+        ('MicrosoftEdgeWebview2Setup.exe', '.') if os.path.exists('MicrosoftEdgeWebview2Setup.exe') else ('icon', 'icon')
     ],
     hiddenimports=[
         'pywebview',
