@@ -115,11 +115,12 @@ def main():
             min_size=(648, 608),
             resizable=True
         )
+        # Cuba guna edgehtml / cef / qt jika mshtml/pythonnet bermasalah
         webview.start()
         print("[DaftarRadiologi] Aplikasi ditutup dengan selamat.")
         sys.exit(0)
     except Exception as e1:
-        print(f"[DaftarRadiologi] PyWebView gagal dibuka ({e1}). Mencuba enjin PySide6 QtWebEngine...")
+        print(f"[DaftarRadiologi] PyWebView gagal dibuka ({type(e1).__name__}: {e1}). Mencuba enjin PySide6 QtWebEngine...")
 
     # 2. Cuba jalankan sebagai PySide6 QtWebEngine Window (Embedded Chromium)
     try:
@@ -140,7 +141,7 @@ def main():
         print("[DaftarRadiologi] Aplikasi Qt ditutup dengan selamat.")
         sys.exit(0)
     except Exception as e2:
-        print(f"[DaftarRadiologi] QtWebEngine gagal dibuka ({e2}). Membuka pelayar web tempatan...")
+        print(f"[DaftarRadiologi] QtWebEngine gagal dibuka ({type(e2).__name__}: {e2}). Membuka pelayar web tempatan...")
 
     # 3. Fallback terakhir ke pelayar web jika tiada enjin tetingkap GUI ditemui
     threading.Timer(1.2, lambda: webbrowser.open(url)).start()
