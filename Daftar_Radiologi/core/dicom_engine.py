@@ -10,6 +10,8 @@ from core.config import DICOM_WORKLIST_PATH, load_config, ensure_dirs
 # DICOM Standard SOP Class UIDs (Universal across all pynetdicom versions)
 MWL_FIND_SOP_CLASS = "1.2.840.10008.5.1.4.31"  # Modality Worklist Information Model - FIND
 VERIFICATION_SOP_CLASS = "1.2.840.10008.1.1"    # Verification (C-ECHO)
+MPPS_SOP_CLASS = "1.2.840.10008.3.1.2.3.3"      # Modality Performed Procedure Step SOP Class
+MPPS_GENERAL_SOP_CLASS = "1.2.840.10008.5.1.4.32" # General Purpose Performed Procedure Step SOP Class
 
 PYDICOM_AVAILABLE = False
 PYNETDICOM_AVAILABLE = False
@@ -467,6 +469,91 @@ def test_dicom_echo_scu(console_ip, console_port=104, console_ae="CARESTREAM", m
         elapsed_ms = round((time.time() - t_start) * 1000, 1)
         return False, f"DICOM connection error: {str(e)}", elapsed_ms
 
+# --- DICOM MPPS SCP HANDLERS (N-CREATE & N-SET) ---
+
+def handle_n_create(event):
+    """
+    DICOM MPPS N-CREATE SCP Request Handler.
+    Triggered when Modality Console (SCU) starts a procedure (Status: IN PROGRESS).
+    """
+    requestor = event.assoc.requestor
+    raw_ae = requestor.ae_title
+    req_ae = raw_ae.decode('ascii', errors='ignore').strip() if isinstance(raw_ae, bytes) else str(raw_ae).strip()
+    print(f"[DICOM MPPS SCP] N-CREATE received from {req_ae} @ {requestor.address}")
+
+    if not PYDICOM_AVAILABLE:
+        print("[DICOM MPPS Error] pydicom library is not installed.")
+        return 0x0110, None  # Processing Failure
+
+    try:
+        ds = getattr(event, "attribute_list", None) or getattr(event, "dataset", None)
+        if ds is None and hasattr(event.request, "DataSet"):
+            ds = event.request.DataSet
+
+        if ds is None:
+            print("[DICOM MPPS N-CREATE Error] Missing Attribute List in N-CREATE request.")
+            return 0x0120, None  # Missing Attribute
+
+        sop_inst = getattr(event.request, "AffectedSOPInstanceUID", None)
+        if not sop_inst and hasattr(ds, "SOPInstanceUID"):
+            sop_inst = str(ds.SOPInstanceUID)
+        if not sop_inst and hasattr(ds, "AffectedSOPInstanceUID"):
+            sop_inst = str(ds.AffectedSOPInstanceUID)
+
+        from core.mpps_engine import save_mpps_create_record
+        rec_id, msg = save_mpps_create_record(
+            dataset=ds,
+            sop_instance_uid=sop_inst,
+            sop_class_uid=getattr(event.request, "AffectedSOPClassUID", MPPS_SOP_CLASS),
+            station_ae_fallback=req_ae
+        )
+
+        if rec_id is None:
+            return 0x0110, None  # Processing Failure
+
+        # Success Status
+        return 0x0000, None
+    except Exception as e:
+        print(f"[DICOM MPPS N-CREATE Exception] {e}")
+        return 0x0110, None
+
+def handle_n_set(event):
+    """
+    DICOM MPPS N-SET SCP Request Handler.
+    Triggered when Modality Console (SCU) updates, completes, or discontinues a procedure step.
+    """
+    requestor = event.assoc.requestor
+    raw_ae = requestor.ae_title
+    req_ae = raw_ae.decode('ascii', errors='ignore').strip() if isinstance(raw_ae, bytes) else str(raw_ae).strip()
+    print(f"[DICOM MPPS SCP] N-SET received from {req_ae} @ {requestor.address}")
+
+    if not PYDICOM_AVAILABLE:
+        return 0x0110, None
+
+    try:
+        ds = getattr(event, "modification_list", None) or getattr(event, "attribute_list", None) or getattr(event, "dataset", None)
+        if ds is None and hasattr(event.request, "DataSet"):
+            ds = event.request.DataSet
+
+        if ds is None:
+            print("[DICOM MPPS N-SET Error] Missing Modification List in N-SET request.")
+            return 0x0120, None
+
+        sop_inst = getattr(event.request, "RequestedSOPInstanceUID", getattr(event.request, "AffectedSOPInstanceUID", None))
+        if not sop_inst and hasattr(ds, "SOPInstanceUID"):
+            sop_inst = str(ds.SOPInstanceUID)
+
+        from core.mpps_engine import save_mpps_set_record
+        ok, msg = save_mpps_set_record(dataset=ds, sop_instance_uid=sop_inst)
+
+        if not ok:
+            return 0x0110, None
+
+        return 0x0000, None
+    except Exception as e:
+        print(f"[DICOM MPPS N-SET Exception] {e}")
+        return 0x0110, None
+
 # --- DICOM MWL SERVER DAEMON (BACKGROUND SCP SERVICE) ---
 
 class DicomMWLServerDaemon:
@@ -490,7 +577,7 @@ class DicomMWLServerDaemon:
             return cls._instance
 
     def start(self, host="0.0.0.0", port=104, ae_title="KAUNTER"):
-        """Start the DICOM MWL SCP Server in a background daemon thread."""
+        """Start the DICOM MWL & MPPS SCP Server in a background daemon thread."""
         if not PYNETDICOM_AVAILABLE:
             self.last_error = "The pynetdicom library is required. Please install via pip install pynetdicom."
             print(f"[DICOM Server] {self.last_error}")
@@ -508,14 +595,18 @@ class DicomMWLServerDaemon:
             try:
                 self.ae_server = AE(ae_title=self.ae_title.encode('ascii'))
                 
-                # Add Presentation Contexts using standard SOP Class UIDs
+                # Add Presentation Contexts using standard SOP Class UIDs (MWL, Verification, MPPS)
                 self.ae_server.add_supported_context(MWL_FIND_SOP_CLASS)
                 self.ae_server.add_supported_context(VERIFICATION_SOP_CLASS)
+                self.ae_server.add_supported_context(MPPS_SOP_CLASS)
+                self.ae_server.add_supported_context(MPPS_GENERAL_SOP_CLASS)
                 
                 # Bind event handlers
                 handlers = [
                     (evt.EVT_C_ECHO, handle_c_echo),
-                    (evt.EVT_C_FIND, handle_c_find)
+                    (evt.EVT_C_FIND, handle_c_find),
+                    (evt.EVT_N_CREATE, handle_n_create),
+                    (evt.EVT_N_SET, handle_n_set)
                 ]
 
                 # Launch non-blocking background server thread
@@ -526,12 +617,12 @@ class DicomMWLServerDaemon:
                 )
                 self.server_thread.start()
                 self.is_running = True
-                print(f"[DICOM MWL Server] Successfully started on {self.host}:{self.port} (AE Title: {self.ae_title})")
-                return True, f"DICOM MWL Server is now active on port {self.port} (AE: {self.ae_title})"
+                print(f"[DICOM MWL+MPPS Server] Successfully started on {self.host}:{self.port} (AE Title: {self.ae_title})")
+                return True, f"DICOM MWL+MPPS Server is now active on port {self.port} (AE: {self.ae_title})"
             except Exception as e:
                 self.is_running = False
                 self.last_error = str(e)
-                print(f"[DICOM MWL Server Error] Failed to start server: {e}")
+                print(f"[DICOM Server Error] Failed to start server: {e}")
                 return False, f"Failed to start DICOM Server: {str(e)}"
 
     def _run_server(self, handlers):
@@ -547,7 +638,7 @@ class DicomMWLServerDaemon:
             print(f"[DICOM Server Stopped/Error] {e}")
 
     def stop(self):
-        """Stop the DICOM MWL Server."""
+        """Stop the DICOM MWL+MPPS Server."""
         with self._lock:
             if not self.is_running:
                 return True, "DICOM Server is already stopped."
@@ -556,14 +647,14 @@ class DicomMWLServerDaemon:
                 if self.ae_server:
                     self.ae_server.shutdown()
                 self.is_running = False
-                print("[DICOM MWL Server] Server stopped.")
-                return True, "DICOM MWL Server successfully stopped."
+                print("[DICOM MWL+MPPS Server] Server stopped.")
+                return True, "DICOM MWL+MPPS Server successfully stopped."
             except Exception as e:
                 self.last_error = str(e)
                 return False, f"Error stopping server: {str(e)}"
 
     def restart(self, host="0.0.0.0", port=104, ae_title="KAUNTER"):
-        """Restart the DICOM MWL Server with new parameters."""
+        """Restart the DICOM Server with new parameters."""
         self.stop()
         time.sleep(0.5)
         return self.start(host=host, port=port, ae_title=ae_title)
@@ -571,6 +662,14 @@ class DicomMWLServerDaemon:
     def get_status(self):
         """Return real-time diagnostic status of the DICOM Server."""
         items = load_dicom_worklist()
+        mpps_count = 0
+        try:
+            from core.mpps_engine import get_mpps_records_list
+            res = get_mpps_records_list(limit=1, offset=0)
+            mpps_count = res.get("total", 0)
+        except Exception:
+            pass
+
         return {
             "pynetdicom_installed": PYNETDICOM_AVAILABLE,
             "running": self.is_running,
@@ -579,6 +678,8 @@ class DicomMWLServerDaemon:
             "ae_title": self.ae_title,
             "local_lan_ip": get_local_lan_ip(),
             "active_worklist_count": len(items),
+            "mpps_supported": True,
+            "mpps_records_count": mpps_count,
             "last_error": self.last_error
         }
 

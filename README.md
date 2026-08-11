@@ -1,8 +1,9 @@
+<img width="1280" height="640" alt="image" src="https://github.com/user-attachments/assets/263d0179-ec07-4f49-ad25-07c753a0e8e2" />
+
+
 # Radiology Registration & PHRIS Monthly Census System V2 (PER.SS-RA 101 Compliance)
 
 Daftar Radiologi V2 is an offline desktop application designed for Radiology Units in Ministry of Health Malaysia (KKM) health clinics. The application assists radiographers in logging daily patient examinations, monitoring clinic statistics, and generating monthly PHRIS census reports directly from local Excel files, structured according to PER.SS-RA 101 standards.
-
-<img width="1280" height="640" alt="image" src="https://github.com/user-attachments/assets/263d0179-ec07-4f49-ad25-07c753a0e8e2" />
 
 ---
 
@@ -17,6 +18,10 @@ Daftar Radiologi V2 is an offline desktop application designed for Radiology Uni
   - Referral breakdown (Internal vs. External referrals, with counts per referring clinic).
   - Demographic distribution (Gender and Ethnicity) and basic consumable tracking (CDs and X-ray films).
 - **Automated Monthly PHRIS Census**: 12-month statistical matrix (JAN – DEC) automatically calculated according to official KKM reporting guidelines.
+- **DICOM Modality Worklist (MWL) & MPPS SCP Server**:
+  - Integrated DICOM Worklist SCP (port 104, AE title `KAUNTER` / `XRAY`) providing worklist queries (C-FIND) and connectivity verification (C-ECHO).
+  - Built-in **Modality Performed Procedure Step (MPPS SCP)** receiving `N-CREATE` (In Progress) and `N-SET` (Completed / Discontinued) from console modalities (e.g. **Carestream DRX-Compass**, AE `KK3SB`).
+  - Automatic classification of image rejections into official 14 PHRIS categories (*Section 7: Analisis Penolakan Imej*) and live audit logs in Settings.
 - **Local File System Storage**: Direct read and write operations on local `.xlsx` files with daily automatic backups created locally.
 
 ---
@@ -71,10 +76,16 @@ Pre-built packages are available on [GitHub Releases](https://github.com/rdgr-sz
 
 - 🍏 **macOS**:
   - **Apple Silicon (M1 / M2 / M3 / M4)**: Download `DaftarRadiologi-v2-mac-applesilicon.dmg` or `DaftarRadiologi-v2-mac-applesilicon.zip`.
+  
   - **Intel Macs (macOS 10.15 Catalina or newer)**: Download `DaftarRadiologi-v2-mac-intel.dmg` or `DaftarRadiologi-v2-mac-intel.zip`.
+
+
 - 🪟 **Windows**:
   - **Windows 10 / Windows 11**: Download `DaftarRadiologi-v2-win10.zip`, extract the ZIP file, and double-click `DaftarRadiologi.exe`.
+  
   - **Legacy Windows (Windows 7 / 8 / 8.1)**: Download `DaftarRadiologi-v2-win-legacy.zip` (built with Python 3.8 for older Windows systems).
+
+
 
 ### Option B: Developer / Source Code Mode
 1. Create and activate a Python Virtual Environment:
@@ -113,3 +124,23 @@ If macOS indicates that the application is from an unidentified developer:
 If Windows SmartScreen displays a protective prompt when starting `DaftarRadiologi.exe`:
 1. Click **More info**.
 2. Click **Run anyway** to proceed with launching the application.
+
+---
+
+## 5. Release History & Version Notes
+
+### 🚀 Version 2.1.3 (DICOM MPPS SCP & Logs Tab Upgrade)
+- **Modality Performed Procedure Step (MPPS) SCP Server**:
+  - Integrated DICOM MPPS SCP support (`N-CREATE` / `N-SET`) for modality consoles (e.g. Carestream DRX-Compass, AE `KK3SB`).
+  - Real-time procedure tracking (`IN PROGRESS`, `COMPLETED`, `DISCONTINUED`).
+- **Reject Analysis & KKM PHRIS Section 7**:
+  - Auto-classification of image rejections into standard **14 KKM PHRIS Reject Categories** (*Laporan Analisa Filem Ditolak*).
+  - Detailed audit logging of rejected SOP Instance UIDs, reasons, and image counts stored locally in SQLite (`mpps_records` & `mpps_rejected_images`).
+- **Dedicated "Logs" Navigation Tab**:
+  - Extracted real-time monitoring tables into a dedicated top navbar **Logs** tab containing:
+    1. **Active Worklist Queue** (100% full-page width table, sticky headers, zero horizontal scroll).
+    2. **Reject Analysis Log** (Full procedure & image reject audit with status filters, search, and CSV export).
+- **System Tab Consolidation**:
+  - Restructured `Settings > System` into clean sub-tabs: *Database*, *Integration*, and *Updates*.
+  - Added *Worklist Auto-Retention Period* option (`Keep 6 Hours`).
+  - Streamlined single top-level **"Save"** button.

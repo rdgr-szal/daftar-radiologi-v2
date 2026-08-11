@@ -251,37 +251,32 @@
         <span>Consumables</span>
       </button>
 
-      <button type="button" class="tab-btn" onclick="switchTab('tabDatabase')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24">
-          <ellipse cx="12" cy="5" rx="9" ry="3" />
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      <button type="button" class="tab-btn" onclick="switchTab('tabSystem')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
-        <span>Database</span>
+        <span>System</span>
         {% if pending_sync_count and pending_sync_count > 0 %}
         <span
           style="background: #f59e0b; color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.72rem; margin-left: 2px;">{{
           pending_sync_count }}</span>
         {% endif %}
-      </button>
-
-      <button type="button" class="tab-btn" onclick="switchTab('tabDicom')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-          <line x1="6" y1="6" x2="6.01" y2="6"></line>
-          <line x1="6" y1="18" x2="6.01" y2="18"></line>
-        </svg>
-        <span>DICOM / Console</span>
         <span id="dicomNavBadge"
           style="display: none; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-left: 2px;"></span>
       </button>
 
-      <button type="button" class="tab-btn" onclick="switchTab('tabUpdate')">
+      <button type="button" class="tab-btn" onclick="switchTab('tabLogs')">
         <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
         </svg>
-        <span>Updates</span>
+        <span>Logs</span>
       </button>
     </div>
 
@@ -784,747 +779,919 @@
         </div>
       </div>
 
-      <!-- TAB 5: Pangkalan Data Luar (Database & Backup Sub-Tabs) -->
-      <div id="tabDatabase" class="tab-pane">
-        <!-- Sub-Tabs Bar inside Database Tab -->
+      <!-- TAB SYSTEM: Database, Integration & Updates -->
+      <div id="tabSystem" class="tab-pane">
+        <!-- Sub-Tabs Bar inside System Tab -->
         <div
           style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-subtle); margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
           <div style="display: flex; gap: 0.35rem;">
-            <button type="button" class="subtab-btn active" id="btnSubDb" onclick="switchDbSubTab('subDbSekunder')">
+            <button type="button" class="subtab-btn active" id="btnSysSubDb"
+              onclick="switchSystemSubTab('subSysDatabase')">
               <svg class="icon icon-sm" viewBox="0 0 24 24">
                 <ellipse cx="12" cy="5" rx="9" ry="3" />
                 <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
                 <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
               </svg>
               <span>Database</span>
+              {% if pending_sync_count and pending_sync_count > 0 %}
+              <span
+                style="background: #f59e0b; color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.72rem; margin-left: 2px;">{{
+                pending_sync_count }}</span>
+              {% endif %}
             </button>
-            <button type="button" class="subtab-btn" id="btnSubBackup" onclick="switchDbSubTab('subBackup')">
+
+            <button type="button" class="subtab-btn" id="btnSysSubIntegration"
+              onclick="switchSystemSubTab('subSysIntegration')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+              <span>Integration</span>
+            </button>
+
+            <button type="button" class="subtab-btn" id="btnSysSubUpdates"
+              onclick="switchSystemSubTab('subSysUpdates')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+              </svg>
+              <span>Updates</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 1: Database -->
+        <div id="subSysDatabase" class="system-subtab-pane">
+          <!-- Sub-Tabs Bar inside Database Tab -->
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-subtle); margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.35rem;">
+              <button type="button" class="subtab-btn active" id="btnSubDb" onclick="switchDbSubTab('subDbSekunder')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                  <ellipse cx="12" cy="5" rx="9" ry="3" />
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+                <span>Database</span>
+              </button>
+              <button type="button" class="subtab-btn" id="btnSubBackup" onclick="switchDbSubTab('subBackup')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Backup</span>
+              </button>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button type="button" class="btn btn-outline"
+                style="font-size: 0.8rem; font-weight: 600; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
+                onclick="openDbGuidanceModal()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span>Panduan Pematuhan Data & Storage</span>
+              </button>
+              <button type="button" class="btn btn-outline"
+                style="font-size: 0.8rem; font-weight: 600; white-space: nowrap; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
+                onclick="openDbHelpModal()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span>Panduan Setup</span>
+              </button>
+            </div>
+          </div>
+
+          {% set db = config.db_config if config.db_config else {} %}
+          <!-- Hidden input for backward compatibility so payload keeps enabled status -->
+          <input type="checkbox" id="db_enabled" checked style="display: none;">
+
+          <!-- SUB-TAB 1: Database Sekunder -->
+          <div id="subDbSekunder" class="subtab-pane active">
+            <div
+              style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+              <div
+                style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: currentColor; fill: none; stroke-width: 2;">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span>Secondary Database</span>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Excel merupakan sistem rekod utama. Database sekunder berfungsi sebagai additional protection layer
+                sekiranya Excel mengalami kegagalan teknikal atau kerosakan data. Sila pilih serta configure database
+                secondary yang sesuai. Database secondary boleh dihoskan secara local atau cloud mengikut dasar
+                organisasi
+                anda.
+              </p>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                <div class="form-group">
+                  <label for="db_provider">Suggested database provider</label>
+                  <select id="db_provider" class="form-control" onchange="handleProviderChangeSettings()">
+                    <option value="sqlite" {% if db.provider=='sqlite' %}selected{% endif %}>SQLite Local / Intranet
+                      Drive
+                    </option>
+                    <option value="postgres" {% if db.provider in ['postgres', 'postgresql' , 'mygovcloud' ]
+                      %}selected{% endif %}>PostgreSQL (Cloud DB / MyGovCloud@PDSA)</option>
+                    <option value="mysql" {% if db.provider in ['mysql', 'mariadb' ] %}selected{% endif %}>MySQL /
+                      MariaDB
+                      (Local / Shared Drive)</option>
+                  </select>
+                </div>
+                <div class="form-group" id="setHostGroup">
+                  <label for="db_host">Host / IP</label>
+                  <input type="text" id="db_host" class="form-control"
+                    value="{{ db.host if db.host else 'localhost' }}">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
+                id="setCredGroup">
+                <div class="form-group">
+                  <label for="db_name">Nama Database</label>
+                  <input type="text" id="db_name" class="form-control"
+                    value="{{ db.database if db.database else 'radiologi_db' }}">
+                </div>
+                <div class="form-group">
+                  <label for="db_user">Username</label>
+                  <input type="text" id="db_user" class="form-control" value="{{ db.username if db.username else '' }}">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
+                id="setPwdGroup">
+                <div class="form-group">
+                  <label for="db_password">Password</label>
+                  <input type="password" id="db_password" class="form-control"
+                    value="{{ db.password if db.password else '' }}" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                  <label for="db_port">Port</label>
+                  <input type="number" id="db_port" class="form-control" value="{{ db.port if db.port else 5432 }}">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="testDbConnectionSettings()">
+                  <span>Test Connection</span>
+                </button>
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="initDbSchemaSettings()">
+                  <span>Create Database</span>
+                </button>
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="flushSyncQueue()">
+                  <span>Sync Pending Data ({{ pending_sync_count or 0 }})</span>
+                </button>
+              </div>
+              <div id="dbActionFeedback" style="margin-top: 0.6rem; font-size: 0.8rem; text-align: center;"></div>
+            </div>
+          </div>
+
+          <!-- SUB-TAB 2: Backup -->
+          <div id="subBackup" class="subtab-pane" style="display: none;">
+            <div class="gov-alert" style="border-left-color: #10b981; background: rgba(16, 185, 129, 0.08);">
+              <strong>Integrasi Google Drive MyGovUC:</strong> Setiap warga / unit KKM mempunyai atau boleh memohon
+              akaun
+              <em>MyGovUC 2.0 (@moh.gov.my)</em> (rujuk Jabatan IT). Dengan menetapkan folder <strong>Google Drive for
+                Desktop</strong>, salinan backup .zip akan di-upload secara automatik ke akaun Google Drive MyGovUC!
+            </div>
+
+            {% set mg = config.mygovuc_backup if config.mygovuc_backup else {} %}
+            <div
+              style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label for="mygovuc_drive_path">Laluan Folder MyGovUC Google Drive (Intranet Desktop)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="text" id="mygovuc_drive_path" class="form-control"
+                    value="{{ mg.drive_path if mg.drive_path else '' }}"
+                    placeholder="cth: G:\My Drive\Backup_Radiologi  atau  C:\Users\Staff\Google Drive\Backup_Radiologi"
+                    style="flex: 1;">
+                  <button type="button" class="btn btn-outline" onclick="selectDriveFolder()"
+                    style="height: 36px; white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"
+                    title="Pilih folder secara terus dari komputer">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"
+                      style="stroke: currentColor; fill: none; stroke-width: 2;">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span>Pilih Folder</span>
+                  </button>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  Masukkan laluan atau klik <strong>"Pilih Folder"</strong> untuk halakan fail .zip backup ke Google
+                  Drive
+                  Desktop MyGovUC.
+                </p>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label
+                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+                    <input type="checkbox" id="mygovuc_auto_daily" {% if mg.auto_daily !=False %}checked{% endif %}>
+                    <span>Auto Backup (Daily On-Boot / 5PM)</span>
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <label for="mygovuc_retention">Backup Storage (Days)</label>
+                  <input type="number" id="mygovuc_retention" class="form-control"
+                    value="{{ mg.retention_days if mg.retention_days else 30 }}" style="max-width: 120px;">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="triggerManualBackup()">
+                  <span>Backup (.zip)</span>
+                </button>
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="openRestoreModal()">
+                  <span>Restore From Backup (.zip)</span>
+                </button>
+              </div>
+              <div id="backupFeedback" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
+            </div>
+
+            <!-- Section: Pemulihan 1-Klik Fail Excel Rosak -->
+            <div
+              style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: #d97706; fill: none; stroke-width: 2;">
+                    <path
+                      d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  </svg>
+                  <strong style="font-size: 0.9rem; color: var(--text-main);">Repair Excel file</strong>
+                </div>
+                <button type="button" class="btn btn-outline"
+                  style="color: #d97706; border-color: #f59e0b; font-weight: 600; font-size: 0.8rem;"
+                  onclick="triggerExcelRepair()">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"
+                    style="stroke: currentColor; fill: none; stroke-width: 2;">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
+                  <span>Fix Excel File</span>
+                </button>
+              </div>
+              <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">
+                Gunakan feature ini jika fail Excel tidak dapat dibuka / rosak / corrupted akibat gangguan bekalan
+                elektrik. Sistem
+                akan menyelamatkan semua rekod pesakit dari backup file & DB secondary, lalu membina semula secara
+                automatik.
+              </p>
+              <div id="repairFeedback"
+                style="margin-top: 0.5rem; font-size: 0.78rem; display: none; padding: 0.5rem; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border-subtle);">
+              </div>
+            </div>
+
+            <!-- Senarai Backup Yang Wujud -->
+            <div class="section-card-title">
               <svg class="icon icon-sm" viewBox="0 0 24 24">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span>Backup</span>
-            </button>
-          </div>
-
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button type="button" class="btn btn-outline"
-              style="font-size: 0.8rem; font-weight: 600; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
-              onclick="openDbGuidanceModal()">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"
-                style="stroke: var(--primary); fill: none; stroke-width: 2;">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
-              <span>Panduan Pematuhan Data & Storage</span>
-            </button>
-            <button type="button" class="btn btn-outline"
-              style="font-size: 0.8rem; font-weight: 600; white-space: nowrap; height: 34px; display: inline-flex; align-items: center; gap: 0.4rem;"
-              onclick="openDbHelpModal()">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"
-                style="stroke: var(--primary); fill: none; stroke-width: 2;">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <span>Panduan Setup</span>
-            </button>
-          </div>
-        </div>
-
-        {% set db = config.db_config if config.db_config else {} %}
-        <!-- Hidden input for backward compatibility so payload keeps enabled status -->
-        <input type="checkbox" id="db_enabled" checked style="display: none;">
-
-        <!-- SUB-TAB 1: Database Sekunder -->
-        <div id="subDbSekunder" class="subtab-pane active">
-          <div
-            style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
-            <div
-              style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              <span>Secondary Database</span>
+              <span>Local Backups</span>
             </div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
-              Excel merupakan sistem rekod utama. Database sekunder berfungsi sebagai additional protection layer
-              sekiranya Excel mengalami kegagalan teknikal atau kerosakan data. Sila pilih serta configure database
-              secondary yang sesuai. Database secondary boleh dihoskan secara local atau cloud mengikut dasar organisasi
-              anda.
-            </p>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
-              <div class="form-group">
-                <label for="db_provider">Suggested database provider</label>
-                <select id="db_provider" class="form-control" onchange="handleProviderChangeSettings()">
-                  <option value="sqlite" {% if db.provider=='sqlite' %}selected{% endif %}>SQLite Local / Intranet Drive
-                  </option>
-                  <option value="postgres" {% if db.provider in ['postgres', 'postgresql' , 'mygovcloud' ] %}selected{%
-                    endif %}>PostgreSQL (Cloud DB / MyGovCloud@PDSA)</option>
-                  <option value="mysql" {% if db.provider in ['mysql', 'mariadb' ] %}selected{% endif %}>MySQL / MariaDB
-                    (Local / Shared Drive)</option>
-                </select>
-              </div>
-              <div class="form-group" id="setHostGroup">
-                <label for="db_host">Host / IP</label>
-                <input type="text" id="db_host" class="form-control" value="{{ db.host if db.host else 'localhost' }}">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
-              id="setCredGroup">
-              <div class="form-group">
-                <label for="db_name">Nama Database</label>
-                <input type="text" id="db_name" class="form-control"
-                  value="{{ db.database if db.database else 'radiologi_db' }}">
-              </div>
-              <div class="form-group">
-                <label for="db_user">Username</label>
-                <input type="text" id="db_user" class="form-control" value="{{ db.username if db.username else '' }}">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;"
-              id="setPwdGroup">
-              <div class="form-group">
-                <label for="db_password">Password</label>
-                <input type="password" id="db_password" class="form-control"
-                  value="{{ db.password if db.password else '' }}" placeholder="••••••••">
-              </div>
-              <div class="form-group">
-                <label for="db_port">Port</label>
-                <input type="number" id="db_port" class="form-control" value="{{ db.port if db.port else 5432 }}">
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="testDbConnectionSettings()">
-                <span>Test Connection</span>
-              </button>
-              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="initDbSchemaSettings()">
-                <span>Create Database</span>
-              </button>
-              <button type="button" class="btn btn-outline" style="flex: 1;" onclick="flushSyncQueue()">
-                <span>Sync Pending Data ({{ pending_sync_count or 0 }})</span>
-              </button>
-            </div>
-            <div id="dbActionFeedback" style="margin-top: 0.6rem; font-size: 0.8rem; text-align: center;"></div>
-          </div>
-        </div>
-
-        <!-- SUB-TAB 2: Backup -->
-        <div id="subBackup" class="subtab-pane" style="display: none;">
-          <div class="gov-alert" style="border-left-color: #10b981; background: rgba(16, 185, 129, 0.08);">
-            <strong>Integrasi Google Drive MyGovUC:</strong> Setiap warga / unit KKM mempunyai atau boleh memohon akaun
-            <em>MyGovUC 2.0 (@moh.gov.my)</em> (rujuk Jabatan IT). Dengan menetapkan folder <strong>Google Drive for
-              Desktop</strong>, salinan backup .zip akan di-upload secara automatik ke akaun Google Drive MyGovUC!
-          </div>
-
-          {% set mg = config.mygovuc_backup if config.mygovuc_backup else {} %}
-          <div
-            style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
-            <div class="form-group" style="margin-bottom: 0.75rem;">
-              <label for="mygovuc_drive_path">Laluan Folder MyGovUC Google Drive (Intranet Desktop)</label>
-              <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input type="text" id="mygovuc_drive_path" class="form-control"
-                  value="{{ mg.drive_path if mg.drive_path else '' }}"
-                  placeholder="cth: G:\My Drive\Backup_Radiologi  atau  C:\Users\Staff\Google Drive\Backup_Radiologi"
-                  style="flex: 1;">
-                <button type="button" class="btn btn-outline" onclick="selectDriveFolder()"
-                  style="height: 36px; white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"
-                  title="Pilih folder secara terus dari komputer">
-                  <svg class="icon icon-sm" viewBox="0 0 24 24"
-                    style="stroke: currentColor; fill: none; stroke-width: 2;">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <span>Pilih Folder</span>
-                </button>
-              </div>
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                Masukkan laluan atau klik <strong>"Pilih Folder"</strong> untuk halakan fail .zip backup ke Google Drive
-                Desktop MyGovUC.
-              </p>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-              <div class="form-group">
-                <label
-                  style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
-                  <input type="checkbox" id="mygovuc_auto_daily" {% if mg.auto_daily !=False %}checked{% endif %}>
-                  <span>Auto Backup (Daily On-Boot / 5PM)</span>
-                </label>
-              </div>
-
-              <div class="form-group">
-                <label for="mygovuc_retention">Backup Storage (Days)</label>
-                <input type="number" id="mygovuc_retention" class="form-control"
-                  value="{{ mg.retention_days if mg.retention_days else 30 }}" style="max-width: 120px;">
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 0.75rem;">
-              <button type="button" class="btn btn-primary" style="flex: 1;" onclick="triggerManualBackup()">
-                <span>Backup (.zip)</span>
-              </button>
-              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="openRestoreModal()">
-                <span>Restore From Backup (.zip)</span>
-              </button>
-            </div>
-            <div id="backupFeedback" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
-          </div>
-
-          <!-- Section: Pemulihan 1-Klik Fail Excel Rosak -->
-          <div
-            style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
-            <div
-              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: #d97706; fill: none; stroke-width: 2;">
-                  <path
-                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                </svg>
-                <strong style="font-size: 0.9rem; color: var(--text-main);">Repair Excel file</strong>
-              </div>
-              <button type="button" class="btn btn-outline"
-                style="color: #d97706; border-color: #f59e0b; font-weight: 600; font-size: 0.8rem;"
-                onclick="triggerExcelRepair()">
-                <svg class="icon icon-sm" viewBox="0 0 24 24"
-                  style="stroke: currentColor; fill: none; stroke-width: 2;">
-                  <polyline points="23 4 23 10 17 10" />
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                </svg>
-                <span>Fix Excel File</span>
-              </button>
-            </div>
-            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">
-              Gunakan feature ini jika fail Excel tidak dapat dibuka / rosak / corrupted akibat gangguan bekalan
-              elektrik. Sistem
-              akan menyelamatkan semua rekod pesakit dari backup file & DB secondary, lalu membina semula secara
-              automatik.
-            </p>
-            <div id="repairFeedback"
-              style="margin-top: 0.5rem; font-size: 0.78rem; display: none; padding: 0.5rem; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border-subtle);">
-            </div>
-          </div>
-
-          <!-- Senarai Backup Yang Wujud -->
-          <div class="section-card-title">
-            <svg class="icon icon-sm" viewBox="0 0 24 24">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            <span>Local Backups</span>
-          </div>
-          <table class="backup-table">
-            <thead>
-              <tr>
-                <th>NAMA FAIL</th>
-                <th>TARIKH</th>
-                <th>SAIZ</th>
-                <th style="text-align: right;">TINDAKAN</th>
-              </tr>
-            </thead>
-            <tbody id="backupListTbody">
-              {% if backups and backups|length > 0 %}
-              {% for b in backups %}
-              <tr>
-                <td style="font-family: monospace; font-weight: 600; color: var(--primary);">{{ b.filename }}</td>
-                <td>{{ b.created_at }}</td>
-                <td>{{ b.size_mb }} MB</td>
-                <td style="text-align: right; white-space: nowrap;">
-                  <button type="button" class="btn btn-outline"
-                    style="padding: 2px 8px; font-size: 0.75rem; height: 26px; font-weight: 600; color: var(--primary); margin-right: 0.4rem;"
-                    onclick="restoreLocalBackup('{{ b.filename }}')" title="Pulihkan data daripada sandaran ini">
-                    Pulihkan
-                  </button>
-                  <a href="/api/backup/download/{{ b.filename }}" class="btn-action-icon" style="color: var(--primary);"
-                    title="Muat turun ZIP">
-                    Muat Turun
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-              {% else %}
-              <tr>
-                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                  Belum ada fail backup. Klik "Backup (.zip)" di atas untuk mencipta fail sandaran pertama.
-                </td>
-              </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB DICOM: Modality Worklist (MWL Server) & Console Integration -->
-      <div id="tabDicom" class="tab-pane">
-        <div class="section-card-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-              <line x1="6" y1="6" x2="6.01" y2="6"></line>
-              <line x1="6" y1="18" x2="6.01" y2="18"></line>
-            </svg>
-            <span>DICOM Modality Worklist (MWL) & Console Integration</span>
-          </div>
-          <span id="dicomServerStatusBadge"
-            style="font-size: 0.72rem; padding: 3px 10px; border-radius: 12px; font-weight: 700; text-transform: uppercase; background: #e2e8f0; color: #64748b;">
-            OFFLINE
-          </span>
-        </div>
-
-        <!-- Live Server Status Card -->
-        <div
-          style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-          <div>
-            <div
-              style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-              Local DICOM Worklist Server Status (SCP)
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
-              <span id="dicomLiveStatusText" style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">
-                Checking status...
-              </span>
-              <span
-                style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">
-                Local LAN IP: <strong id="dicomLocalIpDisplay">{{ config.dicom_config.host if config.dicom_config and
-                  config.dicom_config.host != "0.0.0.0" else "127.0.0.1" }}</strong>
-              </span>
-            </div>
-            <p style="margin: 0.35rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-              Registered patients are automatically dispatched to the DICOM Worklist pool for queries (C-FIND) by
-              Carestream DR or any DICOM modality console.
-            </p>
-          </div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" id="btnToggleDicomServer" onclick="handleToggleDicomServer()"
-              style="font-size: 0.82rem; font-weight: 700; padding: 0.5rem 1rem;">
-              Start Server
-            </button>
-            <button type="button" class="btn btn-outline" onclick="fetchDicomStatus(true)"
-              style="font-size: 0.82rem; padding: 0.5rem 0.85rem;" title="Refresh DICOM status">
-              Refresh Status
-            </button>
-          </div>
-        </div>
-
-        <!-- 2 Column Configuration Grid -->
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
-
-          <!-- CARD 1: LOCAL WORKLIST SERVER (KAUNTER PC) -->
-          <div
-            style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid var(--primary);">
-            <div
-              style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"
-                style="stroke: var(--primary); fill: none; stroke-width: 2;">
-                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-              </svg>
-              <span>1. Local Worklist Server (SCP)</span>
-            </div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
-              Configuration for the DICOM MWL server running on this counter workstation.
-            </p>
-
-            <div class="form-group" style="margin-bottom: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" id="dicom_enabled" name="dicom_enabled" class="checkbox" {% if
-                  config.dicom_config and config.dicom_config.enabled %}checked{% endif %}>
-                <span style="font-weight: 700; font-size: 0.85rem;">Enable DICOM
-                  Worklist Server</span>
-              </label>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0.85rem;">
-              <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-                <label for="dicom_ae_title" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
-                  Server AE Title (HIS/RIS AE Title)
-                </label>
-                <span style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
-                  title="Application Entity Title (max 16 uppercase chars). Enter this exact name as HIS/RIS AE Title on your modality console setup screen (e.g., XRAY or RAD).">?</span>
-              </div>
-              <input type="text" id="dicom_ae_title" class="form-input"
-                style="font-family: monospace; font-weight: 700;"
-                value="{{ config.dicom_config.ae_title if config.dicom_config and config.dicom_config.ae_title else '' }}"
-                placeholder="e.g. XRAY or RAD" maxlength="16">
-              <span style="font-size: 0.72rem; color: var(--text-muted);">Enter this AE Title on your modality workstation HIS/RIS settings.</span>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-                  <label for="dicom_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
-                    Server Port
-                  </label>
-                  <span style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
-                    title="Standard DICOM network port is 104 (or 11112).">?</span>
-                </div>
-                <input type="number" id="dicom_port" class="form-input" style="font-family: monospace;"
-                  value="{{ config.dicom_config.port if config.dicom_config and config.dicom_config.port else 104 }}"
-                  placeholder="104">
-                <span style="font-size: 0.7rem; color: var(--text-muted);">Standard DICOM: 104</span>
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label for="dicom_default_modality"
-                  style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
-                  Modality Code
-                </label>
-                <select id="dicom_default_modality" class="form-select" style="font-weight: 600;">
-                  <option value="CR" {% if not config.dicom_config or config.dicom_config.default_modality=='CR'
-                    %}selected{% endif %}>CR (Computed Radiography)</option>
-                  <option value="DX" {% if config.dicom_config and config.dicom_config.default_modality=='DX'
-                    %}selected{% endif %}>DX (Digital Radiography)</option>
-                  <option value="RG" {% if config.dicom_config and config.dicom_config.default_modality=='RG'
-                    %}selected{% endif %}>RG (General Radiography)</option>
-                  <option value="US" {% if config.dicom_config and config.dicom_config.default_modality=='US'
-                    %}selected{% endif %}>US (Ultrasound)</option>
-                  <option value="CT" {% if config.dicom_config and config.dicom_config.default_modality=='CT'
-                    %}selected{% endif %}>CT (Computed Tomography)</option>
-                  <option value="MR" {% if config.dicom_config and config.dicom_config.default_modality=='MR'
-                    %}selected{% endif %}>MR (Magnetic Resonance)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="dicom_auto_clear_hours"
-                style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
-                Worklist Auto-Retention Period
-              </label>
-              <select id="dicom_auto_clear_hours" class="form-select">
-                <option value="12" {% if config.dicom_config and config.dicom_config.auto_clear_hours==12 %}selected{%
-                  endif %}>Keep 12 Hours</option>
-                <option value="24" {% if not config.dicom_config or not config.dicom_config.auto_clear_hours or
-                  config.dicom_config.auto_clear_hours==24 %}selected{% endif %}>Keep 24 Hours (Recommended)</option>
-                <option value="48" {% if config.dicom_config and config.dicom_config.auto_clear_hours==48 %}selected{%
-                  endif %}>Keep 48 Hours (2 Days)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- CARD 2: REMOTE MODALITY CONSOLE (SCU) -->
-          <div
-            style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid #10b981;">
-            <div
-              style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: #10b981; fill: none; stroke-width: 2;">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-              <span>2. Modality Console (SCU)</span>
-            </div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
-              Modality console details for connectivity verification via DICOM C-ECHO (Ping).
-            </p>
-
-            <div class="form-group" style="margin-bottom: 0.85rem;">
-              <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-                <label for="dicom_console_ae" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
-                  Console AE Title
-                </label>
-                <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
-                  title="The AE Title configured on your X-Ray/Ultrasound machine (e.g., CONSOLE_DR or RAD). Used to verify C-ECHO pings.">?</span>
-              </div>
-              <input type="text" id="dicom_console_ae" class="form-input"
-                style="font-family: monospace; font-weight: 700;"
-                value="{{ config.dicom_config.console_ae_title if config.dicom_config and config.dicom_config.console_ae_title else '' }}"
-                placeholder="e.g. CONSOLE_DR or RAD" maxlength="16">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-                  <label for="dicom_console_ip" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
-                    Console IP Address
-                  </label>
-                  <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
-                    title="How to find Console IP: On your modality console screen, open Network Settings, or press Win+R > type cmd > ipconfig to view its IPv4 address on the LAN.">?</span>
-                </div>
-                <input type="text" id="dicom_console_ip" class="form-input" style="font-family: monospace;"
-                  value="{{ config.dicom_config.console_ip if config.dicom_config and config.dicom_config.console_ip else '' }}"
-                  placeholder="e.g. 10.33.133.4">
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
-                  <label for="dicom_console_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
-                    Console Port
-                  </label>
-                  <span style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
-                    title="DICOM port of the console machine (usually 104).">?</span>
-                </div>
-                <input type="number" id="dicom_console_port" class="form-input" style="font-family: monospace;"
-                  value="{{ config.dicom_config.console_port if config.dicom_config and config.dicom_config.console_port else 104 }}"
-                  placeholder="104">
-              </div>
-            </div>
-
-            <div style="margin-top: 1.15rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle);">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
-                <button type="button" class="btn btn-outline" id="btnTestDicomEcho" onclick="handleTestDicomEcho()"
-                  style="font-size: 0.82rem; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px;">
-                  <svg class="icon icon-sm" viewBox="0 0 24 24"
-                    style="stroke: currentColor; fill: none; stroke-width: 2;">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                  </svg>
-                  <span>Test Connection (DICOM C-ECHO Ping)</span>
-                </button>
-              </div>
-              <div id="dicomEchoFeedback" style="font-size: 0.76rem; margin-top: 0.5rem; min-height: 18px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Setup & Windows Firewall Guidance Box -->
-        <div
-          style="background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.15rem 1.25rem; margin-bottom: 1.25rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem;">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <strong style="font-size: 0.88rem; color: var(--text-main);">Quick Setup Guide for Modality Console &
-              Windows Firewall</strong>
-          </div>
-
-          <div
-            style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-            <div>
-              <strong style="color: var(--text-main);">1. On your Modality Console (HIS/RIS Setup Screen):</strong>
-              <ul style="margin: 0.35rem 0 0 1.2rem; padding: 0;">
-                <li><strong>HIS/RIS AE Title:</strong> <code id="guideAeText">KAUNTER</code> (Matches Server AE Title)
-                </li>
-                <li><strong>HIS/RIS IP or Name:</strong> <code id="guideIpText">10.33.133.x</code> (IP address of this
-                  Counter PC)</li>
-                <li><strong>HIS/RIS Port:</strong> <code id="guidePortText">104</code></li>
-                <li><strong>Enable Polling / Remote Query:</strong> <span
-                    style="color: #10b981; font-weight: 700;">ON</span></li>
-              </ul>
-            </div>
-            <div>
-              <strong style="color: var(--text-main);">2. Windows Inbound Firewall Rule (Run Once as
-                Administrator):</strong>
-              <p style="margin: 0.25rem 0 0.4rem 0; font-size: 0.74rem;">Open <em>Command Prompt as Administrator</em>
-                and execute this command:</p>
-              <div style="display: flex; gap: 0.4rem; align-items: center;">
-                <input type="text" readonly id="cmdFirewallText" class="form-input"
-                  style="font-family: monospace; font-size: 0.72rem; padding: 0.4rem 0.6rem; background: var(--bg-card);"
-                  value='netsh advfirewall firewall add rule name="DaftarRadiologi-MWL-104" dir=in action=allow protocol=TCP localport=104'>
-                <button type="button" class="btn btn-secondary" onclick="copyFirewallCmd()"
-                  style="font-size: 0.75rem; padding: 0.4rem 0.75rem; white-space: nowrap;">
-                  Copy
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Active DICOM Worklist Queue Table (Real-Time Preview) -->
-        <div
-          style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.25rem;">
-          <div
-            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
-            <div>
-              <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
-                Active DICOM Worklist Queue (<span id="dicomWorklistCount">0</span>)
-              </div>
-              <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
-                List of registered patients ready to be pulled by modality consoles via C-FIND.
-              </p>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" class="btn btn-outline" onclick="loadDicomWorklistTable()"
-                style="font-size: 0.78rem; padding: 0.4rem 0.75rem;">
-                Refresh Queue
-              </button>
-              <button type="button" class="btn btn-secondary" onclick="handleClearDicomWorklist()"
-                style="font-size: 0.78rem; padding: 0.4rem 0.75rem; color: #ef4444;">
-                Clear Queue
-              </button>
-            </div>
-          </div>
-
-          <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-            <table class="data-table" style="width: 100%; font-size: 0.8rem;">
+            <table class="backup-table">
               <thead>
                 <tr>
-                  <th style="width: 90px;">X-Ray No</th>
-                  <th>Patient Name</th>
-                  <th style="width: 130px;">IC / ID</th>
-                  <th>Examination</th>
-                  <th style="width: 70px;">Modality</th>
-                  <th style="width: 100px;">Time</th>
+                  <th>NAMA FAIL</th>
+                  <th>TARIKH</th>
+                  <th>SAIZ</th>
+                  <th style="text-align: right;">TINDAKAN</th>
                 </tr>
               </thead>
-              <tbody id="dicomWorklistTableBody">
+              <tbody id="backupListTbody">
+                {% if backups and backups|length > 0 %}
+                {% for b in backups %}
                 <tr>
-                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                    No patients currently in the DICOM Worklist. Newly registered patients will appear here
-                    automatically.
+                  <td style="font-family: monospace; font-weight: 600; color: var(--primary);">{{ b.filename }}</td>
+                  <td>{{ b.created_at }}</td>
+                  <td>{{ b.size_mb }} MB</td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <button type="button" class="btn btn-outline"
+                      style="padding: 2px 8px; font-size: 0.75rem; height: 26px; font-weight: 600; color: var(--primary); margin-right: 0.4rem;"
+                      onclick="restoreLocalBackup('{{ b.filename }}')" title="Pulihkan data daripada sandaran ini">
+                      Pulihkan
+                    </button>
+                    <a href="/api/backup/download/{{ b.filename }}" class="btn-action-icon"
+                      style="color: var(--primary);" title="Muat turun ZIP">
+                      Muat Turun
+                    </a>
                   </td>
                 </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                    Belum ada fail backup. Klik "Backup (.zip)" di atas untuk mencipta fail sandaran pertama.
+                  </td>
+                </tr>
+                {% endif %}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
 
-      <!-- TAB 8: Kemas Kini (Update) -->
-      <div id="tabUpdate" class="tab-pane">
-        <div class="section-card-title">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-          </svg>
-          <span>Updates</span>
+        <!-- SUB-TAB 2: Integration (DICOM / Console) -->
+        <div id="subSysIntegration" class="system-subtab-pane" style="display: none;">
+          <div class="section-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+              <span>DICOM Modality Worklist (MWL) & Console Integration</span>
+            </div>
+            <span id="dicomServerStatusBadge"
+              style="font-size: 0.72rem; padding: 3px 10px; border-radius: 12px; font-weight: 700; text-transform: uppercase; background: #e2e8f0; color: #64748b;">
+              OFFLINE
+            </span>
+          </div>
+
+          <!-- Live Server Status Card -->
+          <div
+            style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <div
+                style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                Local DICOM Worklist Server Status (SCP)
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
+                <span id="dicomLiveStatusText" style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">
+                  Checking status...
+                </span>
+                <span
+                  style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace; background: var(--bg-card); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                  Local LAN IP: <strong id="dicomLocalIpDisplay">{{ config.dicom_config.host if config.dicom_config and
+                    config.dicom_config.host != "0.0.0.0" else "127.0.0.1" }}</strong>
+                </span>
+              </div>
+              <p style="margin: 0.35rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                Registered patients are automatically dispatched to the DICOM Worklist pool for queries (C-FIND) by
+                Carestream DR or any DICOM modality console.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary" id="btnToggleDicomServer"
+                onclick="handleToggleDicomServer()" style="font-size: 0.82rem; font-weight: 700; padding: 0.5rem 1rem;">
+                Start Server
+              </button>
+              <button type="button" class="btn btn-outline" onclick="fetchDicomStatus(true)"
+                style="font-size: 0.82rem; padding: 0.5rem 0.85rem;" title="Refresh DICOM status">
+                Refresh Status
+              </button>
+            </div>
+          </div>
+
+          <!-- 2 Column Configuration Grid -->
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+
+            <!-- CARD 1: LOCAL WORKLIST SERVER (KAUNTER PC) -->
+            <div
+              style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid var(--primary);">
+              <div
+                style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                </svg>
+                <span>1. Local Worklist Server (SCP)</span>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+                Configuration for the DICOM MWL server running on this counter workstation.
+              </p>
+
+              <div class="form-group" style="margin-bottom: 0.85rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="dicom_enabled" name="dicom_enabled" class="checkbox" {% if
+                    config.dicom_config and config.dicom_config.enabled %}checked{% endif %}>
+                  <span style="font-weight: 700; font-size: 0.85rem;">Enable DICOM
+                    Worklist Server</span>
+                </label>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                  <label for="dicom_ae_title" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                    Server AE Title (HIS/RIS AE Title)
+                  </label>
+                  <span
+                    style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                    title="Application Entity Title (max 16 uppercase chars). Enter this exact name as HIS/RIS AE Title on your modality console setup screen (e.g., XRAY or RAD).">?</span>
+                </div>
+                <input type="text" id="dicom_ae_title" class="form-input"
+                  style="font-family: monospace; font-weight: 700;"
+                  value="{{ config.dicom_config.ae_title if config.dicom_config and config.dicom_config.ae_title else '' }}"
+                  placeholder="e.g. XRAY or RAD" maxlength="16">
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Enter this AE Title on your modality
+                  workstation HIS/RIS settings.</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                    <label for="dicom_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                      Server Port
+                    </label>
+                    <span
+                      style="cursor: help; background: var(--bg-subtle); color: var(--primary); border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                      title="Standard DICOM network port is 104 (or 11112).">?</span>
+                  </div>
+                  <input type="number" id="dicom_port" class="form-input" style="font-family: monospace;"
+                    value="{{ config.dicom_config.port if config.dicom_config and config.dicom_config.port else 104 }}"
+                    placeholder="104">
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Standard DICOM: 104</span>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="dicom_default_modality"
+                    style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
+                    Modality Code
+                  </label>
+                  <select id="dicom_default_modality" class="form-select" style="font-weight: 600;">
+                    <option value="CR" {% if not config.dicom_config or config.dicom_config.default_modality=='CR'
+                      %}selected{% endif %}>CR (Computed Radiography)</option>
+                    <option value="DX" {% if config.dicom_config and config.dicom_config.default_modality=='DX'
+                      %}selected{% endif %}>DX (Digital Radiography)</option>
+                    <option value="RG" {% if config.dicom_config and config.dicom_config.default_modality=='RG'
+                      %}selected{% endif %}>RG (General Radiography)</option>
+                    <option value="US" {% if config.dicom_config and config.dicom_config.default_modality=='US'
+                      %}selected{% endif %}>US (Ultrasound)</option>
+                    <option value="CT" {% if config.dicom_config and config.dicom_config.default_modality=='CT'
+                      %}selected{% endif %}>CT (Computed Tomography)</option>
+                    <option value="MR" {% if config.dicom_config and config.dicom_config.default_modality=='MR'
+                      %}selected{% endif %}>MR (Magnetic Resonance)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="dicom_auto_clear_hours"
+                  style="font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 0.25rem;">
+                  Worklist Auto-Retention Period
+                </label>
+                <select id="dicom_auto_clear_hours" class="form-select">
+                  <option value="6" {% if config.dicom_config and config.dicom_config.auto_clear_hours==6 %}selected{%
+                    endif %}>Keep 6 Hours</option>
+                  <option value="12" {% if config.dicom_config and config.dicom_config.auto_clear_hours==12 %}selected{%
+                    endif %}>Keep 12 Hours</option>
+                  <option value="24" {% if not config.dicom_config or not config.dicom_config.auto_clear_hours or
+                    config.dicom_config.auto_clear_hours==24 %}selected{% endif %}>Keep 24 Hours (Recommended)</option>
+                  <option value="48" {% if config.dicom_config and config.dicom_config.auto_clear_hours==48 %}selected{%
+                    endif %}>Keep 48 Hours (2 Days)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- CARD 2: REMOTE MODALITY CONSOLE (SCU) -->
+            <div
+              style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; border-top: 3px solid #10b981;">
+              <div
+                style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: #10b981; fill: none; stroke-width: 2;">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>2. Modality Console (SCU)</span>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+                Modality console details for connectivity verification via DICOM C-ECHO (Ping).
+              </p>
+
+              <div class="form-group" style="margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                  <label for="dicom_console_ae" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                    Console AE Title
+                  </label>
+                  <span
+                    style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                    title="The AE Title configured on your X-Ray/Ultrasound machine (e.g., CONSOLE_DR or RAD). Used to verify C-ECHO pings.">?</span>
+                </div>
+                <input type="text" id="dicom_console_ae" class="form-input"
+                  style="font-family: monospace; font-weight: 700;"
+                  value="{{ config.dicom_config.console_ae_title if config.dicom_config and config.dicom_config.console_ae_title else '' }}"
+                  placeholder="e.g. CONSOLE_DR or RAD" maxlength="16">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                    <label for="dicom_console_ip" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                      Console IP Address
+                    </label>
+                    <span
+                      style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                      title="How to find Console IP: On your modality console screen, open Network Settings, or press Win+R > type cmd > ipconfig to view its IPv4 address on the LAN.">?</span>
+                  </div>
+                  <input type="text" id="dicom_console_ip" class="form-input" style="font-family: monospace;"
+                    value="{{ config.dicom_config.console_ip if config.dicom_config and config.dicom_config.console_ip else '' }}"
+                    placeholder="e.g. 10.33.133.4">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+                    <label for="dicom_console_port" style="font-weight: 600; font-size: 0.8rem; margin: 0;">
+                      Console Port
+                    </label>
+                    <span
+                      style="cursor: help; background: var(--bg-subtle); color: #10b981; border: 1px solid var(--border-subtle); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700;"
+                      title="DICOM port of the console machine (usually 104).">?</span>
+                  </div>
+                  <input type="number" id="dicom_console_port" class="form-input" style="font-family: monospace;"
+                    value="{{ config.dicom_config.console_port if config.dicom_config and config.dicom_config.console_port else 104 }}"
+                    placeholder="104">
+                </div>
+              </div>
+
+              <div style="margin-top: 1.15rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                  <button type="button" class="btn btn-outline" id="btnTestDicomEcho" onclick="handleTestDicomEcho()"
+                    style="font-size: 0.82rem; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px;">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"
+                      style="stroke: currentColor; fill: none; stroke-width: 2;">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    <span>Test Connection (DICOM C-ECHO Ping)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Action Button (Integration/Console) -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 1.25rem;">
+            <button type="submit" class="btn btn-primary" id="btnSaveSettings"
+              style="min-width: 160px; font-weight: 700; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              <span>Save</span>
+            </button>
+          </div>
+
+          <!-- Quick Setup & Windows Firewall Guidance Box -->
+          <div
+            style="background: var(--bg-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.15rem 1.25rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"
+                style="stroke: var(--primary); fill: none; stroke-width: 2;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <strong style="font-size: 0.88rem; color: var(--text-main);">Quick Setup Guide for Modality Console &
+                Windows Firewall</strong>
+            </div>
+
+            <div
+              style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+              <div>
+                <strong style="color: var(--text-main);">1. On your Modality Console (HIS/RIS Setup Screen):</strong>
+                <ul style="margin: 0.35rem 0 0 1.2rem; padding: 0;">
+                  <li><strong>HIS/RIS AE Title:</strong> <code id="guideAeText">KAUNTER</code> (Matches Server AE Title)
+                  </li>
+                  <li><strong>HIS/RIS IP or Name:</strong> <code id="guideIpText">10.33.133.x</code></li>
+                  <li><strong>HIS/RIS Port:</strong> <code id="guidePortText">104</code></li>
+                  <li><strong>Enable Polling / Remote Query:</strong> <span
+                      style="color: #10b981; font-weight: 700;">ON</span></li>
+                </ul>
+              </div>
+              <div>
+                <strong style="color: var(--text-main);">2. Windows Inbound Firewall Rule (Run Once as
+                  Administrator):</strong>
+                <p style="margin: 0.25rem 0 0.4rem 0; font-size: 0.74rem;">Open <em>Command Prompt as Administrator</em>
+                  and execute this command:</p>
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                  <input type="text" readonly id="cmdFirewallText" class="form-input"
+                    style="font-family: monospace; font-size: 0.72rem; padding: 0.4rem 0.6rem; background: var(--bg-card);"
+                    value='netsh advfirewall firewall add rule name="DaftarRadiologi-MWL-104" dir=in action=allow protocol=TCP localport=104'>
+                  <button type="button" class="btn btn-secondary" onclick="copyFirewallCmd()"
+                    style="font-size: 0.75rem; padding: 0.4rem 0.75rem; white-space: nowrap;">
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Current Version Header Card -->
-        <div
-          style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-          <div>
-            <div
-              style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-              Current System Version</div>
-            <div
-              style="font-size: 1.45rem; font-weight: 800; color: var(--primary); font-family: monospace; display: flex; align-items: center; gap: 0.6rem; margin-top: 0.15rem;">
-              v{{ app_version if app_version else "2.1.3" }}
-              <span id="updateBadgeStatus"
-                style="font-size: 0.72rem; padding: 2px 9px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: inherit; text-transform: uppercase;">LATEST</span>
-            </div>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-              Patient database records in <code>Pendaftaran/</code> are protected and preserved across all updates. As a
-              safety precaution, perform a <strong>Backup</strong> before applying updates.
-            </p>
+        <!-- SUB-TAB 3: Updates -->
+        <div id="subSysUpdates" class="system-subtab-pane" style="display: none;">
+          <div class="section-card-title">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+            </svg>
+            <span>Updates</span>
           </div>
-          <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-            <button type="button" class="btn btn-primary" onclick="checkGitHubRelease(true)"
-              style="padding: 0.5rem 1rem; font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <svg class="icon icon-sm" viewBox="0 0 24 24"
-                style="stroke: currentColor; fill: none; stroke-width: 2; width: 14px; height: 14px;">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+
+          <!-- Current Version Header Card -->
+          <div
+            style="background: var(--bg-subtle); padding: 1.1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div>
+              <div
+                style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                Current System Version</div>
+              <div
+                style="font-size: 1.45rem; font-weight: 800; color: var(--primary); font-family: monospace; display: flex; align-items: center; gap: 0.6rem; margin-top: 0.15rem;">
+                v{{ app_version if app_version else "2.1.3" }}
+                <span id="updateBadgeStatus"
+                  style="font-size: 0.72rem; padding: 2px 9px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: inherit; text-transform: uppercase;">LATEST</span>
+              </div>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                Patient database records in <code>Pendaftaran/</code> are protected and preserved across all updates. As
+                a
+                safety precaution, perform a <strong>Backup</strong> before applying updates.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+              <button type="button" class="btn btn-primary" onclick="checkGitHubRelease(true)"
+                style="padding: 0.5rem 1rem; font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"
+                  style="stroke: currentColor; fill: none; stroke-width: 2; width: 14px; height: 14px;">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                Check Update
+              </button>
+            </div>
+          </div>
+
+          <!-- Stacked Layout: 1. Online Update (Top) -->
+          <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
+
+            <!-- SECTION 1: ONLINE UPDATE -->
+            <div
+              style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <svg class="icon icon-md" viewBox="0 0 24 24"
+                    style="stroke: var(--primary); fill: none; stroke-width: 2; width: 18px; height: 18px;">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path
+                      d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Online Update</span>
+                </div>
+              </div>
+
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
+                Automatically fetches latest releases directly from the GitHub repository.
+              </p>
+
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
+                <!-- GitHub Info Status Box -->
+                <div id="githubReleaseInfoBox"
+                  style="background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
+                  <div style="color: var(--text-muted); font-style: italic;">Click "Check Update" to query GitHub for
+                    latest release tags...</div>
+                </div>
+
+                <!-- Install Update Button -->
+                <div>
+                  <button type="button" class="btn btn-primary" id="btnOnlineUpdateApply"
+                    onclick="applyOnlineUpdateFromGitHub()"
+                    style="font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.85rem; min-width: 170px;" disabled>
+                    Install Update
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: MANUAL UPDATE (Below Online Update) -->
+            <div
+              style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--border-subtle);">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <svg class="icon icon-md" viewBox="0 0 24 24"
+                    style="stroke: var(--text-main); fill: none; stroke-width: 2; width: 18px; height: 18px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Manual Update</span>
+                </div>
+              </div>
+
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
+                Upload a <code>.zip</code> package file downloaded from <a
+                  href="https://github.com/rdgr-szal/daftar-radiologi-v2" target="_blank" rel="noopener noreferrer"
+                  style="color: var(--primary); text-decoration: underline; font-weight: 600;">GitHub Repository</a>.
+                The
+                system automatically inspects the patch package—if a major database schema change is detected, an
+                automatic database backup is created before applying the update.
+              </p>
+
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                  Select <strong>.zip</strong> update file provided by developer.
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)"
+                    style="font-weight: 700; padding: 0.55rem 1.25rem; font-size: 0.83rem;">
+                    Upload (.zip)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Hidden File Input for Update Zip -->
+          <input type="file" id="updateZipInput" accept=".zip" style="display: none;"
+            onchange="handleUpdateZipSelected(event)">
+
+          <!-- Safety Notice Banner -->
+          <div class="gov-alert" style="margin-bottom: 0;">
+            <strong>Registration Data Security Guarantee:</strong><br>
+            All update methods (Online or Manual) automatically enforce protection for the <code>Pendaftaran/</code>
+            directory. Patient records in <em>.xlsx</em> and <em>.db</em> are safely preserved.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Logs -->
+      <div id="tabLogs" class="tab-pane">
+        <!-- Sub-Tabs Bar inside Logs Tab -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-subtle); margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="display: flex; gap: 0.35rem;">
+            <button type="button" class="subtab-btn active" id="btnLogSubWorklist"
+              onclick="switchLogSubTab('subLogWorklist')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
               </svg>
-              Check Update
+              <span>Active Worklist Queue</span>
+            </button>
+
+            <button type="button" class="subtab-btn" id="btnLogSubMpps" onclick="switchLogSubTab('subLogMpps')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span>Reject Analysis Log</span>
             </button>
           </div>
         </div>
 
-        <!-- Stacked Layout: 1. Online Update (Top) -->
-        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
-
-          <!-- SECTION 1: ONLINE UPDATE -->
+        <!-- SUB-TAB 1: Active Worklist Queue -->
+        <div id="subLogWorklist" class="log-subtab-pane">
+          <!-- Active DICOM Worklist Queue Table (Real-Time Preview) -->
           <div
-            style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--primary);">
+            style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.25rem;">
             <div
-              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
-              <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <svg class="icon icon-md" viewBox="0 0 24 24"
-                  style="stroke: var(--primary); fill: none; stroke-width: 2; width: 18px; height: 18px;">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path
-                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
-                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Online Update</span>
-              </div>
-            </div>
-
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
-              Automatically fetches latest releases directly from the GitHub repository.
-            </p>
-
-            <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;">
-              <!-- GitHub Info Status Box -->
-              <div id="githubReleaseInfoBox"
-                style="background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
-                <div style="color: var(--text-muted); font-style: italic;">Click "Check Update" to query GitHub for
-                  latest release tags...</div>
-              </div>
-
-              <!-- Install Update Button -->
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
               <div>
-                <button type="button" class="btn btn-primary" id="btnOnlineUpdateApply"
-                  onclick="applyOnlineUpdateFromGitHub()"
-                  style="font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.85rem; min-width: 170px;" disabled>
-                  Install Update
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
+                  Active DICOM Worklist Queue (<span id="dicomWorklistCount">0</span>)
+                </div>
+                <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
+                  List of registered patients ready to be pulled by modality consoles via C-FIND.
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-outline" onclick="loadDicomWorklistTable()"
+                  style="font-size: 0.78rem; padding: 0.4rem 0.75rem;">
+                  Refresh Queue
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="handleClearDicomWorklist()"
+                  style="font-size: 0.78rem; padding: 0.4rem 0.75rem; color: #ef4444;">
+                  Clear Queue
                 </button>
               </div>
             </div>
-          </div>
 
-          <!-- SECTION 2: MANUAL UPDATE (Below Online Update) -->
-          <div
-            style="background: var(--bg-card); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); border-left: 4px solid var(--border-subtle);">
-            <div
-              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle);">
-              <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <svg class="icon icon-md" viewBox="0 0 24 24"
-                  style="stroke: var(--text-main); fill: none; stroke-width: 2; width: 18px; height: 18px;">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">Manual Update</span>
-              </div>
+            <div class="table-responsive"
+              style="max-height: 480px; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-card);">
+              <table class="data-table"
+                style="width: 100%; table-layout: fixed; font-size: 0.78rem; border-collapse: collapse;">
+                <thead>
+                  <tr style="position: sticky; top: 0; z-index: 10; background: var(--bg-subtle);">
+                    <th style="width: 16%; padding: 0.5rem 0.6rem; background: var(--bg-subtle);">No. X-Ray</th>
+                    <th style="width: 25%; padding: 0.5rem 0.6rem; background: var(--bg-subtle);">Patient Name</th>
+                    <th style="width: 18%; padding: 0.5rem 0.6rem; background: var(--bg-subtle);">IC / ID</th>
+                    <th style="width: 25%; padding: 0.5rem 0.6rem; background: var(--bg-subtle);">Examination</th>
+                    <th style="width: 8%; text-align: center; padding: 0.5rem 0.4rem; background: var(--bg-subtle);">
+                      Modality</th>
+                    <th style="width: 8%; text-align: center; padding: 0.5rem 0.4rem; background: var(--bg-subtle);">
+                      Time</th>
+                  </tr>
+                </thead>
+                <tbody id="dicomWorklistTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                      No patients currently in the DICOM Worklist. Newly registered patients will appear here
+                      automatically.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </div>
+        </div>
 
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.85rem 0; line-height: 1.5;">
-              Upload a <code>.zip</code> package file downloaded from <a
-                href="https://github.com/rdgr-szal/daftar-radiologi-v2" target="_blank" rel="noopener noreferrer"
-                style="color: var(--primary); text-decoration: underline; font-weight: 600;">GitHub Repository</a>. The
-              system automatically inspects the patch package—if a major database schema change is detected, an
-              automatic database backup is created before applying the update.
-            </p>
-
+        <!-- SUB-TAB 2: Reject Analysis Log (MPPS) -->
+        <div id="subLogMpps" class="log-subtab-pane" style="display: none;">
+          <!-- Live MPPS Procedure Step & Reject Analysis Section (SCP) -->
+          <div
+            style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); padding: 1.25rem;">
             <div
-              style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
-              <div style="font-size: 0.78rem; color: var(--text-muted);">
-                Select <strong>.zip</strong> update file provided by developer.
-              </div>
+              style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 0.75rem;">
               <div>
-                <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)"
-                  style="font-weight: 700; padding: 0.55rem 1.25rem; font-size: 0.83rem;">
-                  Upload (.zip)
+                <div
+                  style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: #3b82f6; fill: none; stroke-width: 2;">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  <span>Reject Analysis (<span id="mppsRecordCount">0</span>)</span>
+                  <span
+                    style="background: rgba(59, 130, 246, 0.12); color: #3b82f6; font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">SCP
+                    Active</span>
+                </div>
+                <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
+                  Live procedure status and reject analysis received from Carestream console via DICOM MPPS (N-CREATE /
+                  N-SET).
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <select id="mppsStatusFilter" class="form-select"
+                  style="font-size: 0.76rem; padding: 0.35rem 0.6rem; height: 32px; width: auto;"
+                  onchange="loadMppsTable()">
+                  <option value="ALL">All Status</option>
+                  <option value="IN PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="DISCONTINUED">Discontinued / Rejected</option>
+                </select>
+                <input type="text" id="mppsSearchQuery" class="form-input"
+                  style="font-size: 0.76rem; padding: 0.35rem 0.6rem; height: 32px; width: 140px;"
+                  placeholder="Search Acc / Name..." onkeyup="if(event.key==='Enter') loadMppsTable()">
+                <button type="button" class="btn btn-outline" onclick="loadMppsTable()"
+                  style="font-size: 0.78rem; padding: 0.35rem 0.7rem; height: 32px;">
+                  Refresh
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="exportMppsCsv()"
+                  style="font-size: 0.78rem; padding: 0.35rem 0.7rem; height: 32px;">
+                  Export CSV
                 </button>
               </div>
             </div>
+
+            <div class="table-responsive"
+              style="max-height: 480px; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-card);">
+              <table class="data-table"
+                style="width: 100%; table-layout: fixed; font-size: 0.75rem; border-collapse: collapse;">
+                <thead>
+                  <tr style="position: sticky; top: 0; z-index: 10; background: var(--bg-subtle);">
+                    <th style="width: 11%; padding: 0.5rem 0.5rem; background: var(--bg-subtle);">No. X-Ray</th>
+                    <th style="width: 16%; padding: 0.5rem 0.5rem; background: var(--bg-subtle);">Patient Name</th>
+                    <th style="width: 13%; padding: 0.5rem 0.5rem; background: var(--bg-subtle);">ID / IC</th>
+                    <th style="width: 10%; text-align: center; padding: 0.5rem 0.4rem; background: var(--bg-subtle);">
+                      Mod / Station</th>
+                    <th style="width: 11%; text-align: center; padding: 0.5rem 0.4rem; background: var(--bg-subtle);">
+                      Status</th>
+                    <th style="width: 10%; text-align: center; padding: 0.5rem 0.4rem; background: var(--bg-subtle);">
+                      Time</th>
+                    <th style="width: 5%; text-align: center; padding: 0.5rem 0.3rem; background: var(--bg-subtle);">
+                      Imgs</th>
+                    <th style="width: 18%; padding: 0.5rem 0.5rem; background: var(--bg-subtle);">Reject Reason /
+                      Category</th>
+                    <th style="width: 6%; text-align: center; padding: 0.5rem 0.3rem; background: var(--bg-subtle);">
+                      Audit</th>
+                  </tr>
+                </thead>
+                <tbody id="mppsTableBody">
+                  <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                      No MPPS records received yet. Records will populate automatically when Carestream console initiates examinations.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-
-        </div>
-
-        <!-- Hidden File Input for Update Zip -->
-        <input type="file" id="updateZipInput" accept=".zip" style="display: none;"
-          onchange="handleUpdateZipSelected(event)">
-
-        <!-- Safety Notice Banner -->
-        <div class="gov-alert" style="margin-bottom: 0;">
-          <strong>Registration Data Security Guarantee:</strong><br>
-          All update methods (Online or Manual) automatically enforce protection for the <code>Pendaftaran/</code>
-          directory. Patient records in <em>.xlsx</em> and <em>.db</em> are safely preserved.
         </div>
       </div>
 
-      <!-- Action Buttons Bottom -->
-      <div
-        style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-
-        <button type="submit" class="btn btn-primary" id="btnSaveSettings" style="min-width: 160px; font-weight: 700;">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-            <polyline points="17 21 17 13 7 13 7 21" />
-            <polyline points="7 3 7 8 15 8" />
-          </svg>
-          <span>Save</span>
-        </button>
-      </div>
     </form>
   </div>
 </div>
@@ -1845,7 +2012,10 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.remove('active');
+      pane.style.display = '';
+    });
 
     const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => {
       const attr = b.getAttribute('onclick') || '';
@@ -1854,17 +2024,71 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     if (activeBtn) activeBtn.classList.add('active');
 
     const targetPane = document.getElementById(tabId);
-    if (targetPane) targetPane.classList.add('active');
+    if (targetPane) {
+      targetPane.classList.add('active');
+      targetPane.style.display = 'block';
+    }
 
-    if (tabId === 'tabDicom') {
+    if (tabId === 'tabSystem') {
+      const activeSub = document.querySelector('.system-subtab-pane:not([style*="display: none"])');
+      if (activeSub && activeSub.id === 'subSysIntegration') {
+        fetchDicomStatus();
+      }
+    } else if (tabId === 'tabLogs') {
+      const activeLogSub = document.querySelector('.log-subtab-pane:not([style*="display: none"])');
+      if (activeLogSub && activeLogSub.id === 'subLogMpps') {
+        loadMppsTable();
+      } else {
+        loadDicomWorklistTable();
+      }
+    }
+  }
+
+  function switchSystemSubTab(subTabId) {
+    document.querySelectorAll('.system-subtab-pane').forEach(pane => pane.style.display = 'none');
+    document.querySelectorAll('#btnSysSubDb, #btnSysSubIntegration, #btnSysSubUpdates').forEach(btn => btn.classList.remove('active'));
+
+    if (subTabId === 'subSysDatabase') {
+      const pane = document.getElementById('subSysDatabase');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnSysSubDb');
+      if (btn) btn.classList.add('active');
+    } else if (subTabId === 'subSysIntegration') {
+      const pane = document.getElementById('subSysIntegration');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnSysSubIntegration');
+      if (btn) btn.classList.add('active');
       fetchDicomStatus();
+    } else if (subTabId === 'subSysUpdates') {
+      const pane = document.getElementById('subSysUpdates');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnSysSubUpdates');
+      if (btn) btn.classList.add('active');
+    }
+  }
+
+  function switchLogSubTab(subTabId) {
+    document.querySelectorAll('.log-subtab-pane').forEach(pane => pane.style.display = 'none');
+    document.querySelectorAll('#btnLogSubWorklist, #btnLogSubMpps').forEach(btn => btn.classList.remove('active'));
+
+    if (subTabId === 'subLogWorklist') {
+      const pane = document.getElementById('subLogWorklist');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnLogSubWorklist');
+      if (btn) btn.classList.add('active');
       loadDicomWorklistTable();
+    } else if (subTabId === 'subLogMpps') {
+      const pane = document.getElementById('subLogMpps');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnLogSubMpps');
+      if (btn) btn.classList.add('active');
+      loadMppsTable();
     }
   }
 
   function switchDbSubTab(subTabId) {
-    document.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.subtab-pane').forEach(pane => pane.style.display = 'none');
+    document.querySelectorAll('#subSysDatabase .subtab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#subSysDatabase .subtab-pane').forEach(pane => pane.style.display = 'none');
 
     if (subTabId === 'subDbSekunder') {
       const btn = document.getElementById('btnSubDb');
@@ -2379,7 +2603,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
   function handleSaveSettings(e) {
     e.preventDefault();
     const btn = document.getElementById('btnSaveSettings');
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
 
     const facilityType = document.querySelector('input[name="facility_type"]:checked').value;
     const hospitalScope = document.querySelector('input[name="hospital_scope"]:checked') ? document.querySelector('input[name="hospital_scope"]:checked').value : 'ALL';
@@ -2421,7 +2645,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     })
       .then(res => res.json())
       .then(res => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
         if (res.success) {
           showToast(res.message);
         } else {
@@ -2429,7 +2653,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
         }
       })
       .catch(err => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
         showToast('Ralat menyimpan tetapan.', 'error');
       });
   }
@@ -2820,12 +3044,12 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
             `${item.scheduled_step_start_time.substring(0, 2)}:${item.scheduled_step_start_time.substring(2, 4)}` : '-';
           return `
             <tr>
-              <td style="font-weight: 700; font-family: monospace; color: var(--primary);">${escapeHtml(item.accession_number || '')}</td>
-              <td style="font-weight: 600;">${escapeHtml(item.patient_name || '')}</td>
-              <td style="font-family: monospace; font-size: 0.78rem;">${escapeHtml(item.patient_id || '')}</td>
-              <td>${escapeHtml(item.requested_procedure_desc || '')}</td>
-              <td><span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">${escapeHtml(item.modality || 'CR')}</span></td>
-              <td style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${timeStr}</td>
+              <td style="font-weight: 700; font-family: monospace; color: var(--primary); white-space: nowrap;">${escapeHtml(item.accession_number || '')}</td>
+              <td style="font-weight: 600; white-space: normal; word-break: break-word;">${escapeHtml(item.patient_name || '')}</td>
+              <td style="font-family: monospace; font-size: 0.78rem; white-space: nowrap;">${escapeHtml(item.patient_id || '')}</td>
+              <td style="white-space: normal; word-break: break-word;">${escapeHtml(item.requested_procedure_desc || '')}</td>
+              <td style="text-align: center; white-space: nowrap;"><span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">${escapeHtml(item.modality || 'CR')}</span></td>
+              <td style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; text-align: center; white-space: nowrap;">${timeStr}</td>
             </tr>
           `;
         }).join('');
@@ -2844,6 +3068,166 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       });
   }
 
+  function loadMppsTable() {
+    const statusSelect = document.getElementById('mppsStatusFilter');
+    const status = statusSelect ? statusSelect.value : 'ALL';
+    const queryInput = document.getElementById('mppsSearchQuery');
+    const query = queryInput ? queryInput.value.trim() : '';
+
+    const url = `/api/mpps/records?status=${encodeURIComponent(status)}&q=${encodeURIComponent(query)}&limit=100`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) return;
+        const data = res.data || {};
+        const records = data.records || [];
+        const tbody = document.getElementById('mppsTableBody');
+        const countSpan = document.getElementById('mppsRecordCount');
+        if (countSpan) countSpan.textContent = data.total || 0;
+        if (!tbody) return;
+
+        if (records.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                No MPPS records found matching criteria.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = records.map(r => {
+          let statusBadge = '';
+          const st = (r.status || '').toUpperCase();
+          if (st.includes('COMPLETED')) {
+            statusBadge = '<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 0.68rem; padding: 2px 5px; border-radius: 4px;">COMPLETED</span>';
+          } else if (st.includes('DISCONTINUED')) {
+            statusBadge = '<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 700; font-size: 0.68rem; padding: 2px 5px; border-radius: 4px;">REJECTED</span>';
+          } else {
+            statusBadge = '<span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; font-weight: 700; font-size: 0.68rem; padding: 2px 5px; border-radius: 4px;">IN PROGRESS</span>';
+          }
+
+          let timeDisplay = '-';
+          if (r.start_time) {
+            const stTime = r.start_time.length >= 4 ? `${r.start_time.substring(0, 2)}:${r.start_time.substring(2, 4)}` : r.start_time;
+            const endTime = r.end_time && r.end_time.length >= 4 ? `${r.end_time.substring(0, 2)}:${r.end_time.substring(2, 4)}` : '';
+            timeDisplay = endTime ? `${stTime}-${endTime}` : stTime;
+          }
+
+          let rejectInfo = '<span style="color: var(--text-muted);">-</span>';
+          if (r.reject_count > 0 || r.reject_categories) {
+            rejectInfo = `<span style="color: #ef4444; font-weight: 700;">${escapeHtml(r.reject_categories || 'REJECTED')}</span>`;
+            if (r.status_reason || r.comments) {
+              const extra = [r.status_reason, r.comments].filter(Boolean).join(' - ');
+              rejectInfo += `<br><span style="font-size: 0.68rem; color: var(--text-muted);">${escapeHtml(extra)}</span>`;
+            }
+          } else if (r.comments) {
+            rejectInfo = `<span style="font-size: 0.7rem; color: var(--text-muted);">${escapeHtml(r.comments)}</span>`;
+          }
+
+          let modStation = `<span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; font-size: 0.68rem; font-weight: 700; padding: 1px 4px; border-radius: 3px;">${escapeHtml(r.modality || 'CR')}</span>`;
+          if (r.station_ae) {
+            modStation += `<br><span style="font-size: 0.68rem; font-family: monospace; color: var(--text-muted);">${escapeHtml(r.station_ae)}</span>`;
+          }
+
+          const safeUid = (r.sop_instance_uid || String(r.id)).replace(/'/g, "\\'");
+
+          return `
+            <tr>
+              <td style="font-weight: 700; font-family: monospace; color: var(--primary); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.accession_number || '-')}</td>
+              <td style="font-weight: 600; white-space: normal; word-break: break-word; font-size: 0.75rem;">${escapeHtml(r.patient_name || 'UNKNOWN')}</td>
+              <td style="font-family: monospace; font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(r.patient_id || '-')}</td>
+              <td style="text-align: center; white-space: nowrap;">${modStation}</td>
+              <td style="text-align: center; white-space: nowrap;">${statusBadge}</td>
+              <td style="font-size: 0.7rem; font-family: monospace; color: var(--text-muted); text-align: center; white-space: nowrap;">${timeDisplay}</td>
+              <td style="text-align: center; font-weight: 700;">${r.total_images_count || 1}</td>
+              <td style="white-space: normal; word-break: break-word; font-size: 0.72rem;">${rejectInfo}</td>
+              <td style="text-align: center; white-space: nowrap;">
+                <button type="button" class="btn btn-outline" style="padding: 1px 5px; font-size: 0.68rem; height: 24px;" onclick="viewMppsDetails('${safeUid}')">
+                  Inspect
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      })
+      .catch(err => console.error('[MPPS Table Error]', err));
+  }
+
+  function exportMppsCsv() {
+    const statusSelect = document.getElementById('mppsStatusFilter');
+    const status = statusSelect ? statusSelect.value : 'ALL';
+    const queryInput = document.getElementById('mppsSearchQuery');
+    const query = queryInput ? queryInput.value.trim() : '';
+    window.location.href = `/api/mpps/export?status=${encodeURIComponent(status)}&q=${encodeURIComponent(query)}`;
+  }
+
+  function viewMppsDetails(sopUid) {
+    fetch(`/api/mpps/records/${encodeURIComponent(sopUid)}`)
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) {
+          showToast(res.message || 'Failed to load details.', 'error');
+          return;
+        }
+        const data = res.data;
+        const modal = document.getElementById('mppsAuditModal');
+        const content = document.getElementById('mppsAuditContent');
+        if (!modal || !content) return;
+
+        let rejectHtml = '';
+        if (data.rejected_images && data.rejected_images.length > 0) {
+          rejectHtml = `
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 0.85rem; margin-bottom: 1rem;">
+              <strong style="color: #ef4444; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">
+                ⚠️ Reject Analysis Recorded (${data.rejected_images.length} item)
+              </strong>
+              ${data.rejected_images.map((rj, idx) => `
+                <div style="font-size: 0.78rem; margin-bottom: 0.3rem;">
+                  #${idx + 1}: <strong>${escapeHtml(rj.standard_category)}</strong> — ${escapeHtml(rj.reject_reason || '')}
+                  <span style="color: var(--text-muted); font-size: 0.72rem;">(Count: ${rj.image_count}, Operator: ${escapeHtml(rj.rejected_by || '-')})</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        const rawJsonFormatted = JSON.stringify(data.raw_dataset || {}, null, 2);
+
+        content.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; font-size: 0.8rem; margin-bottom: 1rem;">
+            <div><strong>Patient Name:</strong> ${escapeHtml(data.patient_name || '-')}</div>
+            <div><strong>Patient ID:</strong> <code>${escapeHtml(data.patient_id || '-')}</code></div>
+            <div><strong>Accession No:</strong> <code style="color: var(--primary); font-weight: bold;">${escapeHtml(data.accession_number || '-')}</code></div>
+            <div><strong>Modality / Station:</strong> ${escapeHtml(data.modality || '-')} / <code>${escapeHtml(data.station_ae || '-')}</code></div>
+            <div><strong>Status:</strong> <strong>${escapeHtml(data.status || '-')}</strong></div>
+            <div><strong>Procedure Desc:</strong> ${escapeHtml(data.procedure_description || '-')}</div>
+            <div><strong>Start Time:</strong> ${escapeHtml(data.start_date || '')} ${escapeHtml(data.start_time || '')}</div>
+            <div><strong>End Time:</strong> ${escapeHtml(data.end_date || '')} ${escapeHtml(data.end_time || '')}</div>
+            <div><strong>Total Images:</strong> ${data.total_images_count || 1}</div>
+            <div><strong>Comments:</strong> ${escapeHtml(data.comments || '-')}</div>
+          </div>
+          ${rejectHtml}
+          <div>
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+              DICOM MPPS Raw Dataset Audit (JSON):
+            </div>
+            <pre style="background: var(--bg-subtle); padding: 0.85rem; border-radius: 6px; font-family: monospace; font-size: 0.74rem; max-height: 250px; overflow: auto; border: 1px solid var(--border-subtle);">${escapeHtml(rawJsonFormatted)}</pre>
+          </div>
+        `;
+
+        modal.style.display = 'flex';
+      })
+      .catch(err => showToast('Error: ' + err.message, 'error'));
+  }
+
+  function closeMppsModal() {
+    const modal = document.getElementById('mppsAuditModal');
+    if (modal) modal.style.display = 'none';
+  }
+
   function copyFirewallCmd() {
     const inp = document.getElementById('cmdFirewallText');
     if (inp) {
@@ -2858,6 +3242,34 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     updateQuickReferralChipsSettings('{{ config.facility_type if config.facility_type else "KK" }}');
     checkGitHubRelease(false);
     fetchDicomStatus(false);
+    loadMppsTable();
   });
 </script>
+
+<!-- MPPS Audit Details Modal -->
+<div id="mppsAuditModal"
+  style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+  <div
+    style="background: var(--bg-card); border-radius: var(--radius-md); max-width: 680px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); border: 1px solid var(--border-subtle);">
+    <div
+      style="padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+      <h3
+        style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span>DICOM MPPS Transaction Audit</span>
+      </h3>
+      <button type="button" onclick="closeMppsModal()"
+        style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+    <div id="mppsAuditContent" style="padding: 1.25rem; overflow-y: auto;">
+      Loading details...
+    </div>
+    <div
+      style="padding: 0.85rem 1.25rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
+      <button type="button" class="btn btn-secondary" onclick="closeMppsModal()">Close</button>
+    </div>
+  </div>
+</div>
 {% endblock %}

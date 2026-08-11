@@ -154,6 +154,29 @@ def get_phris_matrix_data(year, month=None):
                 if not matched_rej:
                     penolakan["MISCELLANEOUS"][month_idx] += tot_rej
 
+    # 8. Gabungkan data Reject Analysis & Imej Diambil daripada Enjin MPPS Konsol (Carestream / Modality)
+    try:
+        from core.mpps_engine import get_mpps_monthly_reject_summary
+        mpps_summary = get_mpps_monthly_reject_summary(year)
+        if mpps_summary:
+            mpps_penolakan = mpps_summary.get("penolakan", {})
+            mpps_tot_imgs = mpps_summary.get("total_images", [0]*12)
+            mpps_tot_rejs = mpps_summary.get("total_repeats", [0]*12)
+
+            for r_key in rejections_list:
+                if r_key in mpps_penolakan:
+                    for m in range(12):
+                        penolakan[r_key][m] += mpps_penolakan[r_key][m]
+
+            for m in range(12):
+                penolakan["JUMLAH IMEJ"][m] += mpps_tot_imgs[m]
+                penolakan["PENGULANGAN"][m] += mpps_tot_rejs[m]
+                # Pastikan jumlah imej sentiasa mencakupi sekurang-kurangnya bilangan pengulangan
+                if penolakan["PENGULANGAN"][m] > penolakan["JUMLAH IMEJ"][m]:
+                    penolakan["JUMLAH IMEJ"][m] = penolakan["PENGULANGAN"][m]
+    except Exception as e_mpps:
+        print(f"[PHRIS Engine Warning] Ralat menggabungkan data MPPS: {e_mpps}")
+
     return {
         "year": year,
         "bangsa": bangsa,

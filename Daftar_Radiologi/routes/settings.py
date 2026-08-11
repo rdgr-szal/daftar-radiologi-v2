@@ -769,5 +769,105 @@ def api_dicom_clear_worklist():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ==============================================================================
+# DICOM MPPS (MODALITY PERFORMED PROCEDURE STEP) & REJECT ANALYSIS API
+# ==============================================================================
+
+@settings_bp.route('/api/mpps/records', methods=['GET'])
+def api_mpps_records():
+    """Mendapatkan senarai transaksi MPPS dengan penapis status, tarikh dan carian teks."""
+    try:
+        from core.mpps_engine import get_mpps_records_list
+        limit = int(request.args.get('limit', 50))
+        offset = int(request.args.get('offset', 0))
+        status = request.args.get('status', 'ALL')
+        query = request.args.get('q', '')
+        start_date = request.args.get('start_date', '')
+        end_date = request.args.get('end_date', '')
+
+        result = get_mpps_records_list(
+            limit=limit,
+            offset=offset,
+            status=status,
+            query=query,
+            start_date=start_date,
+            end_date=end_date
+        )
+        return jsonify({"success": True, "data": result})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@settings_bp.route('/api/mpps/records/<path:sop_uid>', methods=['GET'])
+def api_mpps_record_details(sop_uid):
+    """Mendapatkan perincian transaksi MPPS termasuk data audit DICOM Dataset JSON."""
+    try:
+        from core.mpps_engine import get_mpps_record_details
+        details = get_mpps_record_details(sop_uid)
+        if not details:
+            return jsonify({"success": False, "message": "Rekod MPPS tidak ditemui."}), 404
+        return jsonify({"success": True, "data": details})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@settings_bp.route('/api/mpps/export', methods=['GET'])
+def api_mpps_export_csv():
+    """Mengeksport senarai transaksi MPPS dan Reject Analysis ke format fail CSV."""
+    import io
+    import csv
+    from flask import Response
+    try:
+        from core.mpps_engine import get_mpps_records_list
+        status = request.args.get('status', 'ALL')
+        query = request.args.get('q', '')
+        start_date = request.args.get('start_date', '')
+        end_date = request.args.get('end_date', '')
+
+        result = get_mpps_records_list(limit=5000, offset=0, status=status, query=query, start_date=start_date, end_date=end_date)
+        records = result.get("records", [])
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Header CSV
+        writer.writerow([
+            "ID", "SOP Instance UID", "Accession Number", "Patient ID", "Patient Name",
+            "Modality", "Station AE", "Station Name", "Status", "Start Date", "Start Time",
+            "End Date", "End Time", "Total Images", "Reject Count", "Reject Categories",
+            "Status Reason", "Comments", "Created At"
+        ])
+
+        for r in records:
+            writer.writerow([
+                r.get("id"),
+                r.get("sop_instance_uid"),
+                r.get("accession_number"),
+                r.get("patient_id"),
+                r.get("patient_name"),
+                r.get("modality"),
+                r.get("station_ae"),
+                r.get("station_name"),
+                r.get("status"),
+                r.get("start_date"),
+                r.get("start_time"),
+                r.get("end_date"),
+                r.get("end_time"),
+                r.get("total_images_count"),
+                r.get("reject_count"),
+                r.get("reject_categories"),
+                r.get("status_reason"),
+                r.get("comments"),
+                r.get("created_at")
+            ])
+
+        output.seek(0)
+        filename = f"mpps_reject_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment;filename={filename}"}
+        )
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Ralat eksport MPPS CSV: {str(e)}"}), 500
+
 
 
