@@ -10,6 +10,38 @@ if sys.platform == 'darwin':
 else:
     app_icon = 'icon/daftarradiologi.ico'
 
+hidden_imports_list = [
+    'pywebview',
+    'webview',
+    'openpyxl',
+    'flask',
+    'sqlite3',
+    'core.config',
+    'core.excel_engine',
+    'core.phris_engine',
+    'core.export_engine',
+    'core.backup_engine',
+    'core.db_engine',
+    'routes.registration',
+    'routes.patients',
+    'routes.phris',
+    'routes.dashboard',
+    'routes.export',
+    'routes.settings'
+]
+
+if sys.platform == 'win32':
+    hidden_imports_list.extend([
+        'clr_loader',
+        'pythonnet',
+        'clr',
+        'PySide6',
+        'PySide6.QtCore',
+        'PySide6.QtWidgets',
+        'PySide6.QtWebEngineWidgets',
+        'PySide6.QtWebEngineCore',
+    ])
+
 a = Analysis(
     ['DaftarRadiologi.py'],
     pathex=['.'],
@@ -22,33 +54,7 @@ a = Analysis(
         ('icon', 'icon'),
         ('MicrosoftEdgeWebview2Setup.exe', '.') if os.path.exists('MicrosoftEdgeWebview2Setup.exe') else ('icon', 'icon')
     ],
-    hiddenimports=[
-        'pywebview',
-        'webview',
-        'clr_loader',
-        'pythonnet',
-        'clr',
-        'PySide6',
-        'PySide6.QtCore',
-        'PySide6.QtWidgets',
-        'PySide6.QtWebEngineWidgets',
-        'PySide6.QtWebEngineCore',
-        'openpyxl',
-        'flask',
-        'sqlite3',
-        'core.config',
-        'core.excel_engine',
-        'core.phris_engine',
-        'core.export_engine',
-        'core.backup_engine',
-        'core.db_engine',
-        'routes.registration',
-        'routes.patients',
-        'routes.phris',
-        'routes.dashboard',
-        'routes.export',
-        'routes.settings'
-    ],
+    hiddenimports=hidden_imports_list,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
