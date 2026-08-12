@@ -130,11 +130,11 @@
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-      <!-- Row 1: IC / Pasport -->
+      <!-- Row 1: ID (IC / Pasport / ID Pesakit) -->
       <div class="form-group">
-        <label for="ic_pasport">IC/Passport No. *</label>
-        <input type="text" id="ic_pasport" name="ic_pasport" class="form-control" placeholder="850403105001" required
-          oninput="handleIcAutoFill(this.value)" title="No. IC (12 digit)">
+        <label for="ic_pasport" style="font-weight: 700;">ID <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="ic_pasport" name="ic_pasport" class="form-control" placeholder="No. MyKad / Passport / ID Pesakit" required
+          oninput="handleIcAutoFill(this.value)" title="No. ID Pesakit (MyKad 12 digit / Passport)">
       </div>
 
       <!-- Row 2: Nama Penuh -->
@@ -202,8 +202,14 @@
       <!-- Row 6: LMP (Diwajibkan bagi Perempuan berusia 12-55 tahun) -->
       <div class="form-group" id="lmpGroup"
         style="display: none; background: rgba(239, 68, 68, 0.05); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">
-        <label for="lmp" style="font-weight: 700; color: #b91c1c;">LMP<span style="color: #ef4444;">*</span></label>
-        <input type="date" id="lmp" name="lmp" class="form-control"
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="lmp" style="font-weight: 700; color: #b91c1c; margin: 0;">LMP <span style="color: #ef4444;">*</span></label>
+          <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #b91c1c;">
+            <input type="checkbox" id="lmp_na" onchange="toggleLmpNa(this.checked)">
+            <span>Not Applicable (N/A)</span>
+          </label>
+        </div>
+        <input type="date" id="lmp" name="lmp" class="form-control" style="margin-top: 0.35rem;"
           title="Diwajibkan bagi pesakit perempuan berusia 12-55 tahun (Peraturan Keselamatan Radiasi KKM)">
         <small style="font-size: 0.73rem; color: #b91c1c; font-weight: 600; display: block; margin-top: 0.25rem;">
           Diwajibkan bagi pesakit perempuan berusia 12 hingga 55 tahun mengikut peraturan Keselamatan Radiasi KKM.
@@ -577,11 +583,27 @@
     }
   }
 
+  function toggleLmpNa(isNa) {
+    const lmpInput = document.getElementById('lmp');
+    if (!lmpInput) return;
+    if (isNa) {
+      lmpInput.value = '';
+      lmpInput.disabled = true;
+      lmpInput.removeAttribute('required');
+      lmpInput.style.backgroundColor = 'var(--bg-subtle)';
+    } else {
+      lmpInput.disabled = false;
+      lmpInput.style.backgroundColor = '';
+      checkLmpRequirement();
+    }
+  }
+
   function checkLmpRequirement() {
     const jantinaElem = document.getElementById('jantina');
     const umurElem = document.getElementById('umur');
     const lmpGroup = document.getElementById('lmpGroup');
     const lmpInput = document.getElementById('lmp');
+    const lmpNaCheckbox = document.getElementById('lmp_na');
 
     if (!jantinaElem || !umurElem || !lmpGroup || !lmpInput) return;
 
@@ -593,11 +615,19 @@
 
     if (isFemaleChildbearingAge) {
       lmpGroup.style.display = 'block';
-      lmpInput.setAttribute('required', 'required');
+      if (lmpNaCheckbox && lmpNaCheckbox.checked) {
+        lmpInput.removeAttribute('required');
+        lmpInput.disabled = true;
+      } else {
+        lmpInput.disabled = false;
+        lmpInput.setAttribute('required', 'required');
+      }
     } else {
       lmpGroup.style.display = 'none';
       lmpInput.removeAttribute('required');
+      lmpInput.disabled = false;
       lmpInput.value = '';
+      if (lmpNaCheckbox) lmpNaCheckbox.checked = false;
     }
   }
 
@@ -693,12 +723,13 @@
 
     const jantinaVal = (document.getElementById('jantina').value || '').toUpperCase();
     const ageVal = parseInt(document.getElementById('umur').value, 10);
-    const lmpVal = document.getElementById('lmp').value;
+    const lmpNaChecked = document.getElementById('lmp_na') && document.getElementById('lmp_na').checked;
+    const lmpVal = lmpNaChecked ? "N/A" : document.getElementById('lmp').value;
 
     const isFemaleChildbearingAge = (jantinaVal === 'F' || jantinaVal === 'PEREMPUAN') && (!isNaN(ageVal) && ageVal >= 12 && ageVal <= 55);
 
-    if (isFemaleChildbearingAge && !lmpVal) {
-      showToast('Borang tidak lengkap: Tarikh LMP wajib diisi untuk pesakit perempuan berusia 12-55 tahun!', 'error');
+    if (isFemaleChildbearingAge && !lmpNaChecked && !lmpVal) {
+      showToast('Borang tidak lengkap: Tarikh LMP wajib diisi untuk pesakit perempuan berusia 12-55 tahun (atau tanda N/A)!', 'error');
       btn.disabled = false;
       btn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> <span>Daftar</span>';
       return;

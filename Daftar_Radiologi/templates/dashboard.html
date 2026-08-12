@@ -296,30 +296,30 @@
   }
 </style>
 
-<!-- Filter & Time Period Bar (Identical to patient_list.html) -->
-<form id="dashboardFilterForm" method="GET" action="{{ url_for('dashboard.dashboard_view') }}"
-  style="margin-bottom: 1.25rem;">
+<!-- Filter & Time Period Bar (Sticky AJAX) -->
+<form id="dashboardFilterForm" onsubmit="event.preventDefault(); switchDashboardPeriodAJAX();"
+  style="margin-bottom: 1.25rem; position: sticky; top: 0; z-index: 100; background: var(--bg-body, #f8fafc); padding-top: 4px; padding-bottom: 4px;">
   <input type="hidden" name="period" id="period" value="{{ period }}">
   <input type="hidden" name="day_date" id="day_date" value="{{ selected_date }}">
 
   <div class="filter-tabs-bar">
     <!-- Left: Period Switcher Buttons -->
     <div class="filter-tab-group">
-      <a href="{{ url_for('dashboard.dashboard_view', period='day', day_date=selected_date) }}"
-        class="filter-tab {% if period == 'day' %}active{% endif %}">Day</a>
-      <a href="{{ url_for('dashboard.dashboard_view', period='week', day_date=selected_date) }}"
-        class="filter-tab {% if period == 'week' %}active{% endif %}">Week</a>
-      <a href="{{ url_for('dashboard.dashboard_view', period='month', year=selected_year, month=selected_month, day_date=selected_date) }}"
-        class="filter-tab {% if period == 'month' %}active{% endif %}">Month</a>
-      <a href="{{ url_for('dashboard.dashboard_view', period='year', year=selected_year, day_date=selected_date) }}"
-        class="filter-tab {% if period == 'year' %}active{% endif %}">Year</a>
+      <button type="button" onclick="switchDashboardPeriodAJAX('day', null, null, null, event)" data-period="day"
+        class="filter-tab {% if period == 'day' %}active{% endif %}">Day</button>
+      <button type="button" onclick="switchDashboardPeriodAJAX('week', null, null, null, event)" data-period="week"
+        class="filter-tab {% if period == 'week' %}active{% endif %}">Week</button>
+      <button type="button" onclick="switchDashboardPeriodAJAX('month', null, null, null, event)" data-period="month"
+        class="filter-tab {% if period == 'month' %}active{% endif %}">Month</button>
+      <button type="button" onclick="switchDashboardPeriodAJAX('year', null, null, null, event)" data-period="year"
+        class="filter-tab {% if period == 'year' %}active{% endif %}">Year</button>
     </div>
 
     <!-- Center / Controls: Period-Specific Controls -->
     <div style="display: flex; align-items: center; gap: 0.5rem;">
       {% if period == 'day' %}
       <input type="date" class="form-control" value="{{ selected_date }}"
-        style="width: auto; height: 30px; font-size: 0.8rem;" onchange="setDayDateValue(this.value)">
+        style="width: auto; height: 30px; font-size: 0.8rem;" onchange="switchDashboardPeriodAJAX(null, this.value, null, null, event)">
       {% elif period == 'week' %}
       <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
         <button type="button" class="btn btn-outline week-picker-trigger-btn" onclick="toggleWeekPickerCalendar(event)"
@@ -364,7 +364,7 @@
       </div>
       {% elif period == 'month' %}
       <select name="month" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
-        onchange="this.form.submit()">
+        onchange="switchDashboardPeriodAJAX(null, null, this.value, null, event)">
         {% for m_idx in range(1, 13) %}
         <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
           {{ month_map[m_idx][1] }}
@@ -374,7 +374,7 @@
       {% endif %}
 
       <select name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
-        onchange="this.form.submit()">
+        onchange="switchDashboardPeriodAJAX(null, null, null, this.value, event)">
         {% for y in available_years %}
         <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
@@ -385,19 +385,23 @@
 
 <!-- Section 2: Statistics -->
 <div class="metrics-grid">
-  <!-- Card 1: Total Cases & Patients -->
+  <!-- Card 1: Total Workload Summary (Patients & Cases) -->
   <div class="metric-card">
-    <div>
-      <div class="metric-label">Total Cases</div>
-      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-          <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700;">Cases</span>
-          <div class="metric-value" id="valTotalCases" style="color: var(--primary);">0</div>
-        </div>
-        <div style="text-align: right;">
-          <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700;">Patients</span>
-          <div class="metric-value" id="valTotalPatients" style="color: var(--accent);">0</div>
-        </div>
+    <div class="metric-label" style="display: flex; align-items: center; justify-content: space-between;">
+      <span>Total Workload</span>
+      <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+      </svg>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.2rem;">
+      <div style="background: var(--bg-subtle); padding: 0.6rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700; text-transform: uppercase;">Patients</span>
+        <div class="metric-value" id="valTotalPatients" style="color: var(--accent); margin-bottom: 0; font-size: 1.6rem;">0</div>
+      </div>
+      <div style="background: var(--bg-subtle); padding: 0.6rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; font-weight: 700; text-transform: uppercase;">Cases</span>
+        <div class="metric-value" id="valTotalCases" style="color: var(--primary); margin-bottom: 0; font-size: 1.6rem;">0</div>
       </div>
     </div>
     <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic;">
@@ -826,12 +830,17 @@
   });
 
 
-  // Fetch & Load Dashboard data
-  function loadDashboardData() {
-    const period = "{{ period }}";
-    const dayDate = "{{ selected_date }}";
-    const month = "{{ selected_month }}";
-    const year = "{{ selected_year }}";
+  let currentPeriod = "{{ period }}";
+  let currentDayDate = "{{ selected_date }}";
+  let currentMonth = "{{ selected_month }}";
+  let currentYear = "{{ selected_year }}";
+
+  // Fetch & Load Dashboard data live without page reload
+  function loadDashboardData(p, d, m, y) {
+    const period = p || currentPeriod;
+    const dayDate = d || currentDayDate;
+    const month = m || currentMonth;
+    const year = y || currentYear;
 
     let url = `/api/dashboard-data?period=${period}&day_date=${dayDate}&month=${month}&year=${year}`;
 
@@ -952,6 +961,9 @@
 
           // 3.6 Consumables
           populateCensusTable('tableSection3Consumables', res.section3.consumables, "Unit");
+
+          // Restore scroll position after DOM is populated
+          restoreScrollPosDashboard();
         }
       })
       .catch(err => {
@@ -1102,6 +1114,40 @@
     tbody.appendChild(trTotal);
   }
 
-  document.addEventListener('DOMContentLoaded', loadDashboardData);
+  function switchDashboardPeriodAJAX(p, d, m, y, e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+    if (p) currentPeriod = p;
+    if (d) currentDayDate = d;
+    if (m) currentMonth = m;
+    if (y) currentYear = y;
+
+    // Update filter tab active state
+    document.querySelectorAll('.filter-tab-group .filter-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.period === currentPeriod);
+    });
+
+    const hiddenPeriod = document.getElementById('period');
+    if (hiddenPeriod) hiddenPeriod.value = currentPeriod;
+    const hiddenDate = document.getElementById('day_date');
+    if (hiddenDate) hiddenDate.value = currentDayDate;
+
+    const pageUrl = `/dashboard?period=${currentPeriod}&day_date=${currentDayDate}&month=${currentMonth}&year=${currentYear}`;
+    if (typeof history.pushState === 'function') {
+      history.pushState({ period: currentPeriod, dayDate: currentDayDate, month: currentMonth, year: currentYear }, '', pageUrl);
+    }
+
+    loadDashboardData(currentPeriod, currentDayDate, currentMonth, currentYear);
+  }
+
+  window.addEventListener('popstate', function(e) {
+    if (e.state) {
+      switchDashboardPeriodAJAX(e.state.period, e.state.dayDate, e.state.month, e.state.year, null);
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+  });
 </script>
 {% endblock %}

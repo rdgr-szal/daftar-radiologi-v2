@@ -204,10 +204,7 @@ def get_unconfigured_default():
         "default_staff": "",
         # Modaliti aktif SMRP 2.0 yang ditawarkan bagi Klinik Kesihatan
         "active_modalities": [
-            "GENERAL RADIOGRAPHY",
-            "MOBILE - GENERAL RADIOGRAPHY",
-            "ULTRASOUND",
-            "DENTAL"
+            "GENERAL RADIOGRAPHY"
         ],
         "consumables": ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"],
         # Konfigurasi Pangkalan Data Pilihan (Offline-First Hybrid Sync)
@@ -268,7 +265,7 @@ def load_config():
             if "single_modality" not in data:
                 data["single_modality"] = "General Radiography"
             if "active_modalities" not in data:
-                data["active_modalities"] = ["General Radiography", "Ultrasound", "Dental"]
+                data["active_modalities"] = ["GENERAL RADIOGRAPHY"]
             if "consumables" not in data:
                 data["consumables"] = ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"]
             if "db_config" not in data:

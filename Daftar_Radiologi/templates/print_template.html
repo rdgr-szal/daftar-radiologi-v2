@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>BUKU DAFTAR RADIOLOGI - {{ data.singkatan }}{% if data.modality_name %} - {{ data.modality_name }}{% endif %} {{ data.month_name }} {{ data.year }}</title>
+  <title>BUKU DAFTAR RADIOLOGI - {{ data.singkatan }}{% if data.modality_name %} - {{ data.modality_name }}{% endif %}
+    {{ data.month_name }} {{ data.year }}</title>
   <style>
     /* Tetapan Kertas A4 Landscape (Saiz Piawai KKM Printing) */
     @page {
@@ -146,18 +147,23 @@
 
 <body>
   <div class="print-actions">
+    <button class="btn-print" onclick="window.history.back()" style="background-color: #64748b; margin-right: 6px;">
+      <span>&larr; Kembali</span>
+    </button>
     <button class="btn-print" onclick="window.print()">
       <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;" viewBox="0 0 24 24">
         <polyline points="6 9 6 2 18 2 18 9" />
         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
         <rect x="6" y="14" width="12" height="8" />
       </svg>
-      <span>Cetak Buku Daftar (A4 Landscape)</span>
+      <span>Cetak</span>
     </button>
   </div>
 
-  <div class="header-title">BUKU DAFTAR RADIOLOGI {{ data.singkatan }}{% if data.modality_name %} ({{ data.modality_name.upper() }}){% endif %}</div>
-  <div class="header-sub">{% if data.facility_type == 'HOSPITAL' %}HOSPITAL / FASILITI{% else %}KLINIK KESIHATAN{% endif %}: {{ data.klinik_asal.upper() }} | BULAN: {{ data.month_name }} TAHUN: {{ data.year }}</div>
+  <div class="header-title">BUKU DAFTAR RADIOLOGI {{ data.singkatan }}{% if data.modality_name %} ({{
+    data.modality_name.upper() }}){% endif %}</div>
+  <div class="header-sub">{% if data.facility_type == 'HOSPITAL' %}HOSPITAL / FASILITI{% else %}KLINIK KESIHATAN{% endif
+    %}: {{ data.klinik_asal.upper() }} | BULAN: {{ data.month_name }} TAHUN: {{ data.year }}</div>
 
   <table class="print-table">
     <thead>

@@ -457,7 +457,7 @@
             </p>
           </div>
           <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; height: 30px;"
-            onclick="addRefFacilityRow('')">+ Tambah</button>
+            onclick="addRefFacilityRow('')">+ Add</button>
         </div>
 
         <div id="quickReferralChipsSettings" style="margin-bottom: 0.75rem;">
@@ -634,7 +634,7 @@
             <button type="button" class="btn btn-outline"
               style="height: 36px; font-weight: 600; font-size: 0.8rem; white-space: nowrap;"
               onclick="addCustomJenisFromSettings()">
-              + Tambah Jenis
+              + Add Type
             </button>
           </div>
         </div>
@@ -712,9 +712,9 @@
                 <td>{{ part }} *</td>
                 <td style="text-align: center;">
                   <button type="button" class="btn-remove-row"
-                    onclick="deleteCustomOrderable('{{ j_key }}', '{{ part }}')" title="Hapus Bahagian Ini"
+                    onclick="deleteCustomOrderable('{{ j_key }}', '{{ part }}')" title="Delete This Part"
                     style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 4px 8px; cursor: pointer;">
-                    Hapus
+                    Delete
                   </button>
                 </td>
               </tr>
@@ -723,12 +723,12 @@
               {% set ns.has_items = true %}
               <tr>
                 <td><strong>{{ j_key }}</strong></td>
-                <td style="color: var(--text-muted); font-style: italic;">(Kategori Sahaja)</td>
+                <td style="color: var(--text-muted); font-style: italic;">(Category Only)</td>
                 <td style="text-align: center;">
                   <button type="button" class="btn-remove-row" onclick="deleteCustomOrderable('{{ j_key }}', '')"
-                    title="Hapus Kategori Ini"
+                    title="Delete This Category"
                     style="background: transparent; color: #ef4444; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 4px 8px; cursor: pointer;">
-                    Hapus
+                    Delete
                   </button>
                 </td>
               </tr>
@@ -763,7 +763,7 @@
             </p>
           </div>
           <button type="button" class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; height: 30px;"
-            onclick="addConsumableRow('')">+ Tambah Consumable</button>
+            onclick="addConsumableRow('')">+ Add Consumable</button>
         </div>
 
         <div id="consumableContainer"
@@ -1336,6 +1336,7 @@
                     <span>Test Connection</span>
                   </button>
                 </div>
+                <div id="dicomEchoFeedback" style="margin-top: 0.6rem; font-size: 0.8rem; text-align: center;"></div>
               </div>
             </div>
           </div>
@@ -2150,7 +2151,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
   function setModalityPreset(presetType) {
     const checkboxes = document.querySelectorAll('.modality-checkbox');
-    const kkModalities = ["GENERAL RADIOGRAPHY", "MOBILE - GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"];
+    const kkModalities = ["GENERAL RADIOGRAPHY"];
 
     checkboxes.forEach(cb => {
       if (presetType === 'KK') {
@@ -2161,7 +2162,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     });
 
     if (typeof showToast === 'function') {
-      showToast(presetType === 'KK' ? 'Preset Klinik Kesihatan diterapkan!' : 'Preset Hospital (Semua Modaliti) diterapkan!');
+      showToast(presetType === 'KK' ? 'KK Preset applied (General X-ray)!' : 'Hospital Preset (All Modalities) applied!');
     }
   }
 

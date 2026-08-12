@@ -344,45 +344,49 @@
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
-      <span>Daftar Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
+      <span>Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
     </div>
     <div style="display: flex; gap: 0.5rem;">
-      <a href="{{ url_for('export.print_buku_daftar', year=selected_year, month=selected_month) }}" target="_blank"
-        class="btn btn-outline" title="Print or save PDF copy of Buku Daftar Radiologi">
+      <button type="button" onclick="openPrintPdfWindow()" class="btn btn-outline"
+        title="Print or save PDF copy of Buku Daftar Radiologi">
         <svg class="icon icon-sm" viewBox="0 0 24 24">
           <polyline points="6 9 6 2 18 2 18 9" />
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <rect x="6" y="14" width="12" height="8" />
         </svg>
         <span>Print / PDF</span>
-      </a>
+      </button>
     </div>
   </div>
 
-  <!-- Filter & Time Period Bar -->
-  <form id="patientFilterForm" method="GET" action="{{ url_for('patients.patient_directory') }}"
-    style="margin-bottom: 1rem;">
+  <!-- Filter & Time Period Bar (Sticky AJAX) -->
+  <form id="patientFilterForm" onsubmit="handlePatientSearchSubmit(event)"
+    style="margin-bottom: 1rem; position: sticky; top: 0; z-index: 100; background: var(--bg-body, #f8fafc); padding-top: 4px; padding-bottom: 4px;">
     <input type="hidden" name="period" id="period" value="{{ period }}">
     <input type="hidden" name="day_date" id="day_date" value="{{ selected_date }}">
 
     <div class="filter-tabs-bar">
       <!-- Left: Period Switcher Buttons -->
       <div class="filter-tab-group">
-        <a href="{{ url_for('patients.patient_directory', period='day', day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'day' %}active{% endif %}">Day</a>
-        <a href="{{ url_for('patients.patient_directory', period='week', day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'week' %}active{% endif %}">Week</a>
-        <a href="{{ url_for('patients.patient_directory', period='month', year=selected_year, month=selected_month, day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'month' %}active{% endif %}">Month</a>
-        <a href="{{ url_for('patients.patient_directory', period='year', year=selected_year, day_date=selected_date, q=search_q) }}"
-          class="filter-tab {% if period == 'year' %}active{% endif %}">Year</a>
+        <button type="button"
+          onclick="switchPatientListAJAX('{{ url_for('patients.patient_directory', period='day', day_date=selected_date, q=search_q) }}', event)"
+          class="filter-tab {% if period == 'day' %}active{% endif %}">Day</button>
+        <button type="button"
+          onclick="switchPatientListAJAX('{{ url_for('patients.patient_directory', period='week', day_date=selected_date, q=search_q) }}', event)"
+          class="filter-tab {% if period == 'week' %}active{% endif %}">Week</button>
+        <button type="button"
+          onclick="switchPatientListAJAX('{{ url_for('patients.patient_directory', period='month', year=selected_year, month=selected_month, day_date=selected_date, q=search_q) }}', event)"
+          class="filter-tab {% if period == 'month' %}active{% endif %}">Month</button>
+        <button type="button"
+          onclick="switchPatientListAJAX('{{ url_for('patients.patient_directory', period='year', year=selected_year, day_date=selected_date, q=search_q) }}', event)"
+          class="filter-tab {% if period == 'year' %}active{% endif %}">Year</button>
       </div>
 
       <!-- Center / Controls: Period-Specific Controls -->
       <div style="display: flex; align-items: center; gap: 0.5rem;">
         {% if period == 'day' %}
-        <input type="date" class="form-control" value="{{ selected_date }}"
-          style="width: auto; height: 30px; font-size: 0.8rem;" onchange="setDayDateValue(this.value)">
+        <input type="date" id="dayDateInput" class="form-control" value="{{ selected_date }}"
+          style="width: auto; height: 30px; font-size: 0.8rem;" onchange="onDayDateInputChange(this.value, event)">
         {% elif period == 'week' %}
         <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
           <button type="button" class="btn btn-outline week-picker-trigger-btn"
@@ -427,7 +431,8 @@
         </div>
         {% elif period == 'month' %}
         <select name="month" class="form-control"
-          style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;" onchange="this.form.submit()">
+          style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+          onchange="onMonthSelectChange(this.value, event)">
           {% for m_idx in range(1, 13) %}
           <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
             {{ month_map[m_idx][1] }}
@@ -437,7 +442,7 @@
         {% endif %}
 
         <select name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
-          onchange="this.form.submit()">
+          onchange="onYearSelectChange(this.value, event)">
           {% for y in available_years %}
           <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
@@ -446,7 +451,7 @@
 
       <!-- Right: Search Input -->
       <div style="display: flex; align-items: center; gap: 0.4rem;">
-        <input type="text" name="q" class="form-control" placeholder="Search Name / IC / X-Ray No..."
+        <input type="text" id="searchInput" name="q" class="form-control" placeholder="Search Name / IC / X-Ray No..."
           value="{{ search_q }}" style="width: 200px; height: 30px; font-size: 0.8rem;">
         <button type="submit" class="btn btn-outline" style="height: 30px; padding: 2px 8px; font-size: 0.8rem;">
           <svg class="icon icon-sm" viewBox="0 0 24 24">
@@ -458,158 +463,162 @@
     </div>
   </form>
 
-  <!-- Summary Stats Bar -->
-  <div
-    style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.83rem; color: var(--text-muted); align-items: center;">
-    <div>Patients: <strong style="color: var(--text-main); font-weight: 700;">{{ total_patients }}</strong></div>
-    <div>Cases: <strong style="color: var(--primary); font-weight: 700;">{{ total_cases }}</strong></div>
-  </div>
+  <!-- Summary Stats & Table Container (AJAX Target) -->
+  <div id="patientListAreaContainer">
 
-  <!-- Table Container -->
-  <div class="table-container">
-    <table class="exam-table">
-      <thead>
-        <tr>
-          <th style="white-space: nowrap; width: 95px;">Date</th>
-          <th style="white-space: nowrap; width: 110px;">X‑Ray No.</th>
-          <th style="min-width: 170px;">Name</th>
-          <th style="white-space: nowrap; width: 140px;">ID</th>
-          <th style="width: 55px; text-align: center;">Age</th>
-          <th style="width: 65px; text-align: center;">Gender</th>
-          <th style="min-width: 180px;">Section</th>
-          <th style="min-width: 140px;">Clinic</th>
-          <th style="text-align: right; width: 50px; white-space: nowrap;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in patients %}
-        <!-- Baris Utama Pesakit (Accordion Header) -->
-        <tr class="patient-parent-row {% if p.is_cancelled %}cancelled-row{% endif %}"
-          onclick="toggleAccordion('{{ p.id }}')">
-          <td style="white-space: nowrap; font-size: 0.83rem;">{{ p.tarikh }}</td>
-          <td
-            style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
-            {{ p.xray_range_display }}</td>
-          <td style="font-weight: 700;">
-            {{ p.nama }}
-            {% if p.is_cancelled %}
-            <span style="font-size: 0.72rem; color: #dc2626; margin-left: 4px; font-weight: 700;">[CANCELLED]</span>
-            {% endif %}
-          </td>
-          <td
-            style="white-space: nowrap; font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; font-size: 0.83rem;">
-            {{ p.ic_pasport or '-' }}</td>
-          <td style="text-align: center;">{{ p.umur }}</td>
-          <td style="text-align: center;">{{ p.jantina }}</td>
-          <td>{{ p.bahagian_summary }}</td>
-          <td>{{ p.klinik_rujukan }}</td>
-          <td style="text-align: right; white-space: nowrap;" onclick="event.stopPropagation()">
-            <!-- Kebab / Overflow Menu Dropdown -->
-            <div class="kebab-menu-container" style="position: relative; display: inline-block;">
-              <button type="button" class="kebab-btn" onclick="toggleKebabMenu(event, 'kebab-{{ p.id }}')"
-                title="Action Options">
-                <svg class="icon icon-sm" viewBox="0 0 24 24"
-                  style="stroke: currentColor; fill: none; stroke-width: 2.2;">
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="6" r="1.5" />
-                  <circle cx="12" cy="18" r="1.5" />
-                </svg>
-              </button>
-              <div id="kebab-{{ p.id }}" class="kebab-dropdown">
-                <button type="button" class="kebab-item" data-patient='{{ p.examinations[0]|tojson|forceescape }}'
-                  data-all-exams='{{ p.examinations|tojson|forceescape }}'
-                  onclick="triggerEditFromKebab(this, 'kebab-{{ p.id }}')">
+    <!-- Summary Stats Bar -->
+    <div
+      style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.83rem; color: var(--text-muted); align-items: center;">
+      <div>Patients: <strong style="color: var(--text-main); font-weight: 700;">{{ total_patients }}</strong></div>
+      <div>Cases: <strong style="color: var(--primary); font-weight: 700;">{{ total_cases }}</strong></div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+      <table class="exam-table">
+        <thead>
+          <tr>
+            <th style="white-space: nowrap; width: 95px;">Date</th>
+            <th style="white-space: nowrap; width: 110px;">X‑Ray No.</th>
+            <th style="min-width: 170px;">Name</th>
+            <th style="white-space: nowrap; width: 140px;">ID</th>
+            <th style="width: 55px; text-align: center;">Age</th>
+            <th style="width: 65px; text-align: center;">Gender</th>
+            <th style="min-width: 180px;">Section</th>
+            <th style="min-width: 140px;">Clinic</th>
+            <th style="text-align: right; width: 50px; white-space: nowrap;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in patients %}
+          <!-- Baris Utama Pesakit (Accordion Header) -->
+          <tr class="patient-parent-row {% if p.is_cancelled %}cancelled-row{% endif %}"
+            onclick="toggleAccordion('{{ p.id }}')">
+            <td style="white-space: nowrap; font-size: 0.83rem;">{{ p.tarikh }}</td>
+            <td
+              style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
+              {{ p.xray_range_display }}</td>
+            <td style="font-weight: 700;">
+              {{ p.nama }}
+              {% if p.is_cancelled %}
+              <span style="font-size: 0.72rem; color: #dc2626; margin-left: 4px; font-weight: 700;">[CANCELLED]</span>
+              {% endif %}
+            </td>
+            <td
+              style="white-space: nowrap; font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; font-size: 0.83rem;">
+              {{ p.ic_pasport or '-' }}</td>
+            <td style="text-align: center;">{{ p.umur }}</td>
+            <td style="text-align: center;">{{ p.jantina }}</td>
+            <td>{{ p.bahagian_summary }}</td>
+            <td>{{ p.klinik_rujukan }}</td>
+            <td style="text-align: right; white-space: nowrap;" onclick="event.stopPropagation()">
+              <!-- Kebab / Overflow Menu Dropdown -->
+              <div class="kebab-menu-container" style="position: relative; display: inline-block;">
+                <button type="button" class="kebab-btn" onclick="toggleKebabMenu(event, 'kebab-{{ p.id }}')"
+                  title="Action Options">
                   <svg class="icon icon-sm" viewBox="0 0 24 24"
-                    style="stroke: currentColor; fill: none; stroke-width: 2;">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    style="stroke: currentColor; fill: none; stroke-width: 2.2;">
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="6" r="1.5" />
+                    <circle cx="12" cy="18" r="1.5" />
                   </svg>
-                  <span>Edit</span>
                 </button>
-                {% if not p.is_cancelled %}
-                <button type="button" class="kebab-item item-danger"
-                  onclick="triggerCancelFromKebab('{{ p.examinations[0].tarikh }}', '{{ p.examinations[0].nombor_xray }}', '{{ p.nama }}', 'kebab-{{ p.id }}')">
-                  <svg class="icon icon-sm" viewBox="0 0 24 24"
-                    style="stroke: currentColor; fill: none; stroke-width: 2;">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                  </svg>
-                  <span>Cancel Case</span>
-                </button>
-                {% endif %}
+                <div id="kebab-{{ p.id }}" class="kebab-dropdown">
+                  <button type="button" class="kebab-item" data-patient='{{ p.examinations[0]|tojson|forceescape }}'
+                    data-all-exams='{{ p.examinations|tojson|forceescape }}'
+                    onclick="triggerEditFromKebab(this, 'kebab-{{ p.id }}')">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"
+                      style="stroke: currentColor; fill: none; stroke-width: 2;">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                  {% if not p.is_cancelled %}
+                  <button type="button" class="kebab-item item-danger"
+                    onclick="triggerCancelFromKebab('{{ p.examinations[0].tarikh }}', '{{ p.examinations[0].nombor_xray }}', '{{ p.nama }}', 'kebab-{{ p.id }}')">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"
+                      style="stroke: currentColor; fill: none; stroke-width: 2;">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                    </svg>
+                    <span>Cancel Case</span>
+                  </button>
+                  {% endif %}
+                </div>
               </div>
-            </div>
-          </td>
-        </tr>
+            </td>
+          </tr>
 
-        <!-- Baris Sub-list Accordion Pesakit -->
-        <tr id="{{ p.id }}" class="patient-detail-row" style="display: none; background-color: var(--bg-subtle);">
-          <td colspan="9" style="padding: 0.85rem 1.25rem !important;">
-            <div
-              style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-subtle); padding: 0.85rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+          <!-- Baris Sub-list Accordion Pesakit -->
+          <tr id="{{ p.id }}" class="patient-detail-row" style="display: none; background-color: var(--bg-subtle);">
+            <td colspan="9" style="padding: 0.85rem 1.25rem !important;">
               <div
-                style="font-weight: 700; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
-                <span>Examination Details ({{ p.examinations|length }} X-Ray Records)</span>
-                <span
-                  style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 0.75rem;">Click
-                  main row to collapse</span>
+                style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-subtle); padding: 0.85rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                <div
+                  style="font-weight: 700; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>Examination Details ({{ p.examinations|length }} X-Ray Records)</span>
+                  <span
+                    style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 0.75rem;">Click
+                    main row to collapse</span>
+                </div>
+                <table class="sub-table">
+                  <thead>
+                    <tr>
+                      <th>X-RAY NO.</th>
+                      <th>EXAMINATION PART</th>
+                      <th>CD / FILM</th>
+                      <th>REFERRING CLINIC</th>
+                      <th>STAFF</th>
+                      <th>REMARKS / CANCEL REASON</th>
+                      <th style="text-align: right;">ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in p.examinations %}
+                    <tr>
+                      <td
+                        style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
+                        {{ item.nombor_xray }}</td>
+                      <td style="font-weight: 600;">{{ item.bahagian_pemeriksaan }}</td>
+                      <td>{{ item.cd_filem or '-' }}</td>
+                      <td>{{ item.klinik_rujukan or '-' }}</td>
+                      <td>{{ item.operator or '-' }}</td>
+                      <td>
+                        {% if item.catatan %}
+                        <span style="color: #d97706; font-weight: 600; font-size: 0.8rem;">{{ item.catatan }}</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                      </td>
+                      <td style="text-align: right; white-space: nowrap;">
+                        <button type="button" class="btn btn-outline"
+                          style="padding: 2px 8px; font-size: 0.72rem; height: 24px; font-weight: 600;"
+                          data-patient='{{ item|tojson|forceescape }}'
+                          data-all-exams='{{ p.examinations|tojson|forceescape }}'
+                          onclick="openEditModalFromSubRow(this)">
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
-              <table class="sub-table">
-                <thead>
-                  <tr>
-                    <th>X-RAY NO.</th>
-                    <th>EXAMINATION PART</th>
-                    <th>CD / FILM</th>
-                    <th>REFERRING CLINIC</th>
-                    <th>STAFF</th>
-                    <th>REMARKS / CANCEL REASON</th>
-                    <th style="text-align: right;">ACTION</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for item in p.examinations %}
-                  <tr>
-                    <td
-                      style="font-weight: 700; color: var(--primary); font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace; white-space: nowrap;">
-                      {{ item.nombor_xray }}</td>
-                    <td style="font-weight: 600;">{{ item.bahagian_pemeriksaan }}</td>
-                    <td>{{ item.cd_filem or '-' }}</td>
-                    <td>{{ item.klinik_rujukan or '-' }}</td>
-                    <td>{{ item.operator or '-' }}</td>
-                    <td>
-                      {% if item.catatan %}
-                      <span style="color: #d97706; font-weight: 600; font-size: 0.8rem;">{{ item.catatan }}</span>
-                      {% else %}
-                      <span style="color: var(--text-muted);">-</span>
-                      {% endif %}
-                    </td>
-                    <td style="text-align: right; white-space: nowrap;">
-                      <button type="button" class="btn btn-outline"
-                        style="padding: 2px 8px; font-size: 0.72rem; height: 24px; font-weight: 600;"
-                        data-patient='{{ item|tojson|forceescape }}'
-                        data-all-exams='{{ p.examinations|tojson|forceescape }}'
-                        onclick="openEditModalFromSubRow(this)">
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="9">
-            <div style="text-align: center; padding: 3rem !important; color: var(--text-muted);">No patient records
-              found for the selected period.</div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9">
+              <div style="text-align: center; padding: 3rem !important; color: var(--text-muted);">No patient records
+                found for the selected period.</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div> <!-- End #patientListAreaContainer -->
 </div>
 
 <!-- Modal 1: Edit Pesakit (Pembetulan Ralat Pendaftaran) -->
@@ -878,11 +887,13 @@
 {% block scripts %}
 <script>
   function setPeriod(p) {
+    saveScrollPos();
     document.getElementById('period').value = p;
     document.getElementById('patientFilterForm').submit();
   }
 
   function setDayDateValue(v) {
+    saveScrollPos();
     document.getElementById('day_date').value = v;
     document.getElementById('patientFilterForm').submit();
   }
@@ -1194,8 +1205,9 @@
         tr.classList.add('selected-week');
       }
 
-      tr.onclick = function () {
-        window.location.href = "/patient-list?period=week&day_date=" + monStr + "&q={{ search_q }}";
+      tr.onclick = function (e) {
+        const weekUrl = "/patient-list?period=week&day_date=" + monStr + "&q=" + encodeURIComponent(document.getElementById('searchInput')?.value || '');
+        switchPatientListAJAX(weekUrl, e);
       };
 
       const tdWeek = document.createElement('td');
@@ -1224,5 +1236,84 @@
       pop.style.display = 'none';
     }
   });
+
+  function switchPatientListAJAX(targetUrl, e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+    if (typeof history.pushState === 'function') {
+      history.pushState(null, '', targetUrl);
+    }
+
+    fetch(targetUrl)
+      .then(res => res.text())
+      .then(htmlText => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        const newContent = doc.getElementById('patientListAreaContainer');
+        const currentContent = document.getElementById('patientListAreaContainer');
+        if (newContent && currentContent) {
+          currentContent.innerHTML = newContent.innerHTML;
+        }
+
+        const newForm = doc.getElementById('patientFilterForm');
+        const currentForm = document.getElementById('patientFilterForm');
+        if (newForm && currentForm) {
+          currentForm.innerHTML = newForm.innerHTML;
+        }
+      })
+      .catch(err => {
+        window.location.href = targetUrl;
+      });
+  }
+
+  function onDayDateInputChange(val, e) {
+    const period = document.getElementById('period')?.value || 'day';
+    const q = encodeURIComponent(document.getElementById('searchInput')?.value || '');
+    const url = `/patient-list?period=${period}&day_date=${val}&q=${q}`;
+    switchPatientListAJAX(url, e);
+  }
+
+  function onMonthSelectChange(val, e) {
+    const period = 'month';
+    const dayDate = document.getElementById('day_date')?.value || '';
+    const year = document.querySelector('select[name="year"]')?.value || '';
+    const q = encodeURIComponent(document.getElementById('searchInput')?.value || '');
+    const url = `/patient-list?period=${period}&year=${year}&month=${val}&day_date=${dayDate}&q=${q}`;
+    switchPatientListAJAX(url, e);
+  }
+
+  function onYearSelectChange(val, e) {
+    const period = document.getElementById('period')?.value || 'year';
+    const dayDate = document.getElementById('day_date')?.value || '';
+    const month = document.querySelector('select[name="month"]')?.value || '';
+    const q = encodeURIComponent(document.getElementById('searchInput')?.value || '');
+    const url = `/patient-list?period=${period}&year=${val}&month=${month}&day_date=${dayDate}&q=${q}`;
+    switchPatientListAJAX(url, e);
+  }
+
+  function handlePatientSearchSubmit(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const period = document.getElementById('period')?.value || 'day';
+    const dayDate = document.getElementById('day_date')?.value || '';
+    const month = document.querySelector('select[name="month"]')?.value || '';
+    const year = document.querySelector('select[name="year"]')?.value || '';
+    const q = encodeURIComponent(document.getElementById('searchInput')?.value || '');
+    const url = `/patient-list?period=${period}&year=${year}&month=${month}&day_date=${dayDate}&q=${q}`;
+    switchPatientListAJAX(url, e);
+  }
+
+  window.addEventListener('popstate', function () {
+    switchPatientListAJAX(location.href, null);
+  });
+
+  function openPrintPdfWindow(e) {
+    if (e) e.preventDefault();
+    const printUrl = "{{ url_for('export.print_buku_daftar') }}?year={{ selected_year }}&month={{ selected_month }}";
+    const win = window.open(printUrl, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      window.location.href = printUrl;
+    }
+  }
 </script>
 {% endblock %}

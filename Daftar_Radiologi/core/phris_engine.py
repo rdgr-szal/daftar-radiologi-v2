@@ -1,7 +1,7 @@
 import os
 import datetime
 from core.config import load_config, load_extra_phris_data, save_extra_phris_data
-from core.excel_engine import get_patients_list
+from core.excel_engine import get_patients_list, process_bilateral_record
 
 def get_phris_matrix_data(year, month=None):
     """
@@ -44,7 +44,12 @@ def get_phris_matrix_data(year, month=None):
         all_records = get_patients_list(year, month_num)
         
         # Tapis rekod aktif sahaja untuk reten
-        records = [r for r in all_records if not r.get("is_cancelled", False)]
+        raw_records = [r for r in all_records if not r.get("is_cancelled", False)]
+        
+        # Pengasingan automatik bagi pemeriksaan Bilateral untuk pengiraan tepat reten PHRIS
+        records = []
+        for r in raw_records:
+            records.extend(process_bilateral_record(r))
         
         for r in records:
             b_val = str(r.get("bangsa", "")).upper()
