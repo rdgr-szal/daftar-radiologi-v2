@@ -7,7 +7,7 @@
 #endif
 #define MyAppPublisher "Jabatan Radiologi"
 #define MyAppExeName "DaftarRadiologi.exe"
-#define MyAppAppId "{C6B82C94-8120-4F25-B470-3E6B47C590E2}"
+#define MyAppAppId "{{C6B82C94-8120-4F25-B470-3E6B47C590E2}"
 
 [Setup]
 AppId={#MyAppAppId}
