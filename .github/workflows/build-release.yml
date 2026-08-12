@@ -155,10 +155,9 @@ jobs:
           cd Daftar_Radiologi
           pyinstaller --clean -y DaftarRadiologi.spec
 
-      - name: Package Windows Portable ZIP
-        shell: pwsh
+      - name: Build Inno Setup Installer (.exe)
         run: |
-          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-win10.zip" -Force
+          iscc /DMyAppVersion=${{ github.ref_name }} installer.iss
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -166,6 +165,7 @@ jobs:
           name: DaftarRadiologi-Windows-Installer
           path: |
             DaftarRadiologi-v2-win10.zip
+            dist/DaftarRadiologi_*_Setup.exe
 
   build-legacy-windows7:
     name: Build Windows 7 / 8 / 8.1 (Legacy x64 - Python 3.10)
@@ -304,7 +304,8 @@ jobs:
 
             #### 🪟 Windows (Offline Compatible)
             - **Windows 10 / Windows 11**:
-              - `DaftarRadiologi-v2-win10.zip` (extract ZIP and run `DaftarRadiologi.exe`)
+              - `DaftarRadiologi_v2_Setup.exe` (Easy Installer — Recommended for non-techy users)
+              - `DaftarRadiologi-v2-win10.zip` (Portable ZIP package)
               
             - **Legacy Windows (Windows 7 / 8 / 8.1)**:
               - `DaftarRadiologi-v2-win-legacy.zip` (built with Python 3.10 for older Windows systems)
@@ -325,6 +326,7 @@ jobs:
             release_assets/DaftarRadiologi-v2-mac-applesilicon.zip
             release_assets/DaftarRadiologi-v2-mac-intel.dmg
             release_assets/DaftarRadiologi-v2-mac-intel.zip
+            release_assets/DaftarRadiologi_v*_Setup.exe
             release_assets/DaftarRadiologi-v2-win10.zip
             release_assets/DaftarRadiologi-v2-win-legacy.zip
           draft: false

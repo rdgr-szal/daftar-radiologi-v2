@@ -237,14 +237,19 @@ def get_daily_case_count(date_obj=None):
 
 def get_next_xray_no(date_obj=None):
     """
-    Mengesan dan mengembalikan Nombor X-ray seterusnya secara automatik dari helaian bulanan.
+    Mengesan dan mengembalikan Nombor X-ray seterusnya secara automatik dari helaian bulanan,
+    sambil menyemak custom_starting_xray_no jika tetapan offset digunakan.
     """
     if date_obj is None:
         date_obj = datetime.date.today()
         
+    config = load_config()
+    custom_starting_no = int(config.get("custom_starting_xray_no", 0) or 0)
+        
     path = get_excel_path(date_obj)
     if not path or not os.path.exists(path):
-        return "0001"
+        initial_num = max(0, custom_starting_no) + 1
+        return f"{initial_num:04d}"
         
     try:
         wb = openpyxl.load_workbook(path, data_only=True)
@@ -266,11 +271,13 @@ def get_next_xray_no(date_obj=None):
                         break
 
         wb.close()
-        next_num = last_num + 1
+        final_last = max(last_num, custom_starting_no)
+        next_num = final_last + 1
         return f"{next_num:04d}"
     except Exception as e:
         print(f"[ExcelEngine V2] Ralat get_next_xray_no: {e}")
-        return "0001"
+        initial_num = max(0, custom_starting_no) + 1
+        return f"{initial_num:04d}"
 
 def add_patient_record(patient_data):
     """

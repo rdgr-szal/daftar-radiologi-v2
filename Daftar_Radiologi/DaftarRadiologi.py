@@ -79,6 +79,24 @@ def ensure_windows_webview2():
         print(f"[WebView2 AutoInstall Warning] Gagal memasang WebView2 secara automatik: {err}")
 
 def main():
+    # 0. Semak jika dijalankan terus dari fail ZIP (Temp Directory Guard)
+    exec_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(__file__)
+    if "AppData\\Local\\Temp" in exec_path or "AppData/Local/Temp" in exec_path:
+        try:
+            import tkinter as tk
+            from tkinter import messagebox
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showwarning(
+                "Zip Extraction Required / Sila Ekstrak ZIP",
+                "You are running this application directly from inside a ZIP file.\n\n"
+                "Please EXTRACT the ZIP folder to your Desktop or Documents folder before launching.\n\n"
+                "Anda menjalankan aplikasi ini terus dari dalam fail ZIP. Sila EXTRACT folder ZIP ke Desktop atau Documents terlebih dahulu."
+            )
+        except Exception:
+            pass
+        sys.exit(1)
+
     # Semakan & Cipta Backup Harian Automatik MyGovUC
     try:
         from core.backup_engine import auto_daily_backup_check

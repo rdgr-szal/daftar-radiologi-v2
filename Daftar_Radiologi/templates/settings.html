@@ -600,6 +600,25 @@
             <span>MOBILE C-ARM</span>
           </label>
         </div>
+
+        <!-- Starting X-Ray Number Card -->
+        <div style="margin-top: 1.25rem; background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div class="section-card-title" style="margin-bottom: 0.5rem; padding-bottom: 0; border: none; font-size: 0.9rem; font-weight: 700; color: var(--primary);">
+            <span>Starting X-Ray Number Configuration</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Set a custom starting X-Ray number if transitioning from a manual logbook mid-year (e.g. set 7836 so the next registration starts automatically at 7837).
+          </p>
+          <div style="display: flex; gap: 0.75rem; align-items: center; max-width: 400px;">
+            <div style="flex: 1;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Last Manual X-Ray Number:</label>
+              <input type="number" id="customStartingXrayNoInput" class="form-control" value="{{ config.custom_starting_xray_no or 0 }}" min="0" placeholder="e.g. 7836" style="font-size: 0.85rem; height: 38px;">
+            </div>
+            <button type="button" class="btn btn-primary" style="height: 38px; font-weight: 600; font-size: 0.82rem; margin-top: 18px;" onclick="saveCustomStartingXrayNo()">
+              Save Starting No.
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: Pemeriksaan (Jenis & Bahagian Pemeriksaan Kustom) -->
@@ -826,6 +845,7 @@
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
               </svg>
               <span>Updates</span>
+              <span id="githubUpdateBadge" style="display: none; font-size: 0.7rem; padding: 1px 6px; border-radius: 10px; font-weight: 700; margin-left: 4px;"></span>
             </button>
           </div>
         </div>
@@ -1029,6 +1049,25 @@
                 </button>
               </div>
               <div id="backupFeedback" style="margin-top: 0.5rem; font-size: 0.8rem; text-align: center;"></div>
+            </div>
+
+            <!-- Legacy Data Migration Card -->
+            <div style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-top: 1.25rem;">
+              <div class="section-card-title" style="margin-bottom: 0.5rem; padding-bottom: 0; border: none; font-size: 0.9rem; font-weight: 700; color: var(--primary);">
+                <span>Legacy Data Migration (Excel / CSV)</span>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Bulk import patient pendaftaran records from legacy Excel logbooks (.xlsx, .xls) or CSV files into the Buku Daftar system with intelligent column matching and automated backups.
+              </p>
+              <button type="button" class="btn btn-outline" style="font-weight: 600; font-size: 0.82rem; height: 38px; display: inline-flex; align-items: center; gap: 0.5rem;" onclick="openImportModal()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Import Legacy Data File</span>
+              </button>
+            </div>
             </div>
 
             <!-- Section: Pemulihan 1-Klik Fail Excel Rosak -->
@@ -1581,8 +1620,8 @@
                   style="font-size: 0.78rem; padding: 0.4rem 0.75rem;">
                   Refresh Queue
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="handleClearDicomWorklist()"
-                  style="font-size: 0.78rem; padding: 0.4rem 0.75rem; color: #ef4444;">
+                <button type="button" class="btn" onclick="handleClearDicomWorklist()"
+                  style="font-size: 0.78rem; padding: 0.4rem 0.75rem; background: #991b1b; color: #ffffff; border: 1px solid #7f1d1d; border-radius: 6px; font-weight: 600;">
                   Clear Queue
                 </button>
               </div>
@@ -2302,6 +2341,28 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       });
   }
 
+  function saveCustomStartingXrayNo() {
+    const val = parseInt(document.getElementById('customStartingXrayNoInput').value) || 0;
+    fetch('/api/settings/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ custom_starting_xray_no: val })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (typeof showToast === 'function') showToast("Starting X-Ray number updated successfully!");
+        else alert("Starting X-Ray number updated successfully!");
+      } else {
+        if (typeof showToast === 'function') showToast(data.message, 'error');
+        else alert("Error: " + data.message);
+      }
+    })
+    .catch(err => {
+      if (typeof showToast === 'function') showToast("Failed to save starting number.", 'error');
+    });
+  }
+
   function deleteCustomOrderable(jenis, bahagian) {
     const targetLabel = bahagian ? `bahagian '${bahagian}'` : `kategori jenis pemeriksaan '${jenis}'`;
     if (!confirm(`Adakah anda pasti untuk memadam ${targetLabel}?`)) return;
@@ -2763,10 +2824,19 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
           latestGitHubAsset = data.asset;
 
           if (data.has_update) {
-            if (badge) {
-              badge.innerText = `Update v${data.latest_version}`;
-              badge.style.background = 'rgba(239, 68, 68, 0.15)';
-              badge.style.color = '#ef4444';
+            const subtabBadge = document.getElementById('githubUpdateBadge');
+            const mainBadge = document.getElementById('updateBadgeStatus');
+            
+            if (subtabBadge) {
+              subtabBadge.innerText = `NEW v${data.latest_version}`;
+              subtabBadge.style.background = '#ef4444';
+              subtabBadge.style.color = '#ffffff';
+              subtabBadge.style.display = 'inline-block';
+            }
+            if (mainBadge) {
+              mainBadge.innerText = `Update v${data.latest_version}`;
+              mainBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+              mainBadge.style.color = '#ef4444';
             }
             if (box) {
               box.innerHTML = `
@@ -3488,6 +3558,190 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     fetchDicomStatus(false);
     loadMppsTable();
   });
+
+  // --- DATA MIGRATION IMPORT CONTROLLER ---
+  let importSession = {
+    tempFilePath: "",
+    headers: [],
+    suggestedMapping: {},
+    targetColumns: [],
+    sheets: [],
+    activeSheet: ""
+  };
+
+  function openImportModal() {
+    const modal = document.getElementById('importDataModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      goImportStep(1);
+    }
+  }
+
+  function closeImportModal() {
+    const modal = document.getElementById('importDataModal');
+    if (modal) modal.style.display = 'none';
+    const inp = document.getElementById('importFileInput');
+    if (inp) inp.value = '';
+  }
+
+  function goImportStep(step) {
+    document.getElementById('importStep1').style.display = step === 1 ? 'block' : 'none';
+    document.getElementById('importStep2').style.display = step === 2 ? 'block' : 'none';
+    document.getElementById('importStep3').style.display = step === 3 ? 'block' : 'none';
+
+    document.getElementById('btnImportBack').style.display = step === 2 ? 'inline-block' : 'none';
+    document.getElementById('btnImportNext').style.display = step === 2 ? 'inline-block' : 'none';
+    document.getElementById('btnImportCancel').textContent = step === 3 ? 'Close' : 'Cancel';
+  }
+
+  function handleImportFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fb = document.getElementById('importStep1Feedback');
+    fb.innerHTML = '<span style="color: var(--primary);">Uploading & parsing file headers...</span>';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/api/import/preview', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        importSession.tempFilePath = data.temp_file_path;
+        importSession.headers = data.headers || [];
+        importSession.suggestedMapping = data.suggested_mapping || {};
+        importSession.targetColumns = data.target_columns || [];
+        importSession.sheets = data.sheets || [];
+        importSession.activeSheet = data.active_sheet || "";
+
+        document.getElementById('importFileInfoLabel').textContent = `Mapping File: ${file.name}`;
+        document.getElementById('importRowCountLabel').textContent = `${data.total_rows || 0} Total Rows Detected`;
+
+        // Render sheet selector if multiple
+        const sheetWrap = document.getElementById('importSheetSelectorWrapper');
+        const sheetSel = document.getElementById('importSheetSelect');
+        if (importSession.sheets.length > 1) {
+          sheetSel.innerHTML = importSession.sheets.map(s => `<option value="${s}" ${s === importSession.activeSheet ? 'selected' : ''}>${s}</option>`).join('');
+          sheetWrap.style.display = 'block';
+        } else {
+          sheetWrap.style.display = 'none';
+        }
+
+        renderMappingGrid();
+        goImportStep(2);
+      } else {
+        fb.innerHTML = `<span style="color: #ef4444;">Error: ${data.message}</span>`;
+      }
+    })
+    .catch(err => {
+      fb.innerHTML = `<span style="color: #ef4444;">Upload error: ${err.message}</span>`;
+    });
+  }
+
+  function renderMappingGrid() {
+    const container = document.getElementById('mappingGrid');
+    if (!container) return;
+
+    let html = '';
+    importSession.targetColumns.forEach(col => {
+      const isReq = col.required;
+      const suggestedIdx = importSession.suggestedMapping[col.key];
+
+      let optionsHtml = `<option value="">-- Ignore Field --</option>`;
+      importSession.headers.forEach((h, idx) => {
+        const selected = (suggestedIdx !== undefined && suggestedIdx === idx) ? 'selected' : '';
+        optionsHtml += `<option value="${idx}" ${selected}>Column ${idx+1}: ${h}</option>`;
+      });
+
+      html += `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <div style="flex: 1;">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-main);">
+              ${col.label} ${isReq ? '<span style="color:#ef4444;">*</span>' : ''}
+            </div>
+          </div>
+          <div style="flex: 1.2;">
+            <select class="form-control mapping-select" data-target-key="${col.key}" style="font-size: 0.82rem; height: 34px;">
+              ${optionsHtml}
+            </select>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function executeDataMigration() {
+    const mapping = {};
+    let missingRequired = false;
+
+    document.querySelectorAll('.mapping-select').forEach(sel => {
+      const key = sel.getAttribute('data-target-key');
+      const val = sel.value;
+      const targetCol = importSession.targetColumns.find(c => c.key === key);
+      
+      if (targetCol && targetCol.required && (val === "" || val === undefined)) {
+        missingRequired = true;
+      }
+      if (val !== "") {
+        mapping[key] = parseInt(val);
+      }
+    });
+
+    if (missingRequired) {
+      alert("Please map all required fields (marked with *) before proceeding.");
+      return;
+    }
+
+    goImportStep(3);
+    document.getElementById('importStatusSpinner').style.display = 'inline-block';
+    document.getElementById('importStatusTitle').textContent = 'Processing Data Migration...';
+    document.getElementById('importStatusDesc').textContent = 'Creating automated ZIP backup and inserting records into Buku Daftar...';
+    document.getElementById('importErrorLogWrapper').style.display = 'none';
+
+    const sheetSel = document.getElementById('importSheetSelect');
+    const selectedSheet = sheetSel ? sheetSel.value : importSession.activeSheet;
+
+    fetch('/api/import/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        temp_file_path: importSession.tempFilePath,
+        column_mapping: mapping,
+        sheet_name: selectedSheet
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('importStatusSpinner').style.display = 'none';
+      if (data.success) {
+        document.getElementById('importStatusTitle').textContent = 'Migration Completed!';
+        document.getElementById('importStatusTitle').style.color = '#10b981';
+        document.getElementById('importStatusDesc').textContent = data.message;
+
+        if (data.error_details && data.error_details.length > 0) {
+          const list = document.getElementById('importErrorList');
+          list.innerHTML = data.error_details.map(err => `<li>${err}</li>`).join('');
+          document.getElementById('importErrorLogWrapper').style.display = 'block';
+        }
+      } else {
+        document.getElementById('importStatusTitle').textContent = 'Migration Failed';
+        document.getElementById('importStatusTitle').style.color = '#ef4444';
+        document.getElementById('importStatusDesc').textContent = data.message;
+      }
+    })
+    .catch(err => {
+      document.getElementById('importStatusSpinner').style.display = 'none';
+      document.getElementById('importStatusTitle').textContent = 'Migration Error';
+      document.getElementById('importStatusTitle').style.color = '#ef4444';
+      document.getElementById('importStatusDesc').textContent = err.message;
+    });
+  }
 </script>
 
 <!-- MPPS Audit Details Modal -->
@@ -3516,4 +3770,6 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     </div>
   </div>
 </div>
+
+{% include "modals/import_modal.html" %}
 {% endblock %}

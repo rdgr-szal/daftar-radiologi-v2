@@ -158,6 +158,12 @@ def api_save_settings():
     if 'consumables' in data and isinstance(data.get('consumables'), list):
         config["consumables"] = data.get('consumables')
 
+    if 'custom_starting_xray_no' in data:
+        try:
+            config["custom_starting_xray_no"] = int(data.get('custom_starting_xray_no', 0) or 0)
+        except (ValueError, TypeError):
+            config["custom_starting_xray_no"] = 0
+
     if 'db_config' in data and isinstance(data.get('db_config'), dict):
         config["db_config"] = data.get('db_config')
 
@@ -1092,7 +1098,57 @@ def api_mpps_export_csv():
             headers={"Content-Disposition": f"attachment;filename={filename}"}
         )
     except Exception as e:
-        return jsonify({"success": False, "message": f"Ralat eksport MPPS CSV: {str(e)}"}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@settings_bp.route('/api/import/preview', methods=['POST'])
+def api_import_preview():
+    if 'file' not in request.files:
+        return jsonify({"success": False, "message": "Tiada fail dimuat naik."}), 400
+        
+    file = request.files['file']
+    if not file or file.filename == '':
+        return jsonify({"success": False, "message": "Fail tidak sah."}), 400
+        
+    filename = file.filename
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ['.xlsx', '.xls', '.csv']:
+        return jsonify({"success": False, "message": "Sila muat naik fail Excel (.xlsx/.xls) atau CSV (.csv)."}), 400
+
+    temp_dir = os.path.join(PENDAFTARAN_DIR, "temp_import")
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, f"import_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}")
+    file.save(temp_path)
+    
+    from core.import_engine import parse_uploaded_file, auto_suggest_mapping
+    res = parse_uploaded_file(temp_path)
+    if not res.get("success"):
+        return jsonify(res), 400
+        
+    suggested = auto_suggest_mapping(res.get("headers", []))
+    res["suggested_mapping"] = suggested
+    res["temp_file_path"] = temp_path
+    return jsonify(res)
+
+@settings_bp.route('/api/import/execute', methods=['POST'])
+def api_import_execute():
+    data = request.get_json() or {}
+    temp_file_path = data.get("temp_file_path")
+    column_mapping = data.get("column_mapping", {})
+    sheet_name = data.get("sheet_name")
+    
+    if not temp_file_path or not os.path.exists(temp_file_path):
+        return jsonify({"success": False, "message": "Fail sesi import telah tamat tempoh. Sila muat naik semula."}), 400
+        
+    from core.import_engine import process_data_migration
+    result = process_data_migration(temp_file_path, column_mapping, sheet_name=sheet_name)
+    
+    # Padam fail sementara
+    try:
+        os.remove(temp_file_path)
+    except Exception:
+        pass
+        
+    return jsonify(result)
 
 
 

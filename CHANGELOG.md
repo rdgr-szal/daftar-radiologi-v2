@@ -4,6 +4,31 @@ All notable changes to the **Buku Daftar Radiologi V2** project are documented i
 
 ---
 
+## [v2.1.5] - 2026-08-12
+
+### 🚀 Major Feature & User Experience Updates
+
+#### 1. Custom Starting X-Ray Sequence Number
+- **Configurable Starting No.**: Added custom starting X-Ray sequence number configuration under **Settings > Modalities**. Facilities can now set custom sequence counters per modality room or start from a specific sequence index for the new year.
+
+#### 2. Legacy Data Migration Tool
+- **Historical Record Import**: Added legacy data import engine accessible via **Settings > System > Backup**. Allows importing legacy Excel records from older systems directly into the V2 database and PER.SS-RA 101 archives with duplicate checking.
+
+#### 3. Interactive Onboarding Wizard
+- **Guided Initial Setup**: Redesigned initial setup into an interactive 3-Step Wizard in full English. Guides new users step-by-step through facility profiling, staff roster setup, referral clinic configuration, and quick feature orientation.
+
+#### 4. Smart Windows Setup Installer (Inno Setup)
+- **Installer Package**: Built a native Windows installer (`Setup.exe`) via GitHub Actions CI/CD with automatic Desktop Shortcuts and Start Menu creation.
+- **Smart Upgrade & Data Protection**: Automatically detects existing installations, offering *Upgrade*, *Repair*, or *Uninstall* options while strictly protecting patient records inside the `Pendaftaran/` directory from being overwritten or deleted.
+
+#### 5. Minor UI & Visual Fixes
+- **New Mascot & Brand Assets**: Updated application logo, icons, and favicons to the new bee mascot image.
+- **Nav Branding Layout**: Enhanced sidebar navigation brand text styling to prevent "Daftar Radiologi" title clipping.
+- **System Updates Badge**: Refined GitHub update check badge placement so update notices appear strictly under **Settings > System > Updates**.
+- **Dark Clear Queue Action Button**: Styled DICOM Worklist "Clear Queue" button with dark red contrast styling for clearer action hierarchy.
+
+---
+
 ## [v2.1.4] - 2026-08-12
 
 ### 🚀 Major Feature & User Experience Updates

@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 # Dynamic Versioning Info
-APP_VERSION = "2.1.4"
+APP_VERSION = "2.1.5"
 GITHUB_REPO = "rdgr-szal/daftar-radiologi-v2" # Format: username/repo
 
 # Tangani lokasi fail asas mengikut mod PyInstaller vs Dev
@@ -207,6 +207,7 @@ def get_unconfigured_default():
             "GENERAL RADIOGRAPHY"
         ],
         "consumables": ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"],
+        "custom_starting_xray_no": 0,
         # Konfigurasi Pangkalan Data Pilihan (Offline-First Hybrid Sync)
         "db_config": {
             "enabled": False,
@@ -268,6 +269,8 @@ def load_config():
                 data["active_modalities"] = ["GENERAL RADIOGRAPHY"]
             if "consumables" not in data:
                 data["consumables"] = ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"]
+            if "custom_starting_xray_no" not in data:
+                data["custom_starting_xray_no"] = 0
             if "db_config" not in data:
                 data["db_config"] = {
                     "enabled": False,

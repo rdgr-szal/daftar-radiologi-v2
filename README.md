@@ -129,6 +129,13 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 
 ## 5. Release History & Version Notes
 
+### 🚀 Version 2.1.5 (Interactive Onboarding Wizard, Inno Setup Smart Installer & Legacy Data Migration)
+- **Custom Starting X-Ray Sequence Number**: Added custom sequence number configuration under **Settings > Modalities** allowing facilities to set custom sequence counters per modality room or start from a specific index.
+- **Legacy Data Migration Tool**: Added legacy record migration engine under **Settings > System > Backup** for importing historical Excel records directly into V2 archives with duplicate checking.
+- **Interactive Onboarding Wizard**: Redesigned initial setup into an interactive 3-Step Wizard in full English for easy onboarding.
+- **Smart Windows Setup Installer (Inno Setup)**: Built native Windows `Setup.exe` installer with automatic Desktop Shortcuts and smart *Upgrade*, *Repair*, or *Uninstall* options protecting patient records (`Pendaftaran/`).
+- **New Mascot Branding & Minor Fixes**: Updated logo to new bee mascot, fixed sidebar branding text layout, refined System Updates badge placement, and styled DICOM Worklist "Clear Queue" button.
+
 ### 🚀 Version 2.1.4 (Online & Manual Updates Fix, Dashboard Date Pickers & New Logo Branding)
 - **Fix Manual Patch Update & Background Extraction**:
   - Fixed PyWebView event loop blocking on Windows by replacing synchronous alert modals with clean HTML/CSS progress dialogs.
