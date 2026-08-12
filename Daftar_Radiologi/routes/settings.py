@@ -6,6 +6,7 @@ import json
 import urllib.request
 import urllib.error
 import zipfile
+import shutil
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, send_file
 from core.config import (
     load_config,
@@ -425,7 +426,7 @@ def api_apply_update_patch():
     1. Simpan fail zip tempatan.
     2. Semak dan auto-kesan sekiranya terdapat fail manifest.json (is_major: true) atau perubahan skema database major.
     3. Jika dikesan major update atau is_major = True: jalankan Auto Backup dahulu.
-    4. Ekstrak fail zip ke BUNDLE_DIR (melindungi folder Pendaftaran/).
+    4. Ekstrak fail zip ke BASE_DIR dan BUNDLE_DIR (melindungi folder Pendaftaran/ dan fail yang dikunci Windows).
     5. Jalankan init_db_schema jika major update dikesan.
     """
     if 'file' not in request.files:
@@ -437,7 +438,7 @@ def api_apply_update_patch():
 
     form_is_major = request.form.get('is_major', 'false').lower() == 'true'
     
-    from core.config import BUNDLE_DIR, load_config
+    from core.config import BASE_DIR, BUNDLE_DIR, PENDAFTARAN_DIR, load_config
     import zipfile
     
     temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_update_patch.zip")
@@ -481,17 +482,56 @@ def api_apply_update_patch():
             if os.path.exists(temp_zip): os.remove(temp_zip)
             return jsonify({"success": False, "message": f"Auto Backup error: {str(e)}"}), 500
 
-    # 2. Ekstrak & Terapkan Kemas Kini
+    # 2. Ekstrak & Terapkan Kemas Kini dengan Selamat (Safety Extraction)
+    target_dirs = [BASE_DIR]
+    if BUNDLE_DIR and os.path.abspath(BUNDLE_DIR) != os.path.abspath(BASE_DIR) and os.path.exists(BUNDLE_DIR):
+        target_dirs.append(BUNDLE_DIR)
+
+    extracted_count = 0
+    locked_files = []
+
     try:
         with zipfile.ZipFile(temp_zip, 'r') as zipf:
             namelist = zipf.namelist()
-            # Keselamatan: Lindungi folder Pendaftaran/
+
             for member in namelist:
                 norm_path = os.path.normpath(member)
-                if norm_path.startswith("Pendaftaran") or norm_path.startswith("Pendaftaran/") or norm_path.startswith("Pendaftaran\\"):
+                path_parts = norm_path.replace('\\', '/').split('/')
+
+                # 🛡️ Perlindungan Pangkalan Data: Jangan sekali-kali ganti folder Pendaftaran/
+                if 'Pendaftaran' in path_parts or 'pendaftaran' in path_parts:
                     continue
-                zipf.extract(member, BUNDLE_DIR)
-                
+
+                for t_dir in target_dirs:
+                    target_file_path = os.path.abspath(os.path.join(t_dir, member))
+                    
+                    # 🛡️ Zip-Slip Security Safeguard
+                    if not target_file_path.startswith(os.path.abspath(t_dir)):
+                        continue
+
+                    if member.endswith('/') or member.endswith('\\'):
+                        os.makedirs(target_file_path, exist_ok=True)
+                        continue
+
+                    os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+
+                    # Tulis fail dengan perlindungan Windows file lock
+                    try:
+                        with zipf.open(member) as source, open(target_file_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                        extracted_count += 1
+                    except (PermissionError, OSError):
+                        # Fail sedang dikunci (cth: fail .exe yang sedang berjalan di Windows)
+                        locked_files.append(os.path.basename(member))
+                        try:
+                            fallback_path = target_file_path + ".new"
+                            with zipf.open(member) as source, open(fallback_path, 'wb') as target:
+                                shutil.copyfileobj(source, target)
+                        except Exception:
+                            pass
+                    except Exception as e_extract_single:
+                        print(f"[Update Extraction File Warning] {member}: {e_extract_single}")
+
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
             
@@ -505,27 +545,47 @@ def api_apply_update_patch():
                 print(f"[Update Major DB Schema Warning] {e_db}")
 
         detected_label = " (Major Patch Detected)" if auto_detected_major else ""
+        locked_notice = ""
+        if locked_files:
+            unique_locked = list(set(locked_files))
+            locked_notice = f" (Note: {', '.join(unique_locked)} locked by Windows, will take full effect on app restart)"
+
         return jsonify({
             "success": True,
-            "message": f"Application update successfully applied!{detected_label}{backup_msg} Please reload page or restart app if needed."
+            "message": f"Application update successfully applied ({extracted_count} files updated)!{detected_label}{backup_msg}{locked_notice} Page will now reload."
         })
         
     except Exception as e:
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
-        return jsonify({"success": False, "message": f"Error extracting update: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Error extracting update package: {str(e)}"}), 500
+
+# --- ONLINE UPDATE TRACKER & PLATFORM MATCHING ---
+
+ONLINE_UPDATE_TRACKER = {
+    "state": "idle",
+    "progress_percent": 0,
+    "downloaded_bytes": 0,
+    "total_bytes": 0,
+    "downloaded_mb": 0.0,
+    "total_mb": 0.0,
+    "message": "",
+    "filepath": "",
+    "filename": "",
+    "is_major": False
+}
 
 @settings_bp.route('/api/update/check-github', methods=['GET'])
 def api_check_github_release():
     """
-    Semak kemas kini terkini daripada GitHub Release API.
+    Semak kemas kini terkini daripada GitHub Release API mengikut OS dan senibina.
     """
     import ssl
+    import platform
     try:
         url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         req = urllib.request.Request(url, headers={'User-Agent': 'DaftarRadiologi-App'})
         
-        # SSL Context setup with unverified fallback for environment SSL certificate issues
         ctx = ssl.create_default_context()
         try:
             ctx.check_hostname = False
@@ -540,24 +600,58 @@ def api_check_github_release():
                 release_name = data.get('name', '')
                 body = data.get('body', '')
                 html_url = data.get('html_url', '')
-                
-                # Cari fail asset zip
+
+                current_sys = sys.platform  # 'win32', 'darwin', 'linux'
+                machine_arch = platform.machine().lower() # 'arm64', 'x86_64', 'amd64'
+
+                target_keyword = ""
+                platform_label = ""
+                if current_sys == 'win32':
+                    win_rel = platform.release()
+                    if win_rel in ['7', '8', '8.1'] or (hasattr(sys, 'getwindowsversion') and sys.getwindowsversion().major < 10):
+                        target_keyword = "win-legacy"
+                        platform_label = "Windows 7 / 8 / 8.1 Legacy x64"
+                    else:
+                        target_keyword = "win10"
+                        platform_label = "Windows 10 / 11 x64"
+                elif current_sys == 'darwin':
+                    if 'arm64' in machine_arch or 'aarch64' in machine_arch:
+                        target_keyword = "mac-applesilicon"
+                        platform_label = "macOS Apple Silicon (M1/M2/M3/M4)"
+                    else:
+                        target_keyword = "mac-intel"
+                        platform_label = "macOS Intel"
+                else:
+                    target_keyword = "zip"
+                    platform_label = "Generic Desktop OS"
+
                 zip_asset = None
+                matched_asset = None
+                fallback_asset = None
+
                 assets = data.get('assets', [])
                 for a in assets:
                     aname = a.get('name', '').lower()
-                    if aname.endswith('.zip') or aname.endswith('.dmg'):
-                        zip_asset = {
-                            "name": a.get('name'),
-                            "download_url": a.get('browser_download_url'),
-                            "size_mb": round(a.get('size', 0) / (1024 * 1024), 2)
-                        }
-                        # Utamakan fail .zip yang mengandungi App
-                        if "app" in aname or "windows" in aname or "macos" in aname:
-                            break
+                    asset_dict = {
+                        "name": a.get('name'),
+                        "download_url": a.get('browser_download_url'),
+                        "size_mb": round(a.get('size', 0) / (1024 * 1024), 2)
+                    }
+
+                    if target_keyword and target_keyword in aname and (aname.endswith('.zip') or aname.endswith('.dmg')):
+                        matched_asset = asset_dict
+                        break
+                    
+                    if current_sys == 'win32' and 'win' in aname and aname.endswith('.zip'):
+                        fallback_asset = asset_dict
+                    elif current_sys == 'darwin' and 'mac' in aname and (aname.endswith('.zip') or aname.endswith('.dmg')):
+                        fallback_asset = asset_dict
+                    elif not fallback_asset and (aname.endswith('.zip') or aname.endswith('.dmg')):
+                        fallback_asset = asset_dict
+
+                zip_asset = matched_asset or fallback_asset
 
                 current_ver = APP_VERSION.lstrip('v')
-                # Perbandingan ringkas versi
                 has_update = tag_name != current_ver and tag_name > current_ver
 
                 return jsonify({
@@ -568,7 +662,8 @@ def api_check_github_release():
                     "has_update": has_update,
                     "body": body,
                     "html_url": html_url,
-                    "asset": zip_asset
+                    "asset": zip_asset,
+                    "platform_label": platform_label
                 })
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -579,20 +674,111 @@ def api_check_github_release():
     except Exception as e:
         return jsonify({"success": False, "message": f"Failed to check online update: {str(e)}"}), 500
 
-@settings_bp.route('/api/update/apply-online', methods=['POST'])
-def api_apply_online_update():
+@settings_bp.route('/api/update/online-status', methods=['GET'])
+def api_update_online_status():
+    """Status muat turun dan pemasangan online semasa."""
+    return jsonify({
+        "success": True,
+        "tracker": ONLINE_UPDATE_TRACKER
+    })
+
+@settings_bp.route('/api/update/start-download', methods=['POST'])
+def api_start_online_download():
     """
-    Muat turun pakej update dari GitHub Release URL & pasang secara automatik.
+    Mulakan muat turun fail update GitHub di latar belakang dengan indikator progress.
     """
     import ssl
     data = request.get_json() or {}
     download_url = data.get('download_url', '').strip()
+    filename = data.get('filename', 'DaftarRadiologi_Update.zip').strip()
     is_major = data.get('is_major', False)
 
     if not download_url:
         return jsonify({"success": False, "message": "Pautan muat turun GitHub tidak sah."}), 400
 
-    from core.config import BUNDLE_DIR, load_config
+    # Tentukan folder muat turun pengguna (Downloads folder)
+    user_downloads = os.path.join(os.path.expanduser('~'), 'Downloads')
+    if not os.path.exists(user_downloads):
+        user_downloads = PENDAFTARAN_DIR
+
+    dest_filepath = os.path.join(user_downloads, filename)
+
+    ONLINE_UPDATE_TRACKER["state"] = "downloading"
+    ONLINE_UPDATE_TRACKER["progress_percent"] = 0
+    ONLINE_UPDATE_TRACKER["downloaded_bytes"] = 0
+    ONLINE_UPDATE_TRACKER["total_bytes"] = 0
+    ONLINE_UPDATE_TRACKER["downloaded_mb"] = 0.0
+    ONLINE_UPDATE_TRACKER["total_mb"] = 0.0
+    ONLINE_UPDATE_TRACKER["message"] = "Starting update package download..."
+    ONLINE_UPDATE_TRACKER["filepath"] = dest_filepath
+    ONLINE_UPDATE_TRACKER["filename"] = filename
+    ONLINE_UPDATE_TRACKER["is_major"] = is_major
+
+    def download_worker():
+        try:
+            req = urllib.request.Request(download_url, headers={'User-Agent': 'DaftarRadiologi-App'})
+            ctx = ssl.create_default_context()
+            try:
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+            except Exception:
+                pass
+
+            with urllib.request.urlopen(req, timeout=60, context=ctx) as response, open(dest_filepath, 'wb') as out_file:
+                total_bytes = int(response.headers.get('content-length', 0))
+                ONLINE_UPDATE_TRACKER["total_bytes"] = total_bytes
+                ONLINE_UPDATE_TRACKER["total_mb"] = round(total_bytes / (1024 * 1024), 2)
+                
+                downloaded = 0
+                chunk_size = 65536
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+                    downloaded += len(chunk)
+                    ONLINE_UPDATE_TRACKER["downloaded_bytes"] = downloaded
+                    ONLINE_UPDATE_TRACKER["downloaded_mb"] = round(downloaded / (1024 * 1024), 2)
+                    if total_bytes > 0:
+                        pct = int((downloaded / total_bytes) * 100)
+                        ONLINE_UPDATE_TRACKER["progress_percent"] = min(pct, 99)
+                        ONLINE_UPDATE_TRACKER["message"] = f"Downloading update package... {pct}% ({ONLINE_UPDATE_TRACKER['downloaded_mb']} MB / {ONLINE_UPDATE_TRACKER['total_mb']} MB)"
+
+            ONLINE_UPDATE_TRACKER["state"] = "ready"
+            ONLINE_UPDATE_TRACKER["progress_percent"] = 100
+            ONLINE_UPDATE_TRACKER["message"] = "Download Completed! Ready to install update."
+        except Exception as e_dl:
+            ONLINE_UPDATE_TRACKER["state"] = "error"
+            ONLINE_UPDATE_TRACKER["message"] = f"Download failed: {str(e_dl)}"
+            if os.path.exists(dest_filepath):
+                try: os.remove(dest_filepath)
+                except Exception: pass
+
+    threading.Thread(target=download_worker, daemon=True).start()
+
+    return jsonify({
+        "success": True,
+        "message": "Update package download started in background.",
+        "filepath": dest_filepath
+    })
+
+@settings_bp.route('/api/update/apply-downloaded', methods=['POST'])
+def api_apply_downloaded_update():
+    """
+    Terapkan kemas kini daripada fail ZIP yang telah dimuat turun & PADAM AUTOMATIK fail ZIP tersebut.
+    """
+    data = request.get_json() or {}
+    filepath = data.get('filepath', '').strip() or ONLINE_UPDATE_TRACKER.get("filepath", "")
+    is_major = data.get('is_major', False) or ONLINE_UPDATE_TRACKER.get("is_major", False)
+
+    if not filepath or not os.path.exists(filepath):
+        return jsonify({"success": False, "message": "Fail update yang dimuat turun tidak ditemui di lokasi muat turun."}), 400
+
+    from core.config import BASE_DIR, BUNDLE_DIR, load_config
+
+    ONLINE_UPDATE_TRACKER["state"] = "applying"
+    ONLINE_UPDATE_TRACKER["progress_percent"] = 10
+    ONLINE_UPDATE_TRACKER["message"] = "Preparing system auto-backup..."
 
     # 1. Auto backup jika major update
     backup_msg = ""
@@ -600,41 +786,71 @@ def api_apply_online_update():
         try:
             success_b, msg_b, _ = create_zip_backup()
             if not success_b:
+                ONLINE_UPDATE_TRACKER["state"] = "error"
                 return jsonify({"success": False, "message": f"Gagal membuat auto backup sebelum major update: {msg_b}"}), 500
             backup_msg = " [Auto Backup Berjaya Dicipta]"
         except Exception as e:
+            ONLINE_UPDATE_TRACKER["state"] = "error"
             return jsonify({"success": False, "message": f"Ralat Auto Backup: {str(e)}"}), 500
 
-    # 2. Muat turun fail zip dari GitHub
-    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_github_update.zip")
-    try:
-        req = urllib.request.Request(download_url, headers={'User-Agent': 'DaftarRadiologi-App'})
-        ctx = ssl.create_default_context()
-        try:
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-        except Exception:
-            pass
+    ONLINE_UPDATE_TRACKER["progress_percent"] = 40
+    ONLINE_UPDATE_TRACKER["message"] = "Extracting update package & patching application..."
 
-        with urllib.request.urlopen(req, timeout=60, context=ctx) as resp, open(temp_zip, 'wb') as out_file:
-            out_file.write(resp.read())
-    except Exception as e:
-        if os.path.exists(temp_zip):
-            os.remove(temp_zip)
-        return jsonify({"success": False, "message": f"Ralat memuat turun dari GitHub: {str(e)}"}), 500
+    # 2. Ekstrak & Terapkan Kemas Kini dengan Selamat (Safety Extraction)
+    target_dirs = [BASE_DIR]
+    if BUNDLE_DIR and os.path.abspath(BUNDLE_DIR) != os.path.abspath(BASE_DIR) and os.path.exists(BUNDLE_DIR):
+        target_dirs.append(BUNDLE_DIR)
 
-    # 3. Ekstrak & Terapkan Kemas Kini
+    extracted_count = 0
+    locked_files = []
+
     try:
-        with zipfile.ZipFile(temp_zip, 'r') as zipf:
+        with zipfile.ZipFile(filepath, 'r') as zipf:
             namelist = zipf.namelist()
+
             for member in namelist:
                 norm_path = os.path.normpath(member)
-                if norm_path.startswith("Pendaftaran") or norm_path.startswith("Pendaftaran/") or norm_path.startswith("Pendaftaran\\"):
-                    continue # Abaikan folder data
-                zipf.extract(member, BUNDLE_DIR)
+                path_parts = norm_path.replace('\\', '/').split('/')
 
-        if os.path.exists(temp_zip):
-            os.remove(temp_zip)
+                if 'Pendaftaran' in path_parts or 'pendaftaran' in path_parts:
+                    continue
+
+                for t_dir in target_dirs:
+                    target_file_path = os.path.abspath(os.path.join(t_dir, member))
+                    if not target_file_path.startswith(os.path.abspath(t_dir)):
+                        continue
+
+                    if member.endswith('/') or member.endswith('\\'):
+                        os.makedirs(target_file_path, exist_ok=True)
+                        continue
+
+                    os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+
+                    try:
+                        with zipf.open(member) as source, open(target_file_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                        extracted_count += 1
+                    except (PermissionError, OSError):
+                        locked_files.append(os.path.basename(member))
+                        try:
+                            fallback_path = target_file_path + ".new"
+                            with zipf.open(member) as source, open(fallback_path, 'wb') as target:
+                                shutil.copyfileobj(source, target)
+                        except Exception:
+                            pass
+                    except Exception as e_extract_single:
+                        print(f"[Online Update Extraction File Warning] {member}: {e_extract_single}")
+
+        ONLINE_UPDATE_TRACKER["progress_percent"] = 85
+        ONLINE_UPDATE_TRACKER["message"] = "Cleaning up downloaded update file..."
+
+        # 3. AUTO DELETEDownloaded Update File
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                print(f"[Online Update] Auto-deleted downloaded file: {filepath}")
+            except Exception as e_del:
+                print(f"[Online Update Auto Delete Warning] {e_del}")
 
         if is_major:
             try:
@@ -644,13 +860,22 @@ def api_apply_online_update():
             except Exception as e_db:
                 print(f"[Online Update Major DB Warning] {e_db}")
 
+        locked_notice = ""
+        if locked_files:
+            unique_locked = list(set(locked_files))
+            locked_notice = f" (Nota: {', '.join(unique_locked)} dikunci oleh Windows, akan beroperasi penuh selepas aplikasi dibuka semula)"
+
+        ONLINE_UPDATE_TRACKER["state"] = "completed"
+        ONLINE_UPDATE_TRACKER["progress_percent"] = 100
+        ONLINE_UPDATE_TRACKER["message"] = "Update Completed Successfully! Reloading page..."
+
         return jsonify({
             "success": True,
-            "message": f"Kemas kini Online dari GitHub berjaya diterap!{backup_msg} Sila muat semula halaman."
+            "message": f"Kemas kini Online dari GitHub berjaya diterap ({extracted_count} fail)!{backup_msg}{locked_notice} Fail muat turun telah dipadam secara automatik."
         })
     except Exception as e:
-        if os.path.exists(temp_zip):
-            os.remove(temp_zip)
+        ONLINE_UPDATE_TRACKER["state"] = "error"
+        ONLINE_UPDATE_TRACKER["message"] = f"Ralat mengekstrak fail: {str(e)}"
         return jsonify({"success": False, "message": f"Ralat mengekstrak fail dari GitHub: {str(e)}"}), 500
 
 # ==============================================================================

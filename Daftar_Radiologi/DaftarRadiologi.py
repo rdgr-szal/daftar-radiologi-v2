@@ -128,9 +128,15 @@ def main():
         from PySide6.QtWidgets import QApplication, QMainWindow
         from PySide6.QtWebEngineWidgets import QWebEngineView
         
+        from PySide6.QtGui import QIcon
         print(f"[DaftarRadiologi] Mulakan tetingkap PySide6 QtWebEngine di {url}...")
         qt_app = QApplication(sys.argv)
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'img', 'logo.png')
+        if os.path.exists(icon_path):
+            qt_app.setWindowIcon(QIcon(icon_path))
         main_win = QMainWindow()
+        if os.path.exists(icon_path):
+            main_win.setWindowIcon(QIcon(icon_path))
         browser = QWebEngineView()
         browser.setUrl(QUrl(url))
         main_win.setCentralWidget(browser)

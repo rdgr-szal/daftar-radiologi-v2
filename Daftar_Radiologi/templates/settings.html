@@ -1714,6 +1714,71 @@
   </div>
 </div>
 
+<!-- Modal Confirm & Progress Update -->
+<div class="modal-backdrop" id="updateProgressModal"
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+  <style>
+    @keyframes updateSpin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  <div
+    style="background: var(--bg-card); border-radius: 12px; width: 100%; max-width: 500px; padding: 1.5rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-xl); text-align: center;">
+
+    <div id="updateModalIcon" style="margin-bottom: 0.75rem;">
+      <div
+        style="width: 50px; height: 50px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--primary); display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="icon icon-lg" viewBox="0 0 24 24"
+          style="stroke: currentColor; fill: none; stroke-width: 2; width: 26px; height: 26px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+    </div>
+
+    <h3 id="updateModalTitle" style="margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-main);">
+      Confirm Application Update</h3>
+    <div id="updateModalDesc"
+      style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;"></div>
+
+    <!-- Animated Progress Bar Section -->
+    <div id="updateModalProgressSection" style="display: none; margin: 1rem 0;">
+      <div
+        style="width: 100%; height: 14px; background: var(--bg-subtle); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); margin-bottom: 0.6rem;">
+        <div id="updateProgressBarFill"
+          style="width: 0%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 8px; transition: width 0.3s ease;">
+        </div>
+      </div>
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem; color: var(--text-muted);">
+        <span id="updateSpinnerText">Downloading update package...</span>
+        <span id="updateProgressPercent" style="font-weight: 700; color: var(--primary);">0%</span>
+      </div>
+    </div>
+
+    <!-- Progress Spinner (Fallback) -->
+    <div id="updateModalSpinner" style="display: none; margin: 1rem 0;">
+      <div
+        style="width: 34px; height: 34px; border: 3px solid var(--border-subtle); border-top-color: var(--primary); border-radius: 50%; animation: updateSpin 1s linear infinite; margin: 0 auto 0.5rem auto;">
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="updateModalActions" style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.25rem;">
+      <button type="button" class="btn btn-outline" id="btnCancelUpdate" onclick="closeUpdateModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btnConfirmApplyUpdate" onclick="proceedApplyUpdate()">Apply
+        Update Now</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Restore Backup -->
 <div class="modal-backdrop" id="restoreModal"
   style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999;">
@@ -2676,14 +2741,19 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
   let isCurrentUpdateMajor = false;
   let latestGitHubAsset = null;
+  let onlineDownloadInterval = null;
 
   function checkGitHubRelease(showFeedback = false) {
+    return checkOnlineGitHubUpdate(showFeedback);
+  }
+
+  function checkOnlineGitHubUpdate(showFeedback = false) {
+    const badge = document.getElementById('githubUpdateBadge') || document.getElementById('updateBadgeStatus');
     const box = document.getElementById('githubReleaseInfoBox');
     const btn = document.getElementById('btnOnlineUpdateApply');
-    const badge = document.getElementById('updateBadgeStatus');
 
     if (box) {
-      box.innerHTML = '<em>Menyemak repositori GitHub Release...</em>';
+      box.innerHTML = '<em>Checking GitHub Release API for latest updates...</em>';
     }
 
     fetch('/api/update/check-github')
@@ -2703,16 +2773,17 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
                 <div style="font-weight: 700; color: #10b981; margin-bottom: 0.2rem;">New Version Found: v${data.latest_version}</div>
                 <div style="color: var(--text-main); font-weight: 600;">${escapeHtml(data.release_name || 'New Release')}</div>
                 <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.25rem;">
+                  Target System: <strong>${escapeHtml(data.platform_label || 'Desktop')}</strong><br>
                   File: <strong>${data.asset ? data.asset.name : 'ZIP Package'}</strong> (${data.asset ? data.asset.size_mb + ' MB' : '-'})
                 </div>
               `;
             }
             if (btn) {
               btn.disabled = false;
-              btn.innerText = `Install v${data.latest_version} (Direct)`;
+              btn.innerText = `Download v${data.latest_version}`;
             }
             if (showFeedback && typeof showToast === 'function') {
-              showToast(`New version v${data.latest_version} found in GitHub!`);
+              showToast(`New version v${data.latest_version} found for ${data.platform_label}!`);
             }
           } else {
             if (badge) {
@@ -2723,12 +2794,12 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
             if (box) {
               box.innerHTML = `
                 <div style="color: #10b981; font-weight: 700;">Application is up to date (v${data.current_version}).</div>
-                <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.2rem;">GitHub Latest Release Tag: <code>v${data.latest_version}</code></div>
+                <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.2rem;">Platform: <strong>${escapeHtml(data.platform_label || 'Desktop')}</strong> | GitHub Tag: <code>v${data.latest_version}</code></div>
               `;
             }
             if (btn) {
               btn.disabled = true;
-              btn.innerText = 'Apps Already Latest';
+              btn.innerText = 'Already On Latest Update';
             }
             if (showFeedback && typeof showToast === 'function') {
               showToast('Apps already on latest updates.');
@@ -2755,49 +2826,152 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
     const isMajor = confirm("Confirm Major Database Schema Update?\n\n[OK] = Major Update (Run Auto Backup first)\n[Cancel] = Standard Patch Update");
 
-    if (!confirm(`Confirm update from online?\n\nFile: ${latestGitHubAsset.name}\nSize: ${latestGitHubAsset.size_mb} MB`)) {
-      return;
-    }
+    // Open progress modal
+    const modalEl = document.getElementById('updateProgressModal');
+    const titleEl = document.getElementById('updateModalTitle');
+    const descEl = document.getElementById('updateModalDesc');
+    const progressSec = document.getElementById('updateModalProgressSection');
+    const progressFill = document.getElementById('updateProgressBarFill');
+    const spinnerText = document.getElementById('updateSpinnerText');
+    const progressPct = document.getElementById('updateProgressPercent');
+    const actionsEl = document.getElementById('updateModalActions');
+    const spinnerEl = document.getElementById('updateModalSpinner');
 
-    const btn = document.getElementById('btnOnlineUpdateApply');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = 'Downloading from GitHub...';
+    if (titleEl) titleEl.textContent = 'Downloading Online Update';
+    if (descEl) descEl.innerHTML = `Asset: <strong>${latestGitHubAsset.name}</strong> (${latestGitHubAsset.size_mb} MB)`;
+    if (spinnerEl) spinnerEl.style.display = 'none';
+    if (progressSec) progressSec.style.display = 'block';
+    if (progressFill) {
+      progressFill.style.width = '0%';
+      progressFill.style.background = 'linear-gradient(90deg, #2563eb, #3b82f6)';
     }
+    if (spinnerText) spinnerText.textContent = 'Starting download...';
+    if (progressPct) progressPct.textContent = '0%';
+    if (actionsEl) actionsEl.style.display = 'none';
+    if (modalEl) modalEl.style.display = 'flex';
 
-    if (typeof showToast === 'function') {
-      showToast('Downloading & applying update from GitHub Release...', 'info');
-    }
-
-    fetch('/api/update/apply-online', {
+    // Start background download on backend
+    fetch('/api/update/start-download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         download_url: latestGitHubAsset.download_url,
+        filename: latestGitHubAsset.name,
         is_major: isMajor
       })
     })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          showToast(data.message);
-          setTimeout(() => location.reload(), 1500);
+          if (onlineDownloadInterval) clearInterval(onlineDownloadInterval);
+          onlineDownloadInterval = setInterval(pollOnlineDownloadProgress, 400);
         } else {
-          alert('Online Update Error: ' + data.message);
-          if (btn) {
-            btn.disabled = false;
-            btn.innerText = 'Install Update Online Direct';
-          }
+          alert('Download error: ' + data.message);
+          closeUpdateModal();
         }
       })
       .catch(err => {
-        alert('Failed to download online update: ' + err.message);
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = 'Install Update Online Direct';
-        }
+        alert('Failed to start online download: ' + err.message);
+        closeUpdateModal();
       });
   }
+
+  function pollOnlineDownloadProgress() {
+    fetch('/api/update/online-status')
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) return;
+        const tracker = res.tracker;
+
+        const progressFill = document.getElementById('updateProgressBarFill');
+        const spinnerText = document.getElementById('updateSpinnerText');
+        const progressPct = document.getElementById('updateProgressPercent');
+        const titleEl = document.getElementById('updateModalTitle');
+        const descEl = document.getElementById('updateModalDesc');
+        const actionsEl = document.getElementById('updateModalActions');
+        const applyBtn = document.getElementById('btnConfirmApplyUpdate');
+
+        if (progressFill) progressFill.style.width = (tracker.progress_percent || 0) + '%';
+        if (progressPct) progressPct.textContent = (tracker.progress_percent || 0) + '%';
+        if (spinnerText) spinnerText.textContent = tracker.message || 'Downloading...';
+
+        if (tracker.state === 'ready') {
+          if (onlineDownloadInterval) clearInterval(onlineDownloadInterval);
+          if (progressFill) {
+            progressFill.style.width = '100%';
+            progressFill.style.background = '#10b981';
+          }
+          if (titleEl) titleEl.textContent = 'Download Completed!';
+          if (descEl) descEl.innerHTML = `Downloaded package: <strong>${tracker.filename}</strong><br><span style="color: #10b981; font-weight: 600;">Click "Apply Update Now" to install. File will be auto-deleted upon completion.</span>`;
+          if (actionsEl) actionsEl.style.display = 'flex';
+          if (applyBtn) {
+            applyBtn.textContent = 'Apply Downloaded Update Now';
+            applyBtn.onclick = function() { proceedApplyDownloadedUpdate(tracker.filepath, tracker.is_major); };
+          }
+        } else if (tracker.state === 'error') {
+          if (onlineDownloadInterval) clearInterval(onlineDownloadInterval);
+          if (titleEl) titleEl.textContent = 'Download Failed';
+          if (descEl) descEl.textContent = tracker.message;
+          if (actionsEl) actionsEl.style.display = 'flex';
+        }
+      })
+      .catch(err => console.error('[Download Poll Error]', err));
+  }
+
+  function proceedApplyDownloadedUpdate(filepath, isMajor) {
+    const titleEl = document.getElementById('updateModalTitle');
+    const descEl = document.getElementById('updateModalDesc');
+    const actionsEl = document.getElementById('updateModalActions');
+    const progressSec = document.getElementById('updateModalProgressSection');
+    const progressFill = document.getElementById('updateProgressBarFill');
+    const spinnerText = document.getElementById('updateSpinnerText');
+    const progressPct = document.getElementById('updateProgressPercent');
+
+    if (actionsEl) actionsEl.style.display = 'none';
+    if (titleEl) titleEl.textContent = 'Installing Update...';
+    if (descEl) descEl.textContent = 'Extracting update package & patching application components...';
+    if (progressSec) progressSec.style.display = 'block';
+    if (progressFill) {
+      progressFill.style.width = '50%';
+      progressFill.style.background = 'linear-gradient(90deg, #f59e0b, #10b981)';
+    }
+    if (spinnerText) spinnerText.textContent = 'Applying update & cleaning temporary downloaded file...';
+    if (progressPct) progressPct.textContent = '50%';
+
+    fetch('/api/update/apply-downloaded', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filepath: filepath,
+        is_major: isMajor
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (progressFill) {
+            progressFill.style.width = '100%';
+            progressFill.style.background = '#10b981';
+          }
+          if (progressPct) progressPct.textContent = '100%';
+          if (titleEl) titleEl.textContent = 'Update Completed Successfully!';
+          if (descEl) descEl.textContent = data.message;
+          if (typeof showToast === 'function') showToast(data.message);
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          if (titleEl) titleEl.textContent = 'Update Error';
+          if (descEl) descEl.textContent = 'Error: ' + data.message;
+          if (actionsEl) actionsEl.style.display = 'flex';
+        }
+      })
+      .catch(err => {
+        if (titleEl) titleEl.textContent = 'Update Failed';
+        if (descEl) descEl.textContent = 'Failed to apply downloaded update: ' + err.message;
+        if (actionsEl) actionsEl.style.display = 'flex';
+      });
+  }
+
+  let selectedUpdateFile = null;
 
   function triggerUpdateUpload(isMajor = false) {
     isCurrentUpdateMajor = isMajor;
@@ -2812,26 +2986,63 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.zip')) {
+    if (!file.name.toLowerCase().endsWith('.zip')) {
       alert('Please select update package in .zip format.');
       return;
     }
 
+    selectedUpdateFile = file;
     const typeMsg = isCurrentUpdateMajor
-      ? "MAJOR UPDATE: System will perform AUTO BACKUP > UPDATE > RESTORE CHECK."
-      : "STANDARD PATCH: Update feature/UI (Excel Data & DB remain unchanged).";
+      ? "MAJOR UPDATE: System will perform Auto Backup before applying updates."
+      : "STANDARD PATCH: Updating features & UI (Excel & Database records remain safe).";
 
-    if (!confirm(`Confirm update applications?\n\nFile: ${file.name}\n${typeMsg}`)) {
-      return;
+    const titleEl = document.getElementById('updateModalTitle');
+    const descEl = document.getElementById('updateModalDesc');
+    const modalEl = document.getElementById('updateProgressModal');
+    const spinnerEl = document.getElementById('updateModalSpinner');
+    const actionsEl = document.getElementById('updateModalActions');
+    const cancelBtn = document.getElementById('btnCancelUpdate');
+    const applyBtn = document.getElementById('btnConfirmApplyUpdate');
+
+    if (titleEl) titleEl.textContent = 'Confirm Application Update';
+    if (descEl) descEl.innerHTML = `Package: <strong>${file.name}</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">${typeMsg}</span>`;
+    if (spinnerEl) spinnerEl.style.display = 'none';
+    if (actionsEl) actionsEl.style.display = 'flex';
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    if (applyBtn) {
+      applyBtn.style.display = 'inline-block';
+      applyBtn.disabled = false;
     }
+    if (modalEl) modalEl.style.display = 'flex';
+  }
+
+  function closeUpdateModal() {
+    const modalEl = document.getElementById('updateProgressModal');
+    if (modalEl) modalEl.style.display = 'none';
+    selectedUpdateFile = null;
+    const input = document.getElementById('updateZipInput');
+    if (input) input.value = '';
+  }
+
+  function proceedApplyUpdate() {
+    if (!selectedUpdateFile) return;
+
+    const modalEl = document.getElementById('updateProgressModal');
+    const spinnerEl = document.getElementById('updateModalSpinner');
+    const actionsEl = document.getElementById('updateModalActions');
+    const spinnerText = document.getElementById('updateSpinnerText');
+    const titleEl = document.getElementById('updateModalTitle');
+    const descEl = document.getElementById('updateModalDesc');
+
+    if (actionsEl) actionsEl.style.display = 'none';
+    if (spinnerEl) spinnerEl.style.display = 'block';
+    if (titleEl) titleEl.textContent = 'Applying Update...';
+    if (descEl) descEl.textContent = 'Uploading package and extracting files to application directory...';
+    if (spinnerText) spinnerText.textContent = isCurrentUpdateMajor ? 'Running auto-backup & applying major update... Please wait.' : 'Applying patch update... Please do not close application.';
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', selectedUpdateFile);
     formData.append('is_major', isCurrentUpdateMajor ? 'true' : 'false');
-
-    if (typeof showToast === 'function') {
-      showToast(isCurrentUpdateMajor ? 'Running auto-backup & applying major update...' : 'Applying patch update...', 'info');
-    }
 
     fetch('/api/update/apply-patch', {
       method: 'POST',
@@ -2840,14 +3051,31 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          showToast(data.message);
+          if (spinnerEl) spinnerEl.style.display = 'none';
+          if (titleEl) titleEl.textContent = 'Update Applied Successfully!';
+          if (descEl) descEl.textContent = data.message;
+          if (typeof showToast === 'function') showToast(data.message);
           setTimeout(() => location.reload(), 1500);
         } else {
-          alert('Update Error: ' + data.message);
+          if (spinnerEl) spinnerEl.style.display = 'none';
+          if (titleEl) titleEl.textContent = 'Update Error';
+          if (descEl) descEl.textContent = 'Error: ' + data.message;
+          if (actionsEl) {
+            actionsEl.style.display = 'flex';
+            const applyBtn = document.getElementById('btnConfirmApplyUpdate');
+            if (applyBtn) applyBtn.style.display = 'none';
+          }
         }
       })
       .catch(err => {
-        alert('Failed to upload or apply update file: ' + err.message);
+        if (spinnerEl) spinnerEl.style.display = 'none';
+        if (titleEl) titleEl.textContent = 'Update Failed';
+        if (descEl) descEl.textContent = 'Failed to upload or apply update file: ' + err.message;
+        if (actionsEl) {
+          actionsEl.style.display = 'flex';
+          const applyBtn = document.getElementById('btnConfirmApplyUpdate');
+          if (applyBtn) applyBtn.style.display = 'none';
+        }
       });
   }
 

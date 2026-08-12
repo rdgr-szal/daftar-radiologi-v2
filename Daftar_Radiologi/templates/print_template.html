@@ -163,7 +163,7 @@
   <div class="header-title">BUKU DAFTAR RADIOLOGI {{ data.singkatan }}{% if data.modality_name %} ({{
     data.modality_name.upper() }}){% endif %}</div>
   <div class="header-sub">{% if data.facility_type == 'HOSPITAL' %}HOSPITAL / FASILITI{% else %}KLINIK KESIHATAN{% endif
-    %}: {{ data.klinik_asal.upper() }} | BULAN: {{ data.month_name }} TAHUN: {{ data.year }}</div>
+    %}: {{ data.klinik_asal.upper() }} | {{ data.period_label.upper() }}</div>
 
   <table class="print-table">
     <thead>
@@ -224,37 +224,11 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="24" style="padding: 15px; font-style: italic;">Tiada rekod pendaftaran pesakit bagi bulan ini.</td>
+        <td colspan="24" style="padding: 15px; font-style: italic;">Tiada rekod pendaftaran pesakit bagi tempoh ini.</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-
-  <!-- Ringkasan Audit Bawah A4 Landscape -->
-  <div class="audit-summary-container">
-    <div class="audit-box">
-      <h4>RINGKASAN AUDIT KES</h4>
-      <div class="audit-row"><span>JUMLAH KES:</span> <strong>{{ data.total_cases }}</strong></div>
-      <div class="audit-row"><span>LELAKI:</span> <span>{{ data.male_count }}</span></div>
-      <div class="audit-row"><span>PEREMPUAN:</span> <span>{{ data.female_count }}</span></div>
-    </div>
-
-    <div class="audit-box">
-      <h4>RINGKASAN MODALITY</h4>
-      <div class="audit-row"><span>CXR (DADA):</span> <span>{{ data.cxr_count }}</span></div>
-      <div class="audit-row"><span>CXR TB:</span> <span>{{ data.cxr_tb_count }}</span></div>
-      <div class="audit-row"><span>CXR HRG:</span> <span>{{ data.cxr_hrg_count }}</span></div>
-      <div class="audit-row"><span>AXR / ABDOMEN:</span> <span>{{ data.axr_count }}</span></div>
-      <div class="audit-row"><span>EXTREMITI:</span> <span>{{ data.ext_count }}</span></div>
-    </div>
-
-    <div class="audit-box">
-      <h4>PECAHAN KLINIK RUJUKAN</h4>
-      {% for clinic_name, count in data.clinic_counts.items() %}
-      <div class="audit-row"><span>{{ clinic_name }}:</span> <span>{{ count }}</span></div>
-      {% endfor %}
-    </div>
-  </div>
 </body>
 
 </html>

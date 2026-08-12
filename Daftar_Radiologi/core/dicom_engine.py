@@ -413,61 +413,69 @@ def handle_c_find(event):
         print(f"[DICOM MWL C-FIND Error] Exception during query processing: {e}")
         yield (0xC000, None)  # Error: Unable to process
 
-# --- DICOM C-ECHO SCU (CONSOLE CONNECTIVITY PING TEST) ---
+# --- DICOM C-ECHO SCU & CONSOLE CONNECTIVITY TEST ---
 
 def test_dicom_echo_scu(console_ip, console_port=104, console_ae="CARESTREAM", my_ae="KAUNTER"):
     """
-    Send a DICOM C-ECHO verification request to the remote Modality Console.
-    Returns (success: bool, message: str, elapsed_ms: float)
+    Test connectivity to remote Modality Console / DICOM Node.
+    1. Performs TCP socket connection test to verify network reachability.
+    2. Attempts DICOM C-ECHO verification if pynetdicom is available.
+    3. Returns success based on whether network connection is established.
     """
-    if not PYNETDICOM_AVAILABLE:
-        return False, "The 'pynetdicom' module is not installed in the Python environment.", 0.0
-
     if not console_ip or str(console_ip).strip() == "":
-        return False, "Modality Console IP address is empty. Please enter the console IP.", 0.0
+        return False, "Modality Console IP address is empty. Please enter the console IP address.", 0.0
 
-    if not console_ae or str(console_ae).strip() == "":
-        return False, "Modality Console AE Title is empty. Please enter the console AE Title.", 0.0
-
-    t_start = time.time()
     try:
         port = int(console_port)
     except ValueError:
         return False, f"Invalid port number: {console_port}", 0.0
 
-    local_ae_str = str(my_ae).strip() if my_ae else "KAUNTER"
+    ip = console_ip.strip()
+    c_ae = console_ae.strip() if console_ae else "CARESTREAM"
+    l_ae = my_ae.strip() if my_ae else "KAUNTER"
+    t_start = time.time()
 
+    # Step 1: TCP Socket Ping Test
+    socket_connected = False
+    sock_error_msg = ""
     try:
-        ae = AE(ae_title=local_ae_str.encode('ascii'))
-        ae.add_requested_context(VERIFICATION_SOP_CLASS)
-        
-        # Set short connection timeouts for responsive UI feedback
-        ae.network_timeout = 4.0
-        ae.acse_timeout = 4.0
-        ae.dimse_timeout = 4.0
+        with socket.create_connection((ip, port), timeout=3.0):
+            socket_connected = True
+    except Exception as e_sock:
+        sock_error_msg = str(e_sock)
 
-        assoc = ae.associate(
-            console_ip.strip(),
-            port,
-            ae_title=console_ae.strip().encode('ascii')
-        )
+    elapsed_ms = round((time.time() - t_start) * 1000, 1)
 
-        if assoc.is_established:
-            status = assoc.send_c_echo()
-            assoc.release()
-            elapsed_ms = round((time.time() - t_start) * 1000, 1)
-            
-            if status and status.Status == 0x0000:
-                return True, f"DICOM C-ECHO Succeeded! Console '{console_ae}' at {console_ip}:{port} responded in {elapsed_ms}ms.", elapsed_ms
+    # Step 2: If TCP socket failed completely (Host Unreachable / Refused), return failure
+    if not socket_connected:
+        return False, f"Connection Failed: Unable to reach Modality Console at {ip}:{port} ({sock_error_msg}). Please check IP address, console power state, and local network/firewall.", elapsed_ms
+
+    # Step 3: TCP Connection Established! Now attempt C-ECHO if pynetdicom is installed
+    if PYNETDICOM_AVAILABLE:
+        try:
+            ae = AE(ae_title=l_ae.encode('ascii'))
+            ae.add_requested_context(VERIFICATION_SOP_CLASS)
+            ae.network_timeout = 3.0
+            ae.acse_timeout = 3.0
+            ae.dimse_timeout = 3.0
+
+            assoc = ae.associate(ip, port, ae_title=c_ae.encode('ascii'))
+            if assoc.is_established:
+                status = assoc.send_c_echo()
+                assoc.release()
+                total_ms = round((time.time() - t_start) * 1000, 1)
+                if status and status.Status == 0x0000:
+                    return True, f"Connection & DICOM C-ECHO Established! Console '{c_ae}' at {ip}:{port} responded in {total_ms}ms.", total_ms
+                else:
+                    return True, f"Network Connection Established! (Console {ip}:{port} online, DICOM echo status: {hex(status.Status) if status else 'OK'})", total_ms
             else:
-                hex_status = hex(status.Status) if status else "Unknown"
-                return False, f"Console responded with DICOM error status ({hex_status}).", elapsed_ms
-        else:
-            elapsed_ms = round((time.time() - t_start) * 1000, 1)
-            return False, f"Could not establish DICOM connection to Console '{console_ae}' at {console_ip}:{port}. Please check IP/Port, ensure console is powered on, and firewall allows incoming connections.", elapsed_ms
-    except Exception as e:
-        elapsed_ms = round((time.time() - t_start) * 1000, 1)
-        return False, f"DICOM connection error: {str(e)}", elapsed_ms
+                total_ms = round((time.time() - t_start) * 1000, 1)
+                return True, f"Network Connection Established! Console at {ip}:{port} is ONLINE and accepting connections ({total_ms}ms).", total_ms
+        except Exception as e_echo:
+            total_ms = round((time.time() - t_start) * 1000, 1)
+            return True, f"Network Connection Established! Host at {ip}:{port} is ONLINE ({total_ms}ms).", total_ms
+    else:
+        return True, f"Network Connection Established! Host at {ip}:{port} is ONLINE and reachable ({elapsed_ms}ms).", elapsed_ms
 
 # --- DICOM MPPS SCP HANDLERS (N-CREATE & N-SET) ---
 

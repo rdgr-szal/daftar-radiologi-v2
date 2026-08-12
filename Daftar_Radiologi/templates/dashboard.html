@@ -317,68 +317,78 @@
 
     <!-- Center / Controls: Period-Specific Controls -->
     <div style="display: flex; align-items: center; gap: 0.5rem;">
-      {% if period == 'day' %}
-      <input type="date" class="form-control" value="{{ selected_date }}"
-        style="width: auto; height: 30px; font-size: 0.8rem;" onchange="switchDashboardPeriodAJAX(null, this.value, null, null, event)">
-      {% elif period == 'week' %}
-      <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
-        <button type="button" class="btn btn-outline week-picker-trigger-btn" onclick="toggleWeekPickerCalendar(event)"
-          title="Klik untuk membuka Kalendar Penapis Minggu">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          <span id="weekPickerTriggerLabel">({{ week_range_text }})</span>
-        </button>
+      <!-- DAY CONTROL -->
+      <div id="dashControlDay" style="display: {% if period == 'day' %}inline-block{% else %}none{% endif %};">
+        <input type="date" id="dashDayDateInput" class="form-control" value="{{ selected_date }}"
+          style="width: auto; height: 30px; font-size: 0.8rem;" onchange="switchDashboardPeriodAJAX(null, this.value, null, null, event)">
+      </div>
 
-        <!-- Calendar Popover Menu -->
-        <div id="weekPickerPopover" class="week-picker-popover" onclick="event.stopPropagation()">
-          <div class="week-picker-header">
-            <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} Ogos</span>
-            <div class="wp-nav-btns">
-              <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(-1)">&lt;</button>
-              <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(1)">&gt;</button>
+      <!-- WEEK CONTROL -->
+      <div id="dashControlWeek" style="display: {% if period == 'week' %}inline-block{% else %}none{% endif %};">
+        <div class="custom-week-picker-container" style="position: relative; display: inline-block;">
+          <button type="button" class="btn btn-outline week-picker-trigger-btn" onclick="toggleWeekPickerCalendar(event)"
+            title="Klik untuk membuka Kalendar Penapis Minggu">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span id="weekPickerTriggerLabel">({{ week_range_text }})</span>
+          </button>
+
+          <!-- Calendar Popover Menu -->
+          <div id="weekPickerPopover" class="week-picker-popover" onclick="event.stopPropagation()">
+            <div class="week-picker-header">
+              <span id="wpYearMonthLabel" class="wp-year-month">{{ selected_year }} Ogos</span>
+              <div class="wp-nav-btns">
+                <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(-1)">&lt;</button>
+                <button type="button" class="wp-nav-btn" onclick="navigateWpMonth(1)">&gt;</button>
+              </div>
             </div>
-          </div>
 
-          <table class="wp-calendar-table">
-            <thead>
-              <tr>
-                <th class="wp-th-week">#</th>
-                <th>Isnin</th>
-                <th>Sel</th>
-                <th>Rab</th>
-                <th>Kha</th>
-                <th>Jum</th>
-                <th>Sab</th>
-                <th>Ahd</th>
-              </tr>
-            </thead>
-            <tbody id="wpCalendarBody">
-              <!-- Dynamically generated rows via JS -->
-            </tbody>
-          </table>
+            <table class="wp-calendar-table">
+              <thead>
+                <tr>
+                  <th class="wp-th-week">#</th>
+                  <th>Isnin</th>
+                  <th>Sel</th>
+                  <th>Rab</th>
+                  <th>Kha</th>
+                  <th>Jum</th>
+                  <th>Sab</th>
+                  <th>Ahd</th>
+                </tr>
+              </thead>
+              <tbody id="wpCalendarBody">
+                <!-- Dynamically generated rows via JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      {% elif period == 'month' %}
-      <select name="month" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
-        onchange="switchDashboardPeriodAJAX(null, null, this.value, null, event)">
-        {% for m_idx in range(1, 13) %}
-        <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
-          {{ month_map[m_idx][1] }}
-        </option>
-        {% endfor %}
-      </select>
-      {% endif %}
 
-      <select name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
-        onchange="switchDashboardPeriodAJAX(null, null, null, this.value, event)">
-        {% for y in available_years %}
-        <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
-        {% endfor %}
-      </select>
+      <!-- MONTH CONTROL -->
+      <div id="dashControlMonth" style="display: {% if period == 'month' %}inline-block{% else %}none{% endif %};">
+        <select id="dashMonthSelect" name="month" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+          onchange="switchDashboardPeriodAJAX(null, null, this.value, null, event)">
+          {% for m_idx in range(1, 13) %}
+          <option value="{{ m_idx }}" {% if m_idx==selected_month %}selected{% endif %}>
+            {{ month_map[m_idx][1] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- YEAR CONTROL -->
+      <div id="dashControlYear" style="display: {% if period in ['month', 'year'] %}inline-block{% else %}none{% endif %};">
+        <select id="dashYearSelect" name="year" class="form-control" style="width: auto; height: 30px; font-size: 0.8rem; font-weight: 600;"
+          onchange="switchDashboardPeriodAJAX(null, null, null, this.value, event)">
+          {% for y in available_years %}
+          <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
   </div>
 </form>
@@ -798,8 +808,10 @@
         tr.classList.add('selected-week');
       }
 
-      tr.onclick = function () {
-        window.location.href = "/dashboard?period=week&day_date=" + monStr;
+      tr.onclick = function (e) {
+        switchDashboardPeriodAJAX('week', monStr, null, null, e);
+        const pop = document.getElementById('weekPickerPopover');
+        if (pop) pop.style.display = 'none';
       };
 
       const tdWeek = document.createElement('td');
@@ -1114,29 +1126,72 @@
     tbody.appendChild(trTotal);
   }
 
+  function getWeekRangeTextJS(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return '';
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    const dayNum = d.getDay() || 7;
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - (dayNum - 1));
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(mon.getDate())}/${pad(mon.getMonth() + 1)}/${mon.getFullYear()} - ${pad(sun.getDate())}/${pad(sun.getMonth() + 1)}/${sun.getFullYear()}`;
+  }
+
   function switchDashboardPeriodAJAX(p, d, m, y, e) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
     if (p) currentPeriod = p;
     if (d) currentDayDate = d;
-    if (m) currentMonth = m;
-    if (y) currentYear = y;
+    if (m) currentMonth = parseInt(m, 10);
+    if (y) currentYear = parseInt(y, 10);
 
-    // Update filter tab active state
+    // 1. Update filter tab active state
     document.querySelectorAll('.filter-tab-group .filter-tab').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.period === currentPeriod);
     });
 
+    // 2. Toggle control containers visibility
+    const ctrlDay = document.getElementById('dashControlDay');
+    const ctrlWeek = document.getElementById('dashControlWeek');
+    const ctrlMonth = document.getElementById('dashControlMonth');
+    const ctrlYear = document.getElementById('dashControlYear');
+
+    if (ctrlDay) ctrlDay.style.display = (currentPeriod === 'day') ? 'inline-block' : 'none';
+    if (ctrlWeek) ctrlWeek.style.display = (currentPeriod === 'week') ? 'inline-block' : 'none';
+    if (ctrlMonth) ctrlMonth.style.display = (currentPeriod === 'month') ? 'inline-block' : 'none';
+    if (ctrlYear) ctrlYear.style.display = (currentPeriod === 'month' || currentPeriod === 'year') ? 'inline-block' : 'none';
+
+    // 3. Sync control values
+    const dayInput = document.getElementById('dashDayDateInput');
+    if (dayInput && d) dayInput.value = d;
+
+    const monthSelect = document.getElementById('dashMonthSelect');
+    if (monthSelect && m) monthSelect.value = m;
+
+    const yearSelect = document.getElementById('dashYearSelect');
+    if (yearSelect && y) yearSelect.value = y;
+
+    if (currentPeriod === 'week') {
+      const lbl = document.getElementById('weekPickerTriggerLabel');
+      if (lbl) lbl.textContent = `(${getWeekRangeTextJS(currentDayDate)})`;
+    }
+
+    // 4. Update hidden inputs
     const hiddenPeriod = document.getElementById('period');
     if (hiddenPeriod) hiddenPeriod.value = currentPeriod;
     const hiddenDate = document.getElementById('day_date');
     if (hiddenDate) hiddenDate.value = currentDayDate;
 
+    // 5. Update browser URL history
     const pageUrl = `/dashboard?period=${currentPeriod}&day_date=${currentDayDate}&month=${currentMonth}&year=${currentYear}`;
     if (typeof history.pushState === 'function') {
       history.pushState({ period: currentPeriod, dayDate: currentDayDate, month: currentMonth, year: currentYear }, '', pageUrl);
     }
 
+    // 6. Fetch updated chart & summary data
     loadDashboardData(currentPeriod, currentDayDate, currentMonth, currentYear);
   }
 

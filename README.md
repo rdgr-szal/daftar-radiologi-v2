@@ -129,6 +129,21 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 
 ## 5. Release History & Version Notes
 
+### 🚀 Version 2.1.4 (Online & Manual Updates Fix, Dashboard Date Pickers & New Logo Branding)
+- **Fix Manual Patch Update & Background Extraction**:
+  - Fixed PyWebView event loop blocking on Windows by replacing synchronous alert modals with clean HTML/CSS progress dialogs.
+  - Implemented safe extraction targeting application directory (`BASE_DIR`) with automatic file lock handling.
+- **Platform-Specific Release Matching & 2-Step Online Update**:
+  - Automatic detection of user OS and CPU architecture (*Windows 10/11 x64*, *Legacy Windows 7/8/8.1 x64*, *macOS Apple Silicon*, *macOS Intel*).
+  - Background downloading with live animated progress bar tracking and auto-deletion of downloaded ZIP files upon update completion.
+- **Dynamic Date Picker Controls on Dashboard**:
+  - Unified date range pickers on Dashboard to dynamically toggle input controls (*Date picker*, *Week picker calendar*, *Month & Year dropdowns*) seamlessly across *Day*, *Week*, *Month*, and *Year* modes via AJAX.
+- **Updated Brand Identity & Multi-Resolution App Icons**:
+  - Integrated new mascot logo across web interface, header, and system templates.
+  - Generated high-resolution multi-size icon bundles (`daftarradiologi.ico`, `daftarradiologi.icns`, and `favicon.ico`) for native Windows & macOS executable packaging.
+- **Custom Date Range Printing for Buku Daftar**:
+  - Added flexible date range selector modal for printing patient registers (*Daily*, *Weekly*, *Monthly*, *Full Year*, and *Custom Date Range*) with clean printable layout.
+
 ### 🚀 Version 2.1.3 (DICOM MPPS SCP & Logs Tab Upgrade)
 - **Modality Performed Procedure Step (MPPS) SCP Server**:
   - Integrated DICOM MPPS SCP support (`N-CREATE` / `N-SET`) for modality consoles.
@@ -144,3 +159,4 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
   - Restructured `Settings > System` into clean sub-tabs: *Database*, *Integration*, and *Updates*.
   - Added *Worklist Auto-Retention Period* option (`Keep 6 Hours`).
   - Streamlined single top-level **"Save"** button.
+

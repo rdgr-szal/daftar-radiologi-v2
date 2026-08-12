@@ -344,7 +344,7 @@
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
-      <span>Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}</span>
+      <span>Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}{% if config.facility_type == 'HOSPITAL' and config.single_modality %} - {{ config.single_modality }}{% endif %}</span>
     </div>
     <div style="display: flex; gap: 0.5rem;">
       <button type="button" onclick="openPrintPdfWindow()" class="btn btn-outline"
@@ -882,6 +882,121 @@
     </form>
   </div>
 </div>
+
+<!-- Modal 3: Pilihan Cetakan Buku Daftar -->
+<div class="modal-backdrop" id="printOptionsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+  <div style="background: var(--bg-card); border-radius: 12px; width: 100%; max-width: 520px; padding: 1.5rem; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-xl);">
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--primary); display: inline-flex; align-items: center; justify-content: center;">
+          <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2; width: 20px; height: 20px;">
+            <polyline points="6 9 6 2 18 2 18 9" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="8" />
+          </svg>
+        </div>
+        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-main);">Cetak Buku Daftar Radiologi</h3>
+      </div>
+      <button type="button" onclick="closePrintModal()" style="background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+    </div>
+
+    <form id="printModalForm" onsubmit="handlePrintModalSubmit(event)">
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.6rem;">Pilih Tempoh Rekod Untuk Dicetak:</label>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border-subtle); border-radius: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); background: var(--bg-subtle);">
+            <input type="radio" name="printPeriod" value="day" onchange="togglePrintInputs('day')">
+            <span>Sehari (Daily)</span>
+          </label>
+          
+          <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border-subtle); border-radius: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); background: var(--bg-subtle);">
+            <input type="radio" name="printPeriod" value="week" onchange="togglePrintInputs('week')">
+            <span>Seminggu (Weekly)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border-subtle); border-radius: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); background: var(--bg-subtle);">
+            <input type="radio" name="printPeriod" value="month" checked onchange="togglePrintInputs('month')">
+            <span>Sebulan (Monthly)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border-subtle); border-radius: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); background: var(--bg-subtle);">
+            <input type="radio" name="printPeriod" value="year" onchange="togglePrintInputs('year')">
+            <span>Setahun (Full Year)</span>
+          </label>
+          
+          <label style="grid-column: span 2; display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.8rem; border: 1px solid var(--border-subtle); border-radius: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); background: var(--bg-subtle);">
+            <input type="radio" name="printPeriod" value="custom" onchange="togglePrintInputs('custom')">
+            <span>Julat Tarikh Kustom (Custom Date Range)</span>
+          </label>
+        </div>
+
+        <!-- Dynamic Date Input Fields -->
+        <div id="printInputDay" style="display: none; margin-bottom: 0.75rem;">
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Tarikh Kes:</label>
+          <input type="date" id="printDayDate" class="form-control" value="{{ selected_date }}" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        </div>
+
+        <div id="printInputWeek" style="display: none; margin-bottom: 0.75rem;">
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Pilih Tarikh Dalam Minggu Tersebut:</label>
+          <input type="date" id="printWeekDate" class="form-control" value="{{ selected_date }}" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        </div>
+
+        <div id="printInputMonth" style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div style="flex: 1;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Bulan:</label>
+            <select id="printMonthSelect" class="form-control" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              {% for m_num, m_tuple in month_map.items() %}
+              <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_tuple[1] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Tahun:</label>
+            <select id="printYearSelect" class="form-control" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              {% for y in available_years %}
+              <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div id="printInputYear" style="display: none; margin-bottom: 0.75rem;">
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Tahun Sasaran:</label>
+          <select id="printFullYearSelect" class="form-control" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            {% for y in available_years %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>Tahun {{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="printInputCustom" style="display: none; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Tarikh Mula:</label>
+            <input type="date" id="printStartDate" class="form-control" value="{{ selected_date }}" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Tarikh Akhir:</label>
+            <input type="date" id="printEndDate" class="form-control" value="{{ selected_date }}" style="width: 100%; padding: 0.55rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+        <button type="button" class="btn btn-outline" onclick="closePrintModal()">Batal</button>
+        <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.6rem 1.2rem;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px;">
+            <polyline points="6 9 6 2 18 2 18 9" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="8" />
+          </svg>
+          <span>Cetak / Papar PDF</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -1309,7 +1424,60 @@
 
   function openPrintPdfWindow(e) {
     if (e) e.preventDefault();
-    const printUrl = "{{ url_for('export.print_buku_daftar') }}?year={{ selected_year }}&month={{ selected_month }}";
+    const curPeriod = "{{ period }}" || "month";
+    const radio = document.querySelector(`input[name="printPeriod"][value="${curPeriod}"]`);
+    if (radio) {
+      radio.checked = true;
+      togglePrintInputs(curPeriod);
+    } else {
+      togglePrintInputs('month');
+    }
+    const modal = document.getElementById('printOptionsModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closePrintModal() {
+    const modal = document.getElementById('printOptionsModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function togglePrintInputs(period) {
+    document.getElementById('printInputDay').style.display = (period === 'day') ? 'block' : 'none';
+    document.getElementById('printInputWeek').style.display = (period === 'week') ? 'block' : 'none';
+    document.getElementById('printInputMonth').style.display = (period === 'month') ? 'flex' : 'none';
+    document.getElementById('printInputYear').style.display = (period === 'year') ? 'block' : 'none';
+    document.getElementById('printInputCustom').style.display = (period === 'custom') ? 'grid' : 'none';
+  }
+
+  function handlePrintModalSubmit(e) {
+    if (e) e.preventDefault();
+    const period = document.querySelector('input[name="printPeriod"]:checked')?.value || 'month';
+    let params = new URLSearchParams();
+    params.set('period', period);
+
+    if (period === 'day') {
+      const d = document.getElementById('printDayDate').value;
+      params.set('day_date', d);
+    } else if (period === 'week') {
+      const w = document.getElementById('printWeekDate').value;
+      params.set('day_date', w);
+    } else if (period === 'month') {
+      const m = document.getElementById('printMonthSelect').value;
+      const y = document.getElementById('printYearSelect').value;
+      params.set('month', m);
+      params.set('year', y);
+    } else if (period === 'year') {
+      const y = document.getElementById('printFullYearSelect').value;
+      params.set('year', y);
+    } else if (period === 'custom') {
+      const s = document.getElementById('printStartDate').value;
+      const endD = document.getElementById('printEndDate').value;
+      params.set('start_date', s);
+      params.set('end_date', endD);
+    }
+
+    const printUrl = "{{ url_for('export.print_buku_daftar') }}?" + params.toString();
+    closePrintModal();
     const win = window.open(printUrl, '_blank');
     if (!win || win.closed || typeof win.closed === 'undefined') {
       window.location.href = printUrl;

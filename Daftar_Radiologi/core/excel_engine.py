@@ -687,9 +687,9 @@ def format_date_ddmmyyyy(val):
         return parsed.strftime("%d/%m/%Y")
     return val_str
 
-def get_patients_list(year=None, month=None, search_query=None, period="month", selected_date_str=None):
+def get_patients_list(year=None, month=None, search_query=None, period="month", selected_date_str=None, start_date_str=None, end_date_str=None):
     """
-    Membaca senarai pesakit daripada fail Excel sasaran mengikut julat masa (period: 'day', 'week', 'month', 'year').
+    Membaca senarai pesakit daripada fail Excel sasaran mengikut julat masa (period: 'day', 'week', 'month', 'year', 'custom').
     """
     today = datetime.date.today()
     if year is None:
@@ -714,6 +714,15 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
     week_start = target_date - datetime.timedelta(days=target_date.weekday())
     week_end = week_start + datetime.timedelta(days=6)
 
+    custom_start_date = None
+    custom_end_date = None
+    if period == "custom" and start_date_str and end_date_str:
+        try:
+            custom_start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            custom_end_date = datetime.datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+
     # Tentukan fail (year, month) yang perlu dibaca
     targets_to_read = []
     if period == "year":
@@ -725,6 +734,15 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
         ])))
     elif period == "day":
         targets_to_read = [(target_date.year, target_date.month)]
+    elif period == "custom" and custom_start_date and custom_end_date:
+        cur = datetime.date(custom_start_date.year, custom_start_date.month, 1)
+        end_m = datetime.date(custom_end_date.year, custom_end_date.month, 1)
+        while cur <= end_m:
+            targets_to_read.append((cur.year, cur.month))
+            if cur.month == 12:
+                cur = datetime.date(cur.year + 1, 1, 1)
+            else:
+                cur = datetime.date(cur.year, cur.month + 1, 1)
     else:  # month
         targets_to_read = [(year, month)]
 
@@ -761,6 +779,9 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
                         continue
                 elif period == "week":
                     if not parsed_d or not (week_start <= parsed_d <= week_end):
+                        continue
+                elif period == "custom" and custom_start_date and custom_end_date:
+                    if not parsed_d or not (custom_start_date <= parsed_d <= custom_end_date):
                         continue
                         
                 catatan_val = str(sheet.cell(row=r, column=23).value or "")
