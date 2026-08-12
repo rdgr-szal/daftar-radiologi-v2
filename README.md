@@ -151,6 +151,18 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 - **Custom Date Range Printing for Buku Daftar**:
   - Added flexible date range selector modal for printing patient registers (*Daily*, *Weekly*, *Monthly*, *Full Year*, and *Custom Date Range*) with clean printable layout.
 
+### 🚀 Version 2.1.5 (Maintenance & Feature Release)
+- **Klinik Kesihatan (KK) Preset Fix**:
+  - Enforced single General X-Ray (`GENERAL RADIOGRAPHY`) selection when choosing KK facility profile or KK preset, unchecking non-KK modalities automatically.
+- **Drag & Drop Upload Guard**:
+  - Resolved WebView2 / PyWebView window freeze during drag-and-drop file uploads on Windows. Added global drag prevention and enhanced file drag-and-drop handlers for legacy data import and manual patch zip uploads.
+- **Enlarged Native App Icon**:
+  - Trimmed transparent margins and re-generated full-bleed multi-resolution icon bundles (`daftarradiologi.ico` and `favicon.ico`) with sizes `16x16` up to `256x256`, matching native Windows application icon proportions.
+- **CD Sticker Label Thermal Printing**:
+  - Added dedicated CD / DVD thermal sticker label print feature in `patient_list.html` featuring customizable roll sticker dimensions (e.g. 50x30mm, 60x40mm, circular CD ring), live interactive preview, font scaling, and direct thermal printer CSS support.
+- **Emoji Replacement**:
+  - Replaced all application emoji icons with clean inline SVG icons for a consistent healthcare system interface.
+
 ### 🚀 Version 2.1.3 (DICOM MPPS SCP & Logs Tab Upgrade)
 - **Modality Performed Procedure Step (MPPS) SCP Server**:
   - Integrated DICOM MPPS SCP support (`N-CREATE` / `N-SET`) for modality consoles.

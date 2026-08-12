@@ -6,26 +6,22 @@ All notable changes to the **Buku Daftar Radiologi V2** project are documented i
 
 ## [v2.1.5] - 2026-08-12
 
-### 🚀 Major Feature & User Experience Updates
+### 🚀 Maintenance & Feature Release
 
-#### 1. Custom Starting X-Ray Sequence Number
-- **Configurable Starting No.**: Added custom starting X-Ray sequence number configuration under **Settings > Modalities**. Facilities can now set custom sequence counters per modality room or start from a specific sequence index for the new year.
+#### 1. Klinik Kesihatan (KK) Preset Modality Enforcer
+- **General X-Ray Only**: Fixed setup wizard and settings modality preset for KK facilities to default strictly to `GENERAL RADIOGRAPHY`, unchecking Mobile X-Ray, Ultrasound, and Dental automatically.
 
-#### 2. Legacy Data Migration Tool
-- **Historical Record Import**: Added legacy data import engine accessible via **Settings > System > Backup**. Allows importing legacy Excel records from older systems directly into the V2 database and PER.SS-RA 101 archives with duplicate checking.
+#### 2. Drag & Drop File Upload Guard (PyWebView / Windows)
+- **Prevent WebView Freeze**: Added global window drag/drop guards and dedicated dragover/drop event listeners to `#importDropZone` and `#updateDropZone` to prevent PyWebView / WebView2 page navigation or freezing when dropping files.
 
-#### 3. Interactive Onboarding Wizard
-- **Guided Initial Setup**: Redesigned initial setup into an interactive 3-Step Wizard in full English. Guides new users step-by-step through facility profiling, staff roster setup, referral clinic configuration, and quick feature orientation.
+#### 3. Enlarged Native Application Icon
+- **Full-Bleed Multi-Resolution ICO**: Trimmed empty transparent padding from `logo.png` and regenerated `daftarradiologi.ico` and `favicon.ico` containing sizes `16x16` up to `256x256` for native Windows Desktop, Taskbar, and Start Menu sizing.
 
-#### 4. Smart Windows Setup Installer (Inno Setup)
-- **Installer Package**: Built a native Windows installer (`Setup.exe`) via GitHub Actions CI/CD with automatic Desktop Shortcuts and Start Menu creation.
-- **Smart Upgrade & Data Protection**: Automatically detects existing installations, offering *Upgrade*, *Repair*, or *Uninstall* options while strictly protecting patient records inside the `Pendaftaran/` directory from being overwritten or deleted.
+#### 4. Thermal CD Sticker Label Printer Feature
+- **CD Disc Surface Stickers**: Added interactive CD Label Printing tool in `patient_list.html` with preset roll sticker dimensions (50x30mm, 60x40mm, 50x50mm, circular CD ring), live interactive preview, font scaling, field toggles, and thermal printer CSS `@page` layout.
 
-#### 5. Minor UI & Visual Fixes
-- **New Mascot & Brand Assets**: Updated application logo, icons, and favicons to the new bee mascot image.
-- **Nav Branding Layout**: Enhanced sidebar navigation brand text styling to prevent "Daftar Radiologi" title clipping.
-- **System Updates Badge**: Refined GitHub update check badge placement so update notices appear strictly under **Settings > System > Updates**.
-- **Dark Clear Queue Action Button**: Styled DICOM Worklist "Clear Queue" button with dark red contrast styling for clearer action hierarchy.
+#### 5. Strict Emoji-to-SVG UI Refactoring
+- **Clean Interface Standard**: Replaced all application emoji icons across HTML templates with lightweight, crisp SVG icons.
 
 ---
 

@@ -347,6 +347,14 @@
       <span>Radiologi {{ config.singkatan_klinik or config.klinik_asal or 'KKM' }}{% if config.facility_type == 'HOSPITAL' and config.single_modality %} - {{ config.single_modality }}{% endif %}</span>
     </div>
     <div style="display: flex; gap: 0.5rem;">
+      <button type="button" onclick="openCdLabelModal()" class="btn btn-outline"
+        title="Print CD / DVD Sticker Label for Thermal Printer">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        <span>Print CD Label</span>
+      </button>
       <button type="button" onclick="openPrintPdfWindow()" class="btn btn-outline"
         title="Print or save PDF copy of Buku Daftar Radiologi">
         <svg class="icon icon-sm" viewBox="0 0 24 24">
@@ -534,6 +542,16 @@
                     </svg>
                     <span>Edit</span>
                   </button>
+                  <button type="button" class="kebab-item" data-patient='{{ p.examinations[0]|tojson|forceescape }}'
+                    data-all-exams='{{ p.examinations|tojson|forceescape }}'
+                    onclick="triggerPrintCdLabelFromKebab(this, 'kebab-{{ p.id }}')">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"
+                      style="stroke: currentColor; fill: none; stroke-width: 2;">
+                      <circle cx="12" cy="12" r="10" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>Print CD Label</span>
+                  </button>
                   {% if not p.is_cancelled %}
                   <button type="button" class="kebab-item item-danger"
                     onclick="triggerCancelFromKebab('{{ p.examinations[0].tarikh }}', '{{ p.examinations[0].nombor_xray }}', '{{ p.nama }}', 'kebab-{{ p.id }}')">
@@ -598,6 +616,12 @@
                           data-all-exams='{{ p.examinations|tojson|forceescape }}'
                           onclick="openEditModalFromSubRow(this)">
                           Edit
+                        </button>
+                        <button type="button" class="btn btn-outline"
+                          style="padding: 2px 8px; font-size: 0.72rem; height: 24px; font-weight: 600; margin-left: 4px;"
+                          data-patient='{{ item|tojson|forceescape }}'
+                          onclick="openCdLabelModalFromData(this)">
+                          CD Label
                         </button>
                       </td>
                     </tr>
@@ -995,6 +1019,135 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal 4: CD / DVD Thermal Sticker Label Print Modal -->
+<div class="modal-backdrop" id="cdLabelModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+  <div class="modal-dialog" style="max-width: 820px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-lg); overflow: hidden;">
+    
+    <!-- Modal Header -->
+    <div style="padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; background: var(--bg-subtle);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg class="icon icon-md" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Print CD / DVD Thermal Sticker Label</h3>
+      </div>
+      <button type="button" onclick="closeCdLabelModal()" style="background: none; border: none; font-size: 1.4rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+    </div>
+
+    <!-- Modal Body: Split View (Left Controls, Right Live Preview) -->
+    <div style="padding: 1.25rem; overflow-y: auto; flex: 1; display: grid; grid-template-columns: 310px 1fr; gap: 1.25rem;">
+      
+      <!-- Left Column: Controls & Presets -->
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        
+        <!-- Select Patient / Exam Record -->
+        <div class="form-group" id="cdRecordSelectGroup" style="display: none;">
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Pilih Rekod Pesakit:</label>
+          <select id="cdRecordSelect" class="form-control" style="font-size: 0.82rem;" onchange="loadCdPatientFromSelect(this.value)">
+          </select>
+        </div>
+
+        <!-- Preset Label Types -->
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Label Preset Size:</label>
+          <select id="cdLabelPresetSelect" class="form-control" style="font-size: 0.83rem;" onchange="applyCdLabelPreset(this.value)">
+            <option value="RECT_50x30">Rectangular Roll (50mm x 30mm) - Default</option>
+            <option value="RECT_60x40">Rectangular Roll (60mm x 40mm)</option>
+            <option value="SQUARE_50x50">Square Sticker (50mm x 50mm)</option>
+            <option value="RECT_70x35">Wide Sticker (70mm x 35mm)</option>
+            <option value="CIRCLE_RING">Full Circular CD Label (116mm Ring)</option>
+            <option value="CUSTOM">Custom Size (mm)</option>
+          </select>
+        </div>
+
+        <!-- Custom Dimensions -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;" id="cdCustomDimBox">
+          <div>
+            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Width (mm):</label>
+            <input type="number" id="cdStickerWidth" class="form-control" value="50" min="20" max="130" style="font-size: 0.83rem; height: 36px;" oninput="updateCdStickerPreview()">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Height (mm):</label>
+            <input type="number" id="cdStickerHeight" class="form-control" value="30" min="15" max="130" style="font-size: 0.83rem; height: 36px;" oninput="updateCdStickerPreview()">
+          </div>
+        </div>
+
+        <!-- Font Size Scale -->
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Text Font Size:</label>
+          <select id="cdFontSizeSelect" class="form-control" style="font-size: 0.83rem;" onchange="updateCdStickerPreview()">
+            <option value="9px">Small (9px)</option>
+            <option value="11px" selected>Medium (11px)</option>
+            <option value="13px">Large (13px)</option>
+          </select>
+        </div>
+
+        <!-- Fields Selection -->
+        <div style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); margin-bottom: 0.4rem;">Papar Medan Label:</div>
+          <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.78rem;">
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldFacility" checked onchange="updateCdStickerPreview()">
+              <span>Nama Fasiliti</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldNama" checked onchange="updateCdStickerPreview()">
+              <span>Nama Pesakit</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldIc" checked onchange="updateCdStickerPreview()">
+              <span>No. IC / Pasport / RN</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldExam" checked onchange="updateCdStickerPreview()">
+              <span>Pemeriksaan</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldDate" checked onchange="updateCdStickerPreview()">
+              <span>Tarikh Pemeriksaan</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="cdFieldXray" checked onchange="updateCdStickerPreview()">
+              <span>No. X-Ray</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Interactive Live Sticker Preview -->
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-subtle); border-radius: 10px; border: 1px solid var(--border-subtle); padding: 1.5rem; min-height: 320px; position: relative;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Live Sticker Print Preview</div>
+        
+        <!-- Live Preview Container -->
+        <div id="cdStickerPreviewContainer" style="display: flex; align-items: center; justify-content: center; width: 100%; flex: 1;">
+          <!-- Sticker Card Generated via JS -->
+        </div>
+
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.75rem; text-align: center;">
+          Optimized for Thermal Roll Label Printers (Xprinter, Zebra, TSC, etc.)
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; background: var(--bg-subtle);">
+      <button type="button" class="btn btn-secondary" onclick="closeCdLabelModal()">Batal</button>
+      <button type="button" class="btn btn-primary" onclick="printCdLabelSticker()" style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+          <polyline points="6 9 6 2 18 2 18 9"/>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        <span>Print Thermal Label</span>
+      </button>
+    </div>
+
   </div>
 </div>
 {% endblock %}
@@ -1482,6 +1635,260 @@
     if (!win || win.closed || typeof win.closed === 'undefined') {
       window.location.href = printUrl;
     }
+  }
+
+  // --- CD / DVD THERMAL STICKER LABEL PRINTING LOGIC ---
+  let activeCdPatientData = null;
+
+  function openCdLabelModal(patientData = null) {
+    const modal = document.getElementById('cdLabelModal');
+    if (!modal) return;
+
+    if (patientData) {
+      activeCdPatientData = patientData;
+      document.getElementById('cdRecordSelectGroup').style.display = 'none';
+    } else {
+      const buttons = document.querySelectorAll('[data-patient]');
+      if (buttons.length > 0) {
+        try {
+          activeCdPatientData = JSON.parse(buttons[0].getAttribute('data-patient'));
+        } catch(e) { activeCdPatientData = null; }
+      }
+      
+      const sel = document.getElementById('cdRecordSelect');
+      if (sel) {
+        let optsHtml = '';
+        let seen = new Set();
+        buttons.forEach((btn) => {
+          try {
+            const p = JSON.parse(btn.getAttribute('data-patient'));
+            const key = (p.nombor_xray || '') + '_' + (p.nama || '');
+            if (!seen.has(key)) {
+              seen.add(key);
+              optsHtml += `<option value='${JSON.stringify(p).replace(/'/g, "&apos;")}'>No. X-Ray ${p.nombor_xray || ''} — ${p.nama || ''} (${p.tarikh || ''})</option>`;
+            }
+          } catch(err) {}
+        });
+        if (optsHtml) {
+          sel.innerHTML = optsHtml;
+          document.getElementById('cdRecordSelectGroup').style.display = 'block';
+        }
+      }
+    }
+
+    modal.style.display = 'flex';
+    updateCdStickerPreview();
+  }
+
+  function loadCdPatientFromSelect(valStr) {
+    if (!valStr) return;
+    try {
+      activeCdPatientData = JSON.parse(valStr);
+      updateCdStickerPreview();
+    } catch(e) {}
+  }
+
+  function openCdLabelModalFromData(btn) {
+    if (!btn) return;
+    try {
+      const pData = JSON.parse(btn.getAttribute('data-patient'));
+      openCdLabelModal(pData);
+    } catch(e) {
+      openCdLabelModal();
+    }
+  }
+
+  function triggerPrintCdLabelFromKebab(btn, kebabId) {
+    const keb = document.getElementById(kebabId);
+    if (keb) keb.style.display = 'none';
+    openCdLabelModalFromData(btn);
+  }
+
+  function closeCdLabelModal() {
+    const modal = document.getElementById('cdLabelModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function applyCdLabelPreset(preset) {
+    const wInp = document.getElementById('cdStickerWidth');
+    const hInp = document.getElementById('cdStickerHeight');
+    const dimBox = document.getElementById('cdCustomDimBox');
+
+    if (preset === 'RECT_50x30') {
+      wInp.value = 50; hInp.value = 30;
+      dimBox.style.display = 'grid';
+    } else if (preset === 'RECT_60x40') {
+      wInp.value = 60; hInp.value = 40;
+      dimBox.style.display = 'grid';
+    } else if (preset === 'SQUARE_50x50') {
+      wInp.value = 50; hInp.value = 50;
+      dimBox.style.display = 'grid';
+    } else if (preset === 'RECT_70x35') {
+      wInp.value = 70; hInp.value = 35;
+      dimBox.style.display = 'grid';
+    } else if (preset === 'CIRCLE_RING') {
+      wInp.value = 116; hInp.value = 116;
+      dimBox.style.display = 'grid';
+    } else if (preset === 'CUSTOM') {
+      dimBox.style.display = 'grid';
+    }
+    updateCdStickerPreview();
+  }
+
+  function updateCdStickerPreview() {
+    const container = document.getElementById('cdStickerPreviewContainer');
+    if (!container) return;
+
+    const w = parseFloat(document.getElementById('cdStickerWidth').value) || 50;
+    const h = parseFloat(document.getElementById('cdStickerHeight').value) || 30;
+    const fontSize = document.getElementById('cdFontSizeSelect').value || '11px';
+    const preset = document.getElementById('cdLabelPresetSelect').value;
+
+    const showFacility = document.getElementById('cdFieldFacility').checked;
+    const showNama = document.getElementById('cdFieldNama').checked;
+    const showIc = document.getElementById('cdFieldIc').checked;
+    const showExam = document.getElementById('cdFieldExam').checked;
+    const showDate = document.getElementById('cdFieldDate').checked;
+    const showXray = document.getElementById('cdFieldXray').checked;
+
+    const facilityName = ({{ (config.klinik_asal or 'KLINIK KESIHATAN')|tojson }}) || "KLINIK KESIHATAN";
+    const p = activeCdPatientData || {
+      nama: "NAMA PESAKIT (SAMPLE)",
+      ic_pasport: "900101-14-5555",
+      nombor_xray: "1234",
+      bahagian_pemeriksaan: "CHEST PA",
+      tarikh: new Date().toISOString().split('T')[0]
+    };
+
+    let pxWidth = Math.min(360, Math.max(160, w * 4.5));
+    let pxHeight = (h / w) * pxWidth;
+
+    let html = '';
+
+    if (preset === 'CIRCLE_RING') {
+      let discSize = 270;
+      let holeSize = 85;
+      html = `
+        <div style="width: ${discSize}px; height: ${discSize}px; border-radius: 50%; background: #ffffff; border: 3px solid #cbd5e1; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 15px; box-sizing: border-box; overflow: hidden;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: ${holeSize}px; height: ${holeSize}px; border-radius: 50%; background: var(--bg-subtle, #f1f5f9); border: 2px solid #94a3b8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"></div>
+          
+          <div style="z-index: 2; text-align: center; max-width: 220px; font-size: ${fontSize}; color: #000; line-height: 1.35; font-family: Arial, sans-serif;">
+            ${showFacility ? `<div style="font-weight: 800; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 3px;">${facilityName}</div>` : ''}
+            ${showXray ? `<div style="font-weight: 900; font-size: 1.1em; color: #000;">NO. X-RAY: ${p.nombor_xray || '-'}</div>` : ''}
+            ${showNama ? `<div style="font-weight: 700; text-transform: uppercase; font-size: 0.95em;">${p.nama || '-'}</div>` : ''}
+            ${showIc ? `<div style="font-size: 0.85em; font-family: monospace;">IC/RN: ${p.ic_pasport || '-'}</div>` : ''}
+            ${showExam ? `<div style="font-weight: 700; font-size: 0.85em; margin-top: 2px;">EXAM: ${p.bahagian_pemeriksaan || (p.jenis_pemeriksaan || '-')}</div>` : ''}
+            ${showDate ? `<div style="font-size: 0.8em; color: #333;">TARIKH: ${p.tarikh || '-'}</div>` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      html = `
+        <div style="width: ${pxWidth}px; min-height: ${pxHeight}px; background: #ffffff; border: 2px solid #000; border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); font-family: Arial, sans-serif; font-size: ${fontSize}; color: #000; line-height: 1.3; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            ${showFacility ? `<div style="font-weight: 800; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 4px; text-align: center;">${facilityName}</div>` : ''}
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              ${showXray ? `<div style="font-weight: 900; font-size: 1.15em;">X-RAY: ${p.nombor_xray || '-'}</div>` : ''}
+              ${showDate ? `<div style="font-size: 0.8em; font-weight: 600;">${p.tarikh || '-'}</div>` : ''}
+            </div>
+            ${showNama ? `<div style="font-weight: 800; text-transform: uppercase; font-size: 1.0em; margin-top: 2px;">${p.nama || '-'}</div>` : ''}
+            ${showIc ? `<div style="font-size: 0.85em; font-family: monospace;">IC/RN: ${p.ic_pasport || '-'}</div>` : ''}
+          </div>
+          <div>
+            ${showExam ? `<div style="font-weight: 700; font-size: 0.9em; margin-top: 3px; border-top: 1px dashed #666; padding-top: 2px;">PEMERIKSAAN: ${p.bahagian_pemeriksaan || (p.jenis_pemeriksaan || '-')}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function printCdLabelSticker() {
+    const w = parseFloat(document.getElementById('cdStickerWidth').value) || 50;
+    const h = parseFloat(document.getElementById('cdStickerHeight').value) || 30;
+    const fontSize = document.getElementById('cdFontSizeSelect').value || '11px';
+    const preset = document.getElementById('cdLabelPresetSelect').value;
+
+    const showFacility = document.getElementById('cdFieldFacility').checked;
+    const showNama = document.getElementById('cdFieldNama').checked;
+    const showIc = document.getElementById('cdFieldIc').checked;
+    const showExam = document.getElementById('cdFieldExam').checked;
+    const showDate = document.getElementById('cdFieldDate').checked;
+    const showXray = document.getElementById('cdFieldXray').checked;
+
+    const facilityName = ({{ (config.klinik_asal or 'KLINIK KESIHATAN')|tojson }}) || "KLINIK KESIHATAN";
+    const p = activeCdPatientData || {
+      nama: "NAMA PESAKIT",
+      ic_pasport: "-",
+      nombor_xray: "-",
+      bahagian_pemeriksaan: "-",
+      tarikh: "-"
+    };
+
+    let bodyStyle = `width: ${w}mm; height: ${h}mm; box-sizing: border-box; margin: 0; padding: 1.5mm; font-family: Arial, sans-serif; font-size: ${fontSize}; color: #000; line-height: 1.25; overflow: hidden; background: #fff;`;
+    
+    let contentHtml = '';
+    if (preset === 'CIRCLE_RING') {
+      contentHtml = `
+        <div style="width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2mm;">
+          ${showFacility ? `<div style="font-weight: 800; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 2px;">${facilityName}</div>` : ''}
+          ${showXray ? `<div style="font-weight: 900; font-size: 1.1em;">NO. X-RAY: ${p.nombor_xray || '-'}</div>` : ''}
+          ${showNama ? `<div style="font-weight: 700; text-transform: uppercase; font-size: 0.95em;">${p.nama || '-'}</div>` : ''}
+          ${showIc ? `<div style="font-size: 0.85em; font-family: monospace;">IC/RN: ${p.ic_pasport || '-'}</div>` : ''}
+          ${showExam ? `<div style="font-weight: 700; font-size: 0.85em; margin-top: 1px;">EXAM: ${p.bahagian_pemeriksaan || (p.jenis_pemeriksaan || '-')}</div>` : ''}
+          ${showDate ? `<div style="font-size: 0.8em;">TARIKH: ${p.tarikh || '-'}</div>` : ''}
+        </div>
+      `;
+    } else {
+      contentHtml = `
+        <div style="width: 100%; height: 100%; border: 1px solid #000; box-sizing: border-box; padding: 1.5mm; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            ${showFacility ? `<div style="font-weight: 800; font-size: 0.85em; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 2px; text-align: center;">${facilityName}</div>` : ''}
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              ${showXray ? `<div style="font-weight: 900; font-size: 1.15em;">X-RAY: ${p.nombor_xray || '-'}</div>` : ''}
+              ${showDate ? `<div style="font-size: 0.8em; font-weight: 600;">${p.tarikh || '-'}</div>` : ''}
+            </div>
+            ${showNama ? `<div style="font-weight: 800; text-transform: uppercase; font-size: 0.95em; margin-top: 1px;">${p.nama || '-'}</div>` : ''}
+            ${showIc ? `<div style="font-size: 0.85em; font-family: monospace;">IC/RN: ${p.ic_pasport || '-'}</div>` : ''}
+          </div>
+          <div>
+            ${showExam ? `<div style="font-weight: 700; font-size: 0.85em; margin-top: 1px; border-top: 1px dashed #000; padding-top: 1px;">EXAM: ${p.bahagian_pemeriksaan || (p.jenis_pemeriksaan || '-')}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    const printWin = window.open('', '_blank', 'width=450,height=400');
+    printWin.document.write(\`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>CD Label Sticker Print</title>
+        <style>
+          @page {
+            size: \${w}mm \${h}mm;
+            margin: 0;
+          }
+          * { box-sizing: border-box; }
+          body { \${bodyStyle} }
+          @media print {
+            body { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        \${contentHtml}
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    \`);
+    printWin.document.close();
   }
 </script>
 {% endblock %}

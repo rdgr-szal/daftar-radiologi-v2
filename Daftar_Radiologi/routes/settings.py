@@ -66,7 +66,14 @@ def api_setup():
     klinik_rujukan = data.get('klinik_rujukan', [])
     staff_list = data.get('staff', data.get('juru_xray', []))
     default_staff = data.get('default_staff', data.get('default_juru_xray', '')).strip()
-    active_modalities = data.get('active_modalities', ["General Radiography", "Ultrasound", "Dental"])
+    
+    active_modalities = data.get('active_modalities')
+    if not active_modalities or not isinstance(active_modalities, list):
+        if facility_type == 'KK':
+            active_modalities = ["GENERAL RADIOGRAPHY"]
+        else:
+            active_modalities = ["GENERAL RADIOGRAPHY", "MOBILE - GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"]
+
     consumables_list = data.get('consumables', ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"])
     db_config = data.get('db_config', {})
     mygovuc_config = data.get('mygovuc_backup', {})
@@ -87,7 +94,7 @@ def api_setup():
         "default_staff": default_staff,
         "juru_xray": staff_list if isinstance(staff_list, list) else [],
         "default_juru_xray": default_staff,
-        "active_modalities": active_modalities if isinstance(active_modalities, list) else [],
+        "active_modalities": active_modalities,
         "consumables": consumables_list if isinstance(consumables_list, list) else [],
         "custom_smrp_orderables": data.get("custom_smrp_orderables", existing_config.get("custom_smrp_orderables", {})),
         "db_config": db_config if isinstance(db_config, dict) else {

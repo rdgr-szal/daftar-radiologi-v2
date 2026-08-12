@@ -524,8 +524,7 @@
           Sub-Region di borang pendaftaran:
         </p>
 
-        {% set active_mods = config.active_modalities if config.active_modalities else ["GENERAL RADIOGRAPHY", "MOBILE -
-        GENERAL RADIOGRAPHY", "ULTRASOUND", "DENTAL"] %}
+        {% set active_mods = config.active_modalities if config.active_modalities else ["GENERAL RADIOGRAPHY"] %}
         <div
           style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
           <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
@@ -1547,13 +1546,14 @@
                 automatic database backup is created before applying the update.
               </p>
 
-              <div
-                style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div id="updateDropZone"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--bg-subtle); padding: 0.8rem 1rem; border-radius: 6px; border: 2px dashed var(--border-subtle); cursor: pointer; transition: var(--transition);"
+                onclick="triggerUpdateUpload(false)">
                 <div style="font-size: 0.78rem; color: var(--text-muted);">
-                  Select <strong>.zip</strong> update file provided by developer.
+                  Click or Drag &amp; Drop <strong>.zip</strong> update file provided by developer.
                 </div>
                 <div>
-                  <button type="button" class="btn btn-outline" onclick="triggerUpdateUpload(false)"
+                  <button type="button" class="btn btn-outline"
                     style="font-weight: 700; padding: 0.55rem 1.25rem; font-size: 0.83rem;">
                     Upload (.zip)
                   </button>
@@ -2404,6 +2404,9 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     document.querySelector(`input[name="facility_type"][value="${type}"]`).checked = true;
     document.getElementById('hospitalScopeArea').style.display = type === 'HOSPITAL' ? 'block' : 'none';
     updateQuickReferralChipsSettings(type);
+    if (type === 'KK') {
+      setModalityPreset('KK');
+    }
   }
 
   function toggleSingleModality(isSingle) {
@@ -3495,8 +3498,9 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
         if (data.rejected_images && data.rejected_images.length > 0) {
           rejectHtml = `
             <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 0.85rem; margin-bottom: 1rem;">
-              <strong style="color: #ef4444; font-size: 0.85rem; display: block; margin-bottom: 0.4rem;">
-                ⚠️ Reject Analysis Recorded (${data.rejected_images.length} item)
+              <strong style="color: #ef4444; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: #ef4444; fill: none; stroke-width: 2;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Reject Analysis Recorded (${data.rejected_images.length} item)</span>
               </strong>
               ${data.rejected_images.map((rj, idx) => `
                 <div style="font-size: 0.78rem; margin-bottom: 0.3rem;">
@@ -3742,6 +3746,51 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       document.getElementById('importStatusDesc').textContent = err.message;
     });
   }
+
+  function setupDropZone(zoneId, inputId, callback) {
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+    if (!zone || !input) return;
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        zone.style.borderColor = 'var(--primary)';
+        zone.style.background = 'rgba(0, 77, 64, 0.1)';
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        zone.style.borderColor = 'var(--border-subtle)';
+        zone.style.background = 'var(--bg-subtle)';
+      }, false);
+    });
+
+    zone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer ? e.dataTransfer.files : null;
+      if (files && files.length > 0) {
+        try {
+          const dt = new DataTransfer();
+          dt.items.add(files[0]);
+          input.files = dt.files;
+        } catch (err) {
+          input.files = files;
+        }
+        if (typeof callback === 'function') {
+          callback({ target: { files: input.files } });
+        }
+      }
+    }, false);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setupDropZone('importDropZone', 'importFileInput', handleImportFileSelect);
+    setupDropZone('updateDropZone', 'updateZipInput', handleUpdateZipSelected);
+  });
 </script>
 
 <!-- MPPS Audit Details Modal -->

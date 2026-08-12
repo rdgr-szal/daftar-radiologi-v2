@@ -199,6 +199,14 @@
     }
 
     (function () {
+      // Global Drag & Drop Guard for WebView2 / PyWebView
+      window.addEventListener('dragover', function (e) {
+        e.preventDefault();
+      }, false);
+      window.addEventListener('drop', function (e) {
+        e.preventDefault();
+      }, false);
+
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
       updateThemeIcon(savedTheme);
