@@ -3,10 +3,10 @@ import re
 import os
 
 def update_version():
-    raw_ver = sys.argv[1] if len(sys.argv) > 1 else 'v2.1.3'
+    raw_ver = sys.argv[1] if len(sys.argv) > 1 else 'v2.1.4'
     ver = raw_ver.lstrip('v') if raw_ver and raw_ver.startswith('v') else raw_ver
     if not ver or ver == 'main' or ver == 'master':
-        ver = '2.1.3'
+        ver = '2.1.4'
 
     config_path = os.path.join('Daftar_Radiologi', 'core', 'config.py')
     with open(config_path, 'r', encoding='utf-8') as f:
