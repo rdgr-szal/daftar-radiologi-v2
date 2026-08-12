@@ -76,7 +76,7 @@ function IsAppInstalled(): Boolean;
 var
   RegKey: String;
 begin
-  RegKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1';
+  RegKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{#MyAppAppId}}_is1';
   Result := RegValueExists(HKEY_LOCAL_MACHINE, RegKey, 'UninstallString') or
             RegValueExists(HKEY_CURRENT_USER, RegKey, 'UninstallString');
 end;
@@ -157,11 +157,11 @@ begin
         mbConfirmation, MB_YESNO) = IDYES then
       begin
         RegQueryStringValue(HKEY_LOCAL_MACHINE, 
-          'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1', 
+          'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{#MyAppAppId}}_is1', 
           'UninstallString', UninstallerPath);
         if UninstallerPath = '' then
           RegQueryStringValue(HKEY_CURRENT_USER, 
-            'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1', 
+            'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{#MyAppAppId}}_is1', 
             'UninstallString', UninstallerPath);
 
         if UninstallerPath <> '' then
