@@ -7,10 +7,10 @@
 #endif
 #define MyAppPublisher "Jabatan Radiologi"
 #define MyAppExeName "DaftarRadiologi.exe"
-#define MyAppAppId "{{C6B82C94-8120-4F25-B470-3E6B47C590E2}"
+#define MyAppAppId "C6B82C94-8120-4F25-B470-3E6B47C590E2"
 
 [Setup]
-AppId={#MyAppAppId}
+AppId={{C6B82C94-8120-4F25-B470-3E6B47C590E2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
@@ -71,7 +71,7 @@ function IsAppInstalled(): Boolean;
 var
   RegKey: String;
 begin
-  RegKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{#MyAppAppId}' + '_is1';
+  RegKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1';
   Result := RegValueExists(HKEY_LOCAL_MACHINE, RegKey, 'UninstallString') or
             RegValueExists(HKEY_CURRENT_USER, RegKey, 'UninstallString');
 end;
@@ -152,11 +152,11 @@ begin
         mbConfirmation, MB_YESNO) = IDYES then
       begin
         RegQueryStringValue(HKEY_LOCAL_MACHINE, 
-          'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{#MyAppAppId}' + '_is1', 
+          'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1', 
           'UninstallString', UninstallerPath);
         if UninstallerPath = '' then
           RegQueryStringValue(HKEY_CURRENT_USER, 
-            'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + '{#MyAppAppId}' + '_is1', 
+            'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppAppId}' + '}_is1', 
             'UninstallString', UninstallerPath);
 
         if UninstallerPath <> '' then
