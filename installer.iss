@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; Copy all build files from PyInstaller output folder
 Source: "Daftar_Radiologi\dist\DaftarRadiologi\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Optional: Embed WebView2 Bootstrapper installer if available in project root
-Source: "MicrosoftEdgeWebview2Setup.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExistsInSrc('MicrosoftEdgeWebview2Setup.exe')
+Source: "Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists('Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe')
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
