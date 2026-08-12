@@ -50,6 +50,7 @@ test_temp_registration.xlsx
 # Internal Developer Docs, Criteria & Local Launch Scripts
 resources/
 PRD.md
+GIT_RELEASE_RULES.md
 UPDATE.txt
 update.txt
 INSTALLATION.txt
