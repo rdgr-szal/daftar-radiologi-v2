@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; Copy all build files from PyInstaller output folder
 Source: "dist\DaftarRadiologi\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Optional: Embed WebView2 Bootstrapper installer if available in project root
-Source: "MicrosoftEdgeWebview2Setup.exe"; DestDir: "{app}"; Flags: ignoreversion skipifnotsilent; Check: FileExists('MicrosoftEdgeWebview2Setup.exe')
+Source: "MicrosoftEdgeWebview2Setup.exe"; DestDir: "{app}"; Flags: ignoreversion skipifnotsilent; Check: FileExistsInSrc('MicrosoftEdgeWebview2Setup.exe')
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -60,6 +60,11 @@ Type: filesandordirs; Name: "{app}\templates"
 Type: filesandordirs; Name: "{app}\static"
 
 [Code]
+function FileExistsInSrc(const FileName: String): Boolean;
+begin
+  Result := FileExists(ExpandConstant('{src}\' + FileName)) or FileExists(FileName);
+end;
+
 var
   OptionPage: TWizardPage;
   RadioUpgrade: TRadioButton;
