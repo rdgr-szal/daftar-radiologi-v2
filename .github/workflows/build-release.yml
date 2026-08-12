@@ -159,6 +159,11 @@ jobs:
         run: |
           iscc /DMyAppVersion=${{ github.ref_name }} installer.iss
 
+      - name: Package Windows Portable ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "Daftar_Radiologi\dist\DaftarRadiologi\*" -DestinationPath "DaftarRadiologi-v2-win10.zip" -Force
+
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
