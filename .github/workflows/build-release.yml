@@ -38,8 +38,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Inject Dynamic App Version from Git Tag
-        run: |
-          python -c "import os, re; ver = '${{ github.ref_name }}'; ver = '2.1.3' if not ver or not ver.startswith('v') else ver.lstrip('v'); path = 'Daftar_Radiologi/core/config.py'; text = open(path, 'r', encoding='utf-8').read(); text = re.sub(r'APP_VERSION\s*=\s*\".*?\"', f'APP_VERSION = \"{ver}\"', text); open(path, 'w', encoding='utf-8').write(text); print(f'[AutoVersion] Injected APP_VERSION = \"{ver}\" into {path}')"
+        run: python update_version.py "${{ github.ref_name }}"
 
       - name: Build macOS App Bundle
         run: |
@@ -90,8 +89,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Inject Dynamic App Version from Git Tag
-        run: |
-          python -c "import os, re; ver = '${{ github.ref_name }}'; ver = '2.1.3' if not ver or not ver.startswith('v') else ver.lstrip('v'); path = 'Daftar_Radiologi/core/config.py'; text = open(path, 'r', encoding='utf-8').read(); text = re.sub(r'APP_VERSION\s*=\s*\".*?\"', f'APP_VERSION = \"{ver}\"', text); open(path, 'w', encoding='utf-8').write(text); print(f'[AutoVersion] Injected APP_VERSION = \"{ver}\" into {path}')"
+        run: python update_version.py "${{ github.ref_name }}"
 
       - name: Build Legacy macOS App Bundle
         env:
@@ -150,8 +148,7 @@ jobs:
           Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe"
 
       - name: Inject Dynamic App Version from Git Tag
-        run: |
-          python -c "import os, re; ver = '${{ github.ref_name }}'; ver = '2.1.3' if not ver or not ver.startswith('v') else ver.lstrip('v'); path = 'Daftar_Radiologi/core/config.py'; text = open(path, 'r', encoding='utf-8').read(); text = re.sub(r'APP_VERSION\s*=\s*\".*?\"', f'APP_VERSION = \"{ver}\"', text); open(path, 'w', encoding='utf-8').write(text); print(f'[AutoVersion] Injected APP_VERSION = \"{ver}\" into {path}')"
+        run: python update_version.py "${{ github.ref_name }}"
 
       - name: Build Windows Executable
         run: |
@@ -197,8 +194,7 @@ jobs:
           Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "Daftar_Radiologi\MicrosoftEdgeWebview2Setup.exe"
 
       - name: Inject Dynamic App Version from Git Tag
-        run: |
-          python -c "import os, re; ver = '${{ github.ref_name }}'; ver = '2.1.3' if not ver or not ver.startswith('v') else ver.lstrip('v'); path = 'Daftar_Radiologi/core/config.py'; text = open(path, 'r', encoding='utf-8').read(); text = re.sub(r'APP_VERSION\s*=\s*\".*?\"', f'APP_VERSION = \"{ver}\"', text); open(path, 'w', encoding='utf-8').write(text); print(f'[AutoVersion] Injected APP_VERSION = \"{ver}\" into {path}')"
+        run: python update_version.py "${{ github.ref_name }}"
 
       - name: Build Windows 7 Compatible Executable
         run: |
