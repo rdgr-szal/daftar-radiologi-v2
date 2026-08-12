@@ -16,12 +16,16 @@ hidden_imports_list = [
     'openpyxl',
     'flask',
     'sqlite3',
+    'pydicom',
+    'pynetdicom',
     'core.config',
     'core.excel_engine',
     'core.phris_engine',
     'core.export_engine',
     'core.backup_engine',
     'core.db_engine',
+    'core.dicom_engine',
+    'core.mpps_engine',
     'routes.registration',
     'routes.patients',
     'routes.phris',
@@ -32,9 +36,6 @@ hidden_imports_list = [
 
 if sys.platform == 'win32':
     hidden_imports_list.extend([
-        'clr_loader',
-        'pythonnet',
-        'clr',
         'PySide6',
         'PySide6.QtCore',
         'PySide6.QtWidgets',
