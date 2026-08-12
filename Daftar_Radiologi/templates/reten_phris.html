@@ -99,26 +99,26 @@
 
       tbody.innerHTML = ''; // Clear loading message
 
-      // 1. Seksyen: Bangsa Pesakit
-      renderSectionHeader("1. Patient Ethnicity");
+      // 1. Seksyen: Bangsa Pesakit (Bilangan Pesakit Unik)
+      renderSectionHeader("1. Patient Ethnicity (Bil. Pesakit / Demographics)");
       const races = ["MELAYU", "CINA", "INDIA", "BUMIPUTERA", "WARGA ASING", "LAIN-LAIN"];
       races.forEach(r => renderRow(r, data.bangsa[r]));
-      renderSectionTotal("-", calculateTotals(races.map(r => data.bangsa[r])));
+      renderSectionTotal("Jumlah Pesakit (Demografi)", calculateTotals(races.map(r => data.bangsa[r])));
 
-      // 2. Seksyen: Kedatangan
-      renderSectionHeader("2. Arrival Category");
+      // 2. Seksyen: Kedatangan (Bilangan Pesakit Unik)
+      renderSectionHeader("2. Arrival Category (Bil. Pesakit / Arrival Mode)");
       renderRow("Trolley", data.kedatangan["TROLLEY"]);
       renderRow("Wheelchair", data.kedatangan["WHEELCHAIR"]);
       renderRow("Rujuk Terus (Klinik Luar)", data.kedatangan["RUJUK TERUS"]);
-      renderRow("Bil. Pesakit (Klinik/OPD - Walk-in)", data.kedatangan["KLINIK_OPD"]);
+      renderRow("Klinik/OPD (Walking / Walk-in)", data.kedatangan["KLINIK_OPD"]);
       const arrivalKeys = ["TROLLEY", "WHEELCHAIR", "RUJUK TERUS", "KLINIK_OPD"];
-      renderSectionTotal("-", calculateTotals(arrivalKeys.map(k => data.kedatangan[k])));
+      renderSectionTotal("Jumlah Pesakit (Kedatangan)", calculateTotals(arrivalKeys.map(k => data.kedatangan[k])));
 
-      // 3. Seksyen: Pemeriksaan AM
-      renderSectionHeader("3. General Examination (X-ray)");
+      // 3. Seksyen: Pemeriksaan AM (Bilangan Kes Pemeriksaan)
+      renderSectionHeader("3. General Examination (Bil. Kes / Exam Cases Done)");
       const examAm = ["DADA", "ABDOMEN", "EXTREMITI", "RANGKA KEPALA", "SPINA VERTEBRA", "PELVIS", "SKELETAL SURVEY", "DEXA", "OPG", "LAIN-LAIN"];
       examAm.forEach(e => renderRow(capitalizeEachWord(e), data.pemeriksaan_am[e]));
-      renderSectionTotal("-", calculateTotals(examAm.map(e => data.pemeriksaan_am[e])));
+      renderSectionTotal("Jumlah Kes Pemeriksaan AM", calculateTotals(examAm.map(e => data.pemeriksaan_am[e])));
 
       // 4. Seksyen: Pemeriksaan Lain
       renderSectionHeader("4. Other Examinations");

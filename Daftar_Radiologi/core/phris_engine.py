@@ -43,74 +43,94 @@ def get_phris_matrix_data(year, month=None):
         month_num = month_idx + 1
         all_records = get_patients_list(year, month_num)
         
-        # Tapis rekod aktif sahaja untuk reten
+        # Tapis rekod aktif sahaja untuk reten (abaikan rekod terbatal)
         raw_records = [r for r in all_records if not r.get("is_cancelled", False)]
         
-        # Pengasingan automatik bagi pemeriksaan Bilateral untuk pengiraan tepat reten PHRIS
+        # A. KIRAAN TAHAP PESAKIT (PATIENT-LEVEL COUNT for Ethnicity & Arrival Category)
+        seen_patients = set()
+        unique_patient_records = []
+        for r in raw_records:
+            ic_val = str(r.get("ic_pasport", "") or "").strip().upper()
+            nama_val = str(r.get("nama", "") or "").strip().upper()
+            xray_val = str(r.get("nombor_xray", "") or "").strip().upper()
+            tarikh_val = str(r.get("tarikh", "") or "").strip()
+            
+            p_id = ic_val if (ic_val and ic_val != "-") else (nama_val if nama_val else xray_val)
+            pkey = (p_id, tarikh_val)
+            
+            if pkey not in seen_patients:
+                seen_patients.add(pkey)
+                unique_patient_records.append(r)
+                
+        for p_rec in unique_patient_records:
+            b_val = str(p_rec.get("bangsa", "")).upper()
+            w_val = str(p_rec.get("warganegara", "")).upper()
+            kat_val = str(p_rec.get("kategori", "")).upper()
+            cat_val = str(p_rec.get("catatan", "")).upper()
+            klinik_val = str(p_rec.get("klinik_rujukan", "")).upper()
+            
+            # 1. Bangsa (Mengikut Bilangan Pesakit Unik)
+            if w_val not in ["YA", "YES", "Y"] or "ASING" in b_val or "FOREIGN" in b_val:
+                bangsa["WARGA ASING"][month_idx] += 1
+            elif "MELAYU" in b_val:
+                bangsa["MELAYU"][month_idx] += 1
+            elif "CINA" in b_val or "CHINESE" in b_val:
+                bangsa["CINA"][month_idx] += 1
+            elif "INDIA" in b_val or "INDIAN" in b_val:
+                bangsa["INDIA"][month_idx] += 1
+            elif "BUMI" in b_val or "SABAH" in b_val or "SARAWAK" in b_val or "ORANG ASLI" in b_val:
+                bangsa["BUMIPUTERA"][month_idx] += 1
+            else:
+                bangsa["LAIN-LAIN"][month_idx] += 1
+
+            # 2. Kedatangan (Mengikut Bilangan Pesakit Unik)
+            if "TROLLEY" in kat_val or "TROLLEY" in cat_val:
+                kedatangan["TROLLEY"][month_idx] += 1
+            elif "WHEELCHAIR" in kat_val or "KERUSI RODA" in cat_val or "WHEELCHAIR" in cat_val:
+                kedatangan["WHEELCHAIR"][month_idx] += 1
+            elif klinik_val and klinik_asal and klinik_val != klinik_asal and "LUAR" in kat_val:
+                kedatangan["RUJUK TERUS"][month_idx] += 1
+            else:
+                kedatangan["KLINIK_OPD"][month_idx] += 1
+
+        # B. KIRAAN TAHAP KES PEMERIKSAAN (CASE-LEVEL COUNT for Examinations & Procedures)
+        # Pengasingan automatik bagi pemeriksaan Bilateral (Right & Left)
         records = []
         for r in raw_records:
             records.extend(process_bilateral_record(r))
         
         for r in records:
-            b_val = str(r.get("bangsa", "")).upper()
-            w_val = str(r.get("warganegara", "")).upper()
-            kat_val = str(r.get("kategori", "")).upper()
             cat_val = str(r.get("catatan", "")).upper()
             jenis_val = str(r.get("jenis_pemeriksaan", "")).upper()
             bahagian_val = str(r.get("bahagian_pemeriksaan", "")).upper()
-            klinik_val = str(r.get("klinik_rujukan", "")).upper()
             cd_val = str(r.get("cd_filem", "")).upper()
             
-            # 1. Bangsa
-            if w_val not in ["YA", "YES", "Y"] or "ASING" in b_val:
-                bangsa["WARGA ASING"][month_idx] += 1
-            elif "MELAYU" in b_val:
-                bangsa["MELAYU"][month_idx] += 1
-            elif "CINA" in b_val:
-                bangsa["CINA"][month_idx] += 1
-            elif "INDIA" in b_val:
-                bangsa["INDIA"][month_idx] += 1
-            elif "BUMI" in b_val or "SABAH" in b_val or "SARAWAK" in b_val:
-                bangsa["BUMIPUTERA"][month_idx] += 1
-            else:
-                bangsa["LAIN-LAIN"][month_idx] += 1
-
-            # 2. Kedatangan
-            if "TROLLEY" in kat_val or "TROLLEY" in cat_val:
-                kedatangan["TROLLEY"][month_idx] += 1
-            elif "WHEELCHAIR" in kat_val or "KERUSI RODA" in cat_val or "WHEELCHAIR" in cat_val:
-                kedatangan["WHEELCHAIR"][month_idx] += 1
-            elif klinik_val and klinik_asal and klinik_val != klinik_asal:
-                kedatangan["RUJUK TERUS"][month_idx] += 1
-            else:
-                kedatangan["KLINIK_OPD"][month_idx] += 1
-
-            # 3. Pemeriksaan AM
-            if "DADA" in jenis_val or "CXR" in bahagian_val or "CHEST" in jenis_val:
+            # 3. Pemeriksaan AM (Mengikut Bilangan Kes Pemeriksaan)
+            if any(k in jenis_val for k in ["DADA", "CHEST", "CXR", "THORAX"]) or any(k in bahagian_val for k in ["CXR", "CHEST", "DADA", "THORAX", "LUNG", "RIB", "STERNUM", "CLAVICLE"]):
                 pemeriksaan_am["DADA"][month_idx] += 1
-            elif "ABDOMEN" in jenis_val or "AXR" in bahagian_val or "KUB" in bahagian_val:
+            elif any(k in jenis_val for k in ["ABDOMEN", "AXR", "KUB"]) or any(k in bahagian_val for k in ["AXR", "ABDOMEN", "KUB"]):
                 pemeriksaan_am["ABDOMEN"][month_idx] += 1
-            elif "EXTREMITI" in jenis_val or any(k in bahagian_val for k in ["FOOT", "ANKLE", "KNEE", "HAND", "WRIST", "ELBOW", "SHOULDER"]):
+            elif any(k in jenis_val for k in ["EXTREMITI", "EXTREMITIES", "LIMB"]) or any(k in bahagian_val for k in ["FOOT", "ANKLE", "KNEE", "HAND", "WRIST", "ELBOW", "SHOULDER", "HUMERUS", "FEMUR", "TIBIA", "FIBULA", "RADIUS", "ULNA", "HIP", "TOE", "FINGER", "CALCANEUM", "EXT"]):
                 pemeriksaan_am["EXTREMITI"][month_idx] += 1
-            elif "RANGKA KEPALA" in jenis_val or "SKULL" in bahagian_val or "FACE" in bahagian_val:
+            elif any(k in jenis_val for k in ["RANGKA KEPALA", "SKULL", "FACIAL"]) or any(k in bahagian_val for k in ["SKULL", "KEPALA", "FACIAL", "MANDIBLE", "NASAL", "ORBIT", "SINUS", "PNS"]):
                 pemeriksaan_am["RANGKA KEPALA"][month_idx] += 1
-            elif "SPINA" in jenis_val or any(k in bahagian_val for k in ["LUMBOSACRAL", "CERVICAL", "THORACIC"]):
+            elif any(k in jenis_val for k in ["SPINA", "SPINE"]) or any(k in bahagian_val for k in ["SPINE", "SPINA", "CERVICAL", "THORACIC", "LUMBAR", "LUMBOSACRAL", "SACRUM", "COCCYX", "C-SPINE", "T-SPINE", "L-SPINE", "LS SPINE"]):
                 pemeriksaan_am["SPINA VERTEBRA"][month_idx] += 1
             elif "PELVIS" in jenis_val or "PELVIS" in bahagian_val:
                 pemeriksaan_am["PELVIS"][month_idx] += 1
             elif "SKELETAL" in jenis_val or "SKELETAL" in bahagian_val:
                 pemeriksaan_am["SKELETAL SURVEY"][month_idx] += 1
-            elif "DEXA" in jenis_val or "DEXA" in bahagian_val:
+            elif "DEXA" in jenis_val or "DEXA" in bahagian_val or "BMD" in bahagian_val:
                 pemeriksaan_am["DEXA"][month_idx] += 1
-            elif "OPG" in jenis_val or "OPG" in bahagian_val:
+            elif "OPG" in jenis_val or "OPG" in bahagian_val or "DENTAL" in bahagian_val:
                 pemeriksaan_am["OPG"][month_idx] += 1
             else:
                 pemeriksaan_am["LAIN-LAIN"][month_idx] += 1
 
             # 4. Pemeriksaan Lain
-            if "RME" in bahagian_val or "RME" in cat_val:
+            if "RME" in bahagian_val or "RME" in cat_val or "RADIATION MEDICAL" in cat_val:
                 pemeriksaan_lain["RME"][month_idx] += 1
-            if "PTB" in bahagian_val or "TB" in bahagian_val or "PTB" in cat_val:
+            if "PTB" in bahagian_val or "TB" in bahagian_val or "PTB" in cat_val or "TUBERCULOSIS" in cat_val:
                 pemeriksaan_lain["PTB"][month_idx] += 1
             if "COVID" in cat_val or "COVID" in bahagian_val:
                 pemeriksaan_lain["COVID"][month_idx] += 1
@@ -118,11 +138,11 @@ def get_phris_matrix_data(year, month=None):
                 pemeriksaan_lain["DM"][month_idx] += 1
 
             # 5. Temujanji
-            if "USG" in jenis_val or "ULTRASOUND" in cat_val or "USG" in cat_val:
+            if "USG" in jenis_val or "ULTRASOUND" in cat_val or "USG" in cat_val or "ULTRASOUND" in jenis_val:
                 temujanji["USG"][month_idx] += 1
-            elif "MAMMO" in jenis_val or "MAMMO" in cat_val:
+            elif "MAMMO" in jenis_val or "MAMMO" in cat_val or "MAMMOGRAM" in jenis_val:
                 temujanji["MAMMO"][month_idx] += 1
-            elif "CT" in jenis_val or "CT-SCAN" in cat_val:
+            elif "CT" in jenis_val or "CT-SCAN" in cat_val or "SCANNER" in jenis_val:
                 temujanji["CT-SCAN"][month_idx] += 1
 
             # 6. Consumables
