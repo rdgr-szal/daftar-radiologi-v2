@@ -11,6 +11,7 @@ from routes.phris import phris_bp
 from routes.dashboard import dashboard_bp
 from routes.export import export_bp
 from routes.settings import settings_bp
+from routes.label import label_bp
 
 app = Flask(__name__, template_folder=TEMPLATE_FOLDER, static_folder=STATIC_FOLDER)
 
@@ -21,10 +22,11 @@ app.register_blueprint(phris_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(export_bp)
 app.register_blueprint(settings_bp)
+app.register_blueprint(label_bp)
 
 def start_flask_server(port=5005):
     """Menjalankan pelayan Flask tempatan."""
-    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False, threaded=True)
 
 def ensure_windows_webview2():
     """Memeriksa dan memasang Microsoft Edge WebView2 Runtime secara senyap jika dijalankan pada Windows."""

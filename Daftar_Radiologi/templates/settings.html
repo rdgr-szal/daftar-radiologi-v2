@@ -846,6 +846,15 @@
               <span>Updates</span>
               <span id="githubUpdateBadge" style="display: none; font-size: 0.7rem; padding: 1px 6px; border-radius: 10px; font-weight: 700; margin-left: 4px;"></span>
             </button>
+
+            <button type="button" class="subtab-btn" id="btnSysSubLabel"
+              onclick="switchSystemSubTab('subSysLabel')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>Label Printing</span>
+            </button>
           </div>
         </div>
 
@@ -1576,6 +1585,81 @@
         </div>
       </div>
 
+      <!-- SUB-TAB: Label Printing -->
+      <div id="subSysLabel" class="system-subtab-pane" style="display: none;">
+        <div class="section-card-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: var(--primary); fill: none; stroke-width: 2;">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span>CD / DVD Thermal Label Printing</span>
+        </div>
+
+        <div class="gov-alert" style="margin-bottom: 1rem;">
+          <strong>Thermal Printer Requirements:</strong><br>
+          Select a thermal printer (e.g., Xprinter, Zebra, TSC) that has been installed on Windows.
+          The application sends the label directly to the printer driver — it does NOT rely on the
+          default printer or the WebView2 browser dialog.
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label>Thermal Printer</label>
+            <select id="settingsLabelPrinter" class="form-control">
+              <option value="">Loading printer list...</option>
+            </select>
+            <div id="settingsLabelPrinterStatus" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;"></div>
+          </div>
+          <div class="form-group">
+            <label>Label Width (mm)</label>
+            <input type="number" id="settingsLabelWidth" class="form-control" min="10" max="200" step="0.5">
+          </div>
+          <div class="form-group">
+            <label>Label Height (mm)</label>
+            <input type="number" id="settingsLabelHeight" class="form-control" min="10" max="200" step="0.5">
+          </div>
+          <div class="form-group">
+            <label>Text Size</label>
+            <select id="settingsLabelFont" class="form-control">
+              <option value="9px">Small (9px)</option>
+              <option value="11px">Medium (11px)</option>
+              <option value="13px">Large (13px)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Show Label Fields:</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.4rem 1rem; font-size: 0.82rem;">
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelFacility"> Facility Name</label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelNama"> Patient Name</label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelIc"> IC / Passport No.</label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelExam"> Examination</label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelDate"> Date</label>
+            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"><input type="checkbox" id="settingsLabelXray"> X-Ray No.</label>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-outline" onclick="loadSettingsLabelConfig(false)">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            <span>Refresh Printer (Re-check)</span>
+          </button>
+          <button type="button" class="btn btn-primary" onclick="saveSettingsLabelConfig()"
+            style="font-weight: 700;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>Save Label Configuration</span>
+          </button>
+        </div>
+      </div>
+
       <!-- TAB: Logs -->
       <div id="tabLogs" class="tab-pane">
         <!-- Sub-Tabs Bar inside Logs Tab -->
@@ -1764,6 +1848,22 @@
 
       100% {
         transform: rotate(360deg);
+      }
+    }
+
+    .update-indeterminate {
+      background: linear-gradient(90deg, #2563eb, #3b82f6, #2563eb) !important;
+      background-size: 200% 100% !important;
+      animation: updateIndeterminate 1.2s linear infinite;
+    }
+
+    @keyframes updateIndeterminate {
+      0% {
+        background-position: 0% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
       }
     }
   </style>
@@ -2166,7 +2266,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
   function switchSystemSubTab(subTabId) {
     document.querySelectorAll('.system-subtab-pane').forEach(pane => pane.style.display = 'none');
-    document.querySelectorAll('#btnSysSubDb, #btnSysSubIntegration, #btnSysSubUpdates').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#btnSysSubDb, #btnSysSubIntegration, #btnSysSubUpdates, #btnSysSubLabel').forEach(btn => btn.classList.remove('active'));
 
     if (subTabId === 'subSysDatabase') {
       const pane = document.getElementById('subSysDatabase');
@@ -2184,6 +2284,12 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
       if (pane) pane.style.display = 'block';
       const btn = document.getElementById('btnSysSubUpdates');
       if (btn) btn.classList.add('active');
+    } else if (subTabId === 'subSysLabel') {
+      const pane = document.getElementById('subSysLabel');
+      if (pane) pane.style.display = 'block';
+      const btn = document.getElementById('btnSysSubLabel');
+      if (btn) btn.classList.add('active');
+      loadSettingsLabelConfig(true);
     }
   }
 
@@ -2807,6 +2913,105 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
   let latestGitHubAsset = null;
   let onlineDownloadInterval = null;
 
+  // --- CD / DVD THERMAL LABEL PRINTING CONFIG (Settings) ---
+  function loadSettingsLabelConfig(loadPrinters = true) {
+    if (loadPrinters) {
+      const sel = document.getElementById('settingsLabelPrinter');
+      const status = document.getElementById('settingsLabelPrinterStatus');
+      if (sel) sel.innerHTML = '<option value="">Loading printer list...</option>';
+      if (status) { status.textContent = 'Checking printers...'; status.style.color = 'var(--text-muted)'; }
+
+      fetch('/api/label/printers')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            if (sel) sel.innerHTML = '<option value="">No printer detected</option>';
+            if (status) { status.textContent = (data.message || 'No printer'); status.style.color = '#dc2626'; }
+            return;
+          }
+          const printers = data.printers || [];
+          if (printers.length === 0) {
+            if (sel) sel.innerHTML = '<option value="">No printer installed</option>';
+            if (status) { status.textContent = 'No printer detected on Windows.'; status.style.color = '#dc2626'; }
+          } else {
+            let html = '<option value="">— Select Printer —</option>';
+            printers.forEach(name => { html += '<option value="' + name.replace(/"/g, '&quot;') + '">' + name + '</option>'; });
+            if (sel) sel.innerHTML = html;
+            if (status) { status.textContent = printers.length + ' printer(s) available.'; status.style.color = '#047857'; }
+            // Auto-select the saved printer
+            fetch('/api/label/config')
+              .then(r => r.json())
+              .then(cfg => {
+                if (!cfg.success) return;
+                const saved = (cfg.label_config || {}).printer_name || data.default_printer || '';
+                if (saved && sel) {
+                  for (let i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === saved) { sel.value = saved; break; }
+                  }
+                }
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {
+          if (sel) sel.innerHTML = '<option value="">Failed to load printers</option>';
+          if (status) { status.textContent = 'Error connecting to the backend.'; status.style.color = '#dc2626'; }
+        });
+    }
+
+    // Load the saved size & fields
+    fetch('/api/label/config')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return;
+        const lc = data.label_config || {};
+        if (document.getElementById('settingsLabelWidth')) document.getElementById('settingsLabelWidth').value = lc.width_mm || 50;
+        if (document.getElementById('settingsLabelHeight')) document.getElementById('settingsLabelHeight').value = lc.height_mm || 30;
+        if (document.getElementById('settingsLabelFont')) {
+          const fs = document.getElementById('settingsLabelFont');
+          let ff = false;
+          for (let i = 0; i < fs.options.length; i++) { if (fs.options[i].value === lc.font_size) { fs.value = lc.font_size; ff = true; break; } }
+          if (!ff) fs.value = '11px';
+        }
+        const fieldMap = {
+          settingsLabelFacility: 'show_facility', settingsLabelNama: 'show_nama', settingsLabelIc: 'show_ic',
+          settingsLabelExam: 'show_exam', settingsLabelDate: 'show_date', settingsLabelXray: 'show_xray'
+        };
+        for (const id in fieldMap) {
+          const cb = document.getElementById(id);
+          if (cb && lc[fieldMap[id]] !== undefined) cb.checked = !!lc[fieldMap[id]];
+        }
+      })
+      .catch(() => {});
+  }
+
+  function saveSettingsLabelConfig() {
+    const payload = {
+      preset: 'CUSTOM',
+      printer_name: document.getElementById('settingsLabelPrinter') ? document.getElementById('settingsLabelPrinter').value : '',
+      width_mm: parseFloat(document.getElementById('settingsLabelWidth')?.value) || 50,
+      height_mm: parseFloat(document.getElementById('settingsLabelHeight')?.value) || 30,
+      font_size: document.getElementById('settingsLabelFont') ? document.getElementById('settingsLabelFont').value : '11px',
+      show_facility: document.getElementById('settingsLabelFacility') ? document.getElementById('settingsLabelFacility').checked : true,
+      show_nama: document.getElementById('settingsLabelNama') ? document.getElementById('settingsLabelNama').checked : true,
+      show_ic: document.getElementById('settingsLabelIc') ? document.getElementById('settingsLabelIc').checked : true,
+      show_exam: document.getElementById('settingsLabelExam') ? document.getElementById('settingsLabelExam').checked : true,
+      show_date: document.getElementById('settingsLabelDate') ? document.getElementById('settingsLabelDate').checked : true,
+      show_xray: document.getElementById('settingsLabelXray') ? document.getElementById('settingsLabelXray').checked : true
+    };
+    fetch('/api/label/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) showToast(res.message);
+        else showToast(res.message, 'error');
+      })
+      .catch(() => showToast('Error saving the label configuration.', 'error'));
+  }
+
   function checkGitHubRelease(showFeedback = false) {
     return checkOnlineGitHubUpdate(showFeedback);
   }
@@ -3027,6 +3232,13 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
             progressFill.style.background = '#10b981';
           }
           if (progressPct) progressPct.textContent = '100%';
+          if (data.needs_restart) {
+            // Frozen (packaged) build: app will auto-shutdown & relaunch.
+            if (titleEl) titleEl.textContent = 'Update Ready - Restarting Application...';
+            if (descEl) descEl.textContent = data.message + ' Aplikasi akan ditutup dan dimulakan semula sebentar lagi. Jangan tutup aplikasi secara manual.';
+            if (typeof showToast === 'function') showToast(data.message);
+            return; // do NOT location.reload(); the process is self-restarting
+          }
           if (titleEl) titleEl.textContent = 'Update Completed Successfully!';
           if (descEl) descEl.textContent = data.message;
           if (typeof showToast === 'function') showToast(data.message);
@@ -3073,6 +3285,9 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     const descEl = document.getElementById('updateModalDesc');
     const modalEl = document.getElementById('updateProgressModal');
     const spinnerEl = document.getElementById('updateModalSpinner');
+    const progressSec = document.getElementById('updateModalProgressSection');
+    const progressFill = document.getElementById('updateProgressBarFill');
+    const progressPct = document.getElementById('updateProgressPercent');
     const actionsEl = document.getElementById('updateModalActions');
     const cancelBtn = document.getElementById('btnCancelUpdate');
     const applyBtn = document.getElementById('btnConfirmApplyUpdate');
@@ -3080,6 +3295,12 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     if (titleEl) titleEl.textContent = 'Confirm Application Update';
     if (descEl) descEl.innerHTML = `Package: <strong>${file.name}</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">${typeMsg}</span>`;
     if (spinnerEl) spinnerEl.style.display = 'none';
+    if (progressSec) progressSec.style.display = 'none';
+    if (progressFill) {
+      progressFill.classList.remove('update-indeterminate');
+      progressFill.style.width = '0%';
+    }
+    if (progressPct) progressPct.textContent = '0%';
     if (actionsEl) actionsEl.style.display = 'flex';
     if (cancelBtn) cancelBtn.style.display = 'inline-block';
     if (applyBtn) {
@@ -3095,6 +3316,17 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     selectedUpdateFile = null;
     const input = document.getElementById('updateZipInput');
     if (input) input.value = '';
+    const progressSec = document.getElementById('updateModalProgressSection');
+    if (progressSec) progressSec.style.display = 'none';
+    const progressFill = document.getElementById('updateProgressBarFill');
+    if (progressFill) {
+      progressFill.classList.remove('update-indeterminate');
+      progressFill.style.width = '0%';
+    }
+    const progressPct = document.getElementById('updateProgressPercent');
+    if (progressPct) progressPct.textContent = '0%';
+    const spinnerEl = document.getElementById('updateModalSpinner');
+    if (spinnerEl) spinnerEl.style.display = 'none';
   }
 
   function proceedApplyUpdate() {
@@ -3106,50 +3338,80 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     const spinnerText = document.getElementById('updateSpinnerText');
     const titleEl = document.getElementById('updateModalTitle');
     const descEl = document.getElementById('updateModalDesc');
+    const progressSec = document.getElementById('updateModalProgressSection');
+    const progressFill = document.getElementById('updateProgressBarFill');
+    const progressPct = document.getElementById('updateProgressPercent');
 
     if (actionsEl) actionsEl.style.display = 'none';
-    if (spinnerEl) spinnerEl.style.display = 'block';
+    if (spinnerEl) spinnerEl.style.display = 'none';
+    if (progressSec) progressSec.style.display = 'block';
+    if (progressFill) {
+      progressFill.classList.remove('update-indeterminate');
+      progressFill.style.width = '0%';
+      progressFill.style.background = 'linear-gradient(90deg, #2563eb, #3b82f6)';
+    }
+    if (progressPct) progressPct.textContent = '0%';
     if (titleEl) titleEl.textContent = 'Applying Update...';
-    if (descEl) descEl.textContent = 'Uploading package and extracting files to application directory...';
+    if (descEl) descEl.textContent = 'Uploading package, then extracting files to application directory...';
     if (spinnerText) spinnerText.textContent = isCurrentUpdateMajor ? 'Running auto-backup & applying major update... Please wait.' : 'Applying patch update... Please do not close application.';
 
     const formData = new FormData();
     formData.append('file', selectedUpdateFile);
     formData.append('is_major', isCurrentUpdateMajor ? 'true' : 'false');
 
-    fetch('/api/update/apply-patch', {
-      method: 'POST',
-      body: formData
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          if (spinnerEl) spinnerEl.style.display = 'none';
-          if (titleEl) titleEl.textContent = 'Update Applied Successfully!';
-          if (descEl) descEl.textContent = data.message;
-          if (typeof showToast === 'function') showToast(data.message);
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          if (spinnerEl) spinnerEl.style.display = 'none';
-          if (titleEl) titleEl.textContent = 'Update Error';
-          if (descEl) descEl.textContent = 'Error: ' + data.message;
-          if (actionsEl) {
-            actionsEl.style.display = 'flex';
-            const applyBtn = document.getElementById('btnConfirmApplyUpdate');
-            if (applyBtn) applyBtn.style.display = 'none';
-          }
+    uploadFormWithProgress(formData, '/api/update/apply-patch', (pct) => {
+      if (progressFill) {
+        if (pct >= 99 && !progressFill.classList.contains('update-indeterminate')) {
+          progressFill.classList.add('update-indeterminate');
+        } else if (pct < 99) {
+          progressFill.classList.remove('update-indeterminate');
+          progressFill.style.width = Math.min(pct, 60) + '%';
         }
-      })
-      .catch(err => {
-        if (spinnerEl) spinnerEl.style.display = 'none';
-        if (titleEl) titleEl.textContent = 'Update Failed';
-        if (descEl) descEl.textContent = 'Failed to upload or apply update file: ' + err.message;
+      }
+      const label = (pct >= 99)
+        ? (isCurrentUpdateMajor ? 'Running auto-backup & applying major update...' : 'Applying patch update...')
+        : 'Uploading update package...';
+      if (spinnerText) spinnerText.textContent = label;
+      if (progressPct) progressPct.textContent = (pct >= 99) ? '...' : (Math.min(pct, 60) + '%');
+    })
+    .then(data => {
+      if (data.success) {
+        if (progressFill) {
+          progressFill.classList.remove('update-indeterminate');
+          progressFill.style.width = '100%';
+          progressFill.style.background = '#10b981';
+        }
+        if (progressPct) progressPct.textContent = '100%';
+        if (typeof showToast === 'function') showToast(data.message);
+        if (data.needs_restart) {
+          if (titleEl) titleEl.textContent = 'Update Ready - Restarting Application...';
+          if (descEl) descEl.textContent = data.message + ' Jangan tutup aplikasi secara manual.';
+          return; // do NOT reload; app is self-restarting
+        }
+        if (titleEl) titleEl.textContent = 'Update Applied Successfully!';
+        if (descEl) descEl.textContent = data.message;
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        if (progressFill) progressFill.classList.remove('update-indeterminate');
+        if (titleEl) titleEl.textContent = 'Update Error';
+        if (descEl) descEl.textContent = 'Error: ' + data.message;
         if (actionsEl) {
           actionsEl.style.display = 'flex';
           const applyBtn = document.getElementById('btnConfirmApplyUpdate');
           if (applyBtn) applyBtn.style.display = 'none';
         }
-      });
+      }
+    })
+    .catch(err => {
+      if (progressFill) progressFill.classList.remove('update-indeterminate');
+      if (titleEl) titleEl.textContent = 'Update Failed';
+      if (descEl) descEl.textContent = 'Failed to upload or apply update file: ' + err.message;
+      if (actionsEl) {
+        actionsEl.style.display = 'flex';
+        const applyBtn = document.getElementById('btnConfirmApplyUpdate');
+        if (applyBtn) applyBtn.style.display = 'none';
+      }
+    });
   }
 
   // --- DICOM MODALITY WORKLIST & CONSOLE JAVASCRIPT ---
@@ -3581,11 +3843,59 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     }
   }
 
+  function uploadFormWithProgress(formData, url, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        let parsed = null;
+        try {
+          parsed = JSON.parse(xhr.responseText);
+        } catch (err) {
+          parsed = null;
+        }
+        if (parsed) {
+          resolve(parsed);
+        } else {
+          reject(new Error(xhr.statusText || 'Upload failed'));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload. Please try again.'));
+      xhr.send(formData);
+    });
+  }
+
+  function setImportUploadProgress(pct, label) {
+    const wrap = document.getElementById('importUploadProgressWrap');
+    const fill = document.getElementById('importUploadProgressFill');
+    const pctEl = document.getElementById('importUploadProgressPercent');
+    const labelEl = document.getElementById('importUploadProgressLabel');
+    if (wrap) wrap.style.display = 'block';
+    if (fill) fill.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (labelEl && label) labelEl.textContent = label;
+  }
+
   function closeImportModal() {
     const modal = document.getElementById('importDataModal');
     if (modal) modal.style.display = 'none';
     const inp = document.getElementById('importFileInput');
     if (inp) inp.value = '';
+    const fb = document.getElementById('importStep1Feedback');
+    if (fb) fb.innerHTML = '';
+    const upWrap = document.getElementById('importUploadProgressWrap');
+    if (upWrap) upWrap.style.display = 'none';
+    const stWrap = document.getElementById('importStatusProgressWrap');
+    if (stWrap) stWrap.style.display = 'none';
+    const stFill = document.getElementById('importStatusProgressFill');
+    if (stFill) stFill.classList.remove('import-indeterminate');
+    const upFill = document.getElementById('importUploadProgressFill');
+    if (upFill) upFill.style.width = '0%';
   }
 
   function goImportStep(step) {
@@ -3604,16 +3914,30 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
 
     const fb = document.getElementById('importStep1Feedback');
     fb.innerHTML = '<span style="color: var(--primary);">Uploading & parsing file headers...</span>';
+    setImportUploadProgress(0, 'Uploading file...');
 
     const formData = new FormData();
     formData.append('file', file);
 
-    fetch('/api/import/preview', {
-      method: 'POST',
-      body: formData
+    uploadFormWithProgress(formData, '/api/import/preview', (pct) => {
+      if (pct >= 99) {
+        setImportUploadProgress(99, 'File received. Parsing & detecting columns...');
+        const fill = document.getElementById('importUploadProgressFill');
+        if (fill) fill.classList.add('import-indeterminate');
+      } else {
+        setImportUploadProgress(pct, 'Uploading file...');
+        const fill = document.getElementById('importUploadProgressFill');
+        if (fill) fill.classList.remove('import-indeterminate');
+      }
     })
-    .then(res => res.json())
     .then(data => {
+      setImportUploadProgress(100, 'Upload complete.');
+      const fill = document.getElementById('importUploadProgressFill');
+      if (fill) {
+        fill.classList.remove('import-indeterminate');
+        fill.style.width = '100%';
+        fill.style.background = '#10b981';
+      }
       if (data.success) {
         importSession.tempFilePath = data.temp_file_path;
         importSession.headers = data.headers || [];
@@ -3705,8 +4029,23 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     goImportStep(3);
     document.getElementById('importStatusSpinner').style.display = 'inline-block';
     document.getElementById('importStatusTitle').textContent = 'Processing Data Migration...';
+    document.getElementById('importStatusTitle').style.color = 'var(--text-main)';
     document.getElementById('importStatusDesc').textContent = 'Creating automated ZIP backup and inserting records into Buku Daftar...';
     document.getElementById('importErrorLogWrapper').style.display = 'none';
+
+    // Show animated indeterminate progress bar while processing server-side
+    const progWrap = document.getElementById('importStatusProgressWrap');
+    const progFill = document.getElementById('importStatusProgressFill');
+    const progLabel = document.getElementById('importStatusProgressLabel');
+    const progPct = document.getElementById('importStatusProgressPercent');
+    if (progWrap) progWrap.style.display = 'block';
+    if (progFill) {
+      progFill.classList.remove('import-indeterminate');
+      progFill.style.width = '100%';
+      progFill.classList.add('import-indeterminate');
+    }
+    if (progLabel) progLabel.textContent = 'Creating backup & inserting records...';
+    if (progPct) progPct.textContent = 'Processing...';
 
     const sheetSel = document.getElementById('importSheetSelect');
     const selectedSheet = sheetSel ? sheetSel.value : importSession.activeSheet;
@@ -3723,7 +4062,11 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     .then(res => res.json())
     .then(data => {
       document.getElementById('importStatusSpinner').style.display = 'none';
+      if (progFill) progFill.classList.remove('import-indeterminate');
       if (data.success) {
+        if (progFill) { progFill.style.width = '100%'; progFill.style.background = '#10b981'; }
+        if (progPct) progPct.textContent = '100%';
+        if (progLabel) progLabel.textContent = 'Migration complete.';
         document.getElementById('importStatusTitle').textContent = 'Migration Completed!';
         document.getElementById('importStatusTitle').style.color = '#10b981';
         document.getElementById('importStatusDesc').textContent = data.message;
@@ -3734,6 +4077,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
           document.getElementById('importErrorLogWrapper').style.display = 'block';
         }
       } else {
+        if (progPct) progPct.textContent = 'Failed';
         document.getElementById('importStatusTitle').textContent = 'Migration Failed';
         document.getElementById('importStatusTitle').style.color = '#ef4444';
         document.getElementById('importStatusDesc').textContent = data.message;
@@ -3741,6 +4085,8 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     })
     .catch(err => {
       document.getElementById('importStatusSpinner').style.display = 'none';
+      if (progFill) progFill.classList.remove('import-indeterminate');
+      if (progPct) progPct.textContent = 'Error';
       document.getElementById('importStatusTitle').textContent = 'Migration Error';
       document.getElementById('importStatusTitle').style.color = '#ef4444';
       document.getElementById('importStatusDesc').textContent = err.message;

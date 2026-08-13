@@ -461,6 +461,240 @@ def get_clean_zip_member_path(member, zip_namelist):
 
     return rel_member
 
+# ==============================================================================
+# SELF-UPDATE ENGINE (PyInstaller frozen build) - staging + restart updater
+# ------------------------------------------------------------------------------
+# For a frozen onedir build the running code executes from inside the .exe /
+# .app bundle, NOT from loose source files. Writing files into BASE_DIR does
+# NOT update the running app. To update properly we must:
+#   1) extract the downloaded release bundle into a staging dir,
+#   2) spawn a tiny detached updater carrying (PID, staging, install dir),
+#   3) force-exit the app so file locks are released,
+#   4) updater waits for exit -> swaps the bundle -> relaunches the app.
+# ==============================================================================
+
+def _running_frozen():
+    return bool(getattr(sys, 'frozen', False))
+
+def _frozen_install_layout():
+    """Return a dict describing the frozen install layout, or None if not frozen."""
+    if not _running_frozen():
+        return None
+    exec_path = os.path.abspath(sys.executable)
+    exec_name = os.path.basename(exec_path)
+    if sys.platform == 'darwin':
+        # macOS onedir: .../DaftarRadiologi.app/Contents/MacOS/DaftarRadiologi
+        app_dir = os.path.abspath(os.path.join(os.path.dirname(exec_path), '..', '..'))
+        return {
+            "platform": "mac",
+            "root": app_dir,
+            "is_app": app_dir.lower().endswith('.app'),
+            "exec_name": exec_name,
+        }
+    # Windows / Linux onedir: all runtime files sit next to the executable
+    root = os.path.dirname(exec_path)
+    return {
+        "platform": "windows",
+        "root": root,
+        "is_app": False,
+        "exec_name": exec_name,
+    }
+
+def _extract_zip_into(zip_path, dest_root, keep_top_app=False):
+    """
+    Safely extract zip into dest_root. Returns number of files extracted.
+    Protects against zip-slip and never writes into Pendaftaran/.
+    When keep_top_app is True (macOS), a top-level '*.app' folder is preserved
+    as the container so the whole bundle can be swapped at once.
+    """
+    extracted = 0
+    with zipfile.ZipFile(zip_path, 'r') as zipf:
+        namelist = zipf.namelist()
+        for member in namelist:
+            norm_member = member.replace('\\', '/').strip('/')
+            if not norm_member:
+                continue
+
+            if keep_top_app:
+                # Keep the first component (the .app bundle) as the container
+                parts = norm_member.split('/')
+                rel_member = norm_member
+                if len(parts) > 1 and parts[0].lower().endswith('.app'):
+                    rel_member = norm_member  # preserve .app/Contents/...
+                elif len(parts) == 1:
+                    rel_member = norm_member
+            else:
+                rel_member = get_clean_zip_member_path(member, namelist)
+                if not rel_member:
+                    continue
+
+            norm_path = os.path.normpath(rel_member)
+            path_parts = norm_path.replace('\\', '/').split('/')
+            if 'Pendaftaran' in path_parts or 'pendaftaran' in path_parts:
+                continue
+
+            target_file_path = os.path.abspath(os.path.join(dest_root, norm_path))
+            if not target_file_path.startswith(os.path.abspath(dest_root)):
+                continue
+
+            if rel_member.endswith('/') or rel_member.endswith('\\'):
+                os.makedirs(target_file_path, exist_ok=True)
+                continue
+
+            os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+            try:
+                with zipf.open(member) as source, open(target_file_path, 'wb') as target:
+                    shutil.copyfileobj(source, target)
+                extracted += 1
+            except Exception:
+                continue
+    return extracted
+
+def _write_windows_updater(updater_path, pid, src, dst, exe):
+    esc = lambda s: s.replace('"', '""')
+    content = (
+        '@echo off\r\n'
+        'setlocal EnableExtensions\r\n'
+        f'set "SRC={esc(src)}"\r\n'
+        f'set "DST={esc(dst)}"\r\n'
+        f'set "EXE={esc(exe)}"\r\n'
+        f'set "PID={int(pid)}"\r\n'
+        ':WAITLOOP\r\n'
+        'tasklist /FI "PID eq %PID%" 2>nul | find "%PID%" >nul\r\n'
+        'if not errorlevel 1 (\r\n'
+        '  timeout /t 1 /nobreak >nul\r\n'
+        '  goto WAITLOOP\r\n'
+        ')\r\n'
+        'robocopy "%SRC%" "%DST%" /E /R:1 /W:1 /NFL /NDL /NJH /NJS >nul 2>nul\r\n'
+        'if errorlevel 8 xcopy /E /Y /I /Q "%SRC%\\*" "%DST%\\" >nul 2>nul\r\n'
+        'rd /S /Q "%SRC%" >nul 2>nul\r\n'
+        'start "" "%DST%\\%EXE%"\r\n'
+        'endlocal\r\n'
+        'exit /b\r\n'
+    )
+    with open(updater_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    return updater_path
+
+def _write_macos_updater(updater_path, pid, src_app, dst_app, staging_dir):
+    esc = lambda s: s.replace('"', '\\"')
+    content = (
+        '#!/bin/bash\n'
+        f'APP_PID="{int(pid)}"\n'
+        f'SRC="{esc(src_app)}"\n'
+        f'DST="{esc(dst_app)}"\n'
+        f'STAGING="{esc(staging_dir)}"\n'
+        'while /bin/kill -0 "$APP_PID" 2>/dev/null; do /bin/sleep 1; done\n'
+        '/bin/sleep 1\n'
+        '/bin/rm -rf "$DST"\n'
+        '/bin/cp -R "$SRC" "$DST"\n'
+        '/bin/rm -rf "$STAGING"\n'
+        '/usr/bin/open "$DST" >/dev/null 2>&1 || /usr/bin/open -a "$DST" >/dev/null 2>&1\n'
+        'exit 0\n'
+    )
+    with open(updater_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    os.chmod(updater_path, 0o755)
+    return updater_path
+
+def _perform_frozen_self_update(zip_path, is_major):
+    """
+    Stage the downloaded release bundle and spawn a detached updater that
+    swaps the running app and relaunches it. Returns (success, message, needs_restart).
+    """
+    import subprocess
+    layout = _frozen_install_layout()
+    if layout is None:
+        return False, "Not a packaged (frozen) build.", False
+
+    staging_root = os.path.join(layout["root"], "__daftar_staging__")
+    if os.path.exists(staging_root):
+        try:
+            shutil.rmtree(staging_root)
+        except Exception:
+            pass
+    os.makedirs(staging_root, exist_ok=True)
+
+    keep_top_app = layout["is_app"]
+    try:
+        extracted = _extract_zip_into(zip_path, staging_root, keep_top_app=keep_top_app)
+    except Exception as e:
+        try:
+            shutil.rmtree(staging_root)
+        except Exception:
+            pass
+        return False, f"Gagal mengekstrak bundle update: {e}", False
+
+    if extracted <= 0:
+        try:
+            shutil.rmtree(staging_root)
+        except Exception:
+            pass
+        return False, "Bundle update tidak mengandungi fail yang sah.", False
+
+    pid = os.getpid()
+
+    try:
+        if layout["platform"] == "mac" and layout["is_app"]:
+            # Locate the staged .app bundle (may be nested under a prefix dir)
+            app_candidate = staging_root
+            try:
+                for dirpath, dirnames, filenames in os.walk(staging_root):
+                    for d in dirnames:
+                        if d.lower().endswith('.app'):
+                            app_candidate = os.path.join(dirpath, d)
+                            break
+                    if os.path.abspath(app_candidate) != os.path.abspath(staging_root):
+                        break
+            except Exception:
+                pass
+            updater_path = os.path.join(staging_root, "__daftar_selfupdate.sh")
+            _write_macos_updater(updater_path, pid, app_candidate, layout["root"], staging_root)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.Popen(
+                    ['/bin/bash', updater_path],
+                    stdin=devnull, stdout=devnull, stderr=devnull,
+                    close_fds=True, start_new_session=True,
+                )
+            if is_major:
+                threading.Timer(1.0, _try_init_db_after_update).start()
+            threading.Timer(3.5, os._exit, args=(0,)).start()
+            return True, "Bundle update telah dipentaskan. Aplikasi akan dimulakan semula secara automatik.", True
+
+        # Windows / Linux onedir: swap staged contents over install root
+        import tempfile
+        updater_path = os.path.join(tempfile.gettempdir(), "daftar_selfupdate.bat")
+        _write_windows_updater(updater_path, pid, staging_root, layout["root"], layout["exec_name"])
+        devnull = open(os.devnull, 'w')
+        CREATE_NO_WINDOW = 0x08000000
+        DETACHED_PROCESS = 0x00000008
+        try:
+            subprocess.Popen(
+                ['cmd.exe', '/c', updater_path],
+                stdin=devnull, stdout=devnull, stderr=devnull,
+                close_fds=True, creationflags=DETACHED_PROCESS | CREATE_NO_WINDOW,
+            )
+        finally:
+            try:
+                devnull.close()
+            except Exception:
+                pass
+        if is_major:
+            threading.Timer(1.0, _try_init_db_after_update).start()
+        threading.Timer(3.5, os._exit, args=(0,)).start()
+        return True, "Bundle update telah dipentaskan. Aplikasi akan ditutup dan dimulakan semula secara automatik.", True
+
+    except Exception as e:
+        return False, f"Ralat memulakan updater: {e}", False
+
+def _try_init_db_after_update():
+    try:
+        config = load_config()
+        if config.get("db_config", {}).get("enabled", False):
+            init_db_schema(config)
+    except Exception as e_db:
+        print(f"[Self-Update Major DB Warning] {e_db}")
+
 @settings_bp.route('/api/update/apply-patch', methods=['POST'])
 def api_apply_update_patch():
     """
@@ -524,6 +758,23 @@ def api_apply_update_patch():
         except Exception as e:
             if os.path.exists(temp_zip): os.remove(temp_zip)
             return jsonify({"success": False, "message": f"Auto Backup error: {str(e)}"}), 500
+
+    # Packaged (frozen) build => full bundle self-update with automatic restart
+    if _running_frozen():
+        run_ok, run_msg, needs_restart = _perform_frozen_self_update(temp_zip, is_major)
+        if not run_ok:
+            if os.path.exists(temp_zip): os.remove(temp_zip)
+            return jsonify({"success": False, "message": run_msg}), 500
+        auto_clean = ""
+        try:
+            if os.path.exists(temp_zip): os.remove(temp_zip)
+        except Exception:
+            auto_clean = " (Fail temp dibersihkan secara automatik oleh updater)"
+        return jsonify({
+            "success": True,
+            "needs_restart": True,
+            "message": f"{run_msg}{backup_msg}{auto_clean} Aplikasi akan ditutup & dimulakan semula."
+        })
 
     # 2. Ekstrak & Terapkan Kemas Kini dengan Selamat (Safety Extraction)
     target_dirs = [BASE_DIR]
@@ -843,6 +1094,20 @@ def api_apply_downloaded_update():
 
     ONLINE_UPDATE_TRACKER["progress_percent"] = 40
     ONLINE_UPDATE_TRACKER["message"] = "Extracting update package & patching application..."
+
+    # Packaged (frozen) build => full bundle self-update with automatic restart
+    if _running_frozen():
+        run_ok, run_msg, needs_restart = _perform_frozen_self_update(filepath, is_major)
+        ONLINE_UPDATE_TRACKER["state"] = "completed" if run_ok else "error"
+        if not run_ok:
+            ONLINE_UPDATE_TRACKER["message"] = run_msg
+            return jsonify({"success": False, "message": run_msg}), 500
+        ONLINE_UPDATE_TRACKER["message"] = run_msg
+        return jsonify({
+            "success": True,
+            "needs_restart": True,
+            "message": f"{run_msg}{backup_msg} Aplikasi akan ditutup & dimulakan semula secara automatik."
+        })
 
     # 2. Ekstrak & Terapkan Kemas Kini dengan Selamat (Safety Extraction)
     target_dirs = [BASE_DIR]

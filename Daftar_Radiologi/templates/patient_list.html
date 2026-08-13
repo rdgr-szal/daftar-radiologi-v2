@@ -1173,10 +1173,32 @@
 
         <!-- Select Patient / Exam Record -->
         <div class="form-group" id="cdRecordSelectGroup" style="display: none;">
-          <label style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Pilih Rekod Pesakit:</label>
+          <label style="font-size: 0.78rem; font-weight: 700; color: var(--primary);">Select Patient Record:</label>
           <select id="cdRecordSelect" class="form-control" style="font-size: 0.82rem;"
             onchange="loadCdPatientFromSelect(this.value)">
           </select>
+        </div>
+
+        <!-- Printer Selection (Windows Driver / Qt Printer) -->
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">Printer (Windows Driver):</label>
+            <button type="button" onclick="refreshLabelPrinters()" title="Refresh Printer List"
+              style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 5px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted);">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2.2;">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
+          </div>
+          <select id="cdPrinterSelect" class="form-control"
+            style="font-size: 0.83rem; font-weight: 600; background: var(--bg-input);"
+            onchange="updateCdPrinterStatus()">
+            <option value="">Loading printer list...</option>
+          </select>
+          <div id="cdPrinterStatus" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Checking available printers...
+          </div>
         </div>
 
         <!-- Preset Label Types -->
@@ -1225,32 +1247,32 @@
         <!-- Fields Selection -->
         <div
           style="background: var(--bg-subtle); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
-          <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); margin-bottom: 0.4rem;">Papar Medan
-            Label:</div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); margin-bottom: 0.4rem;">Show Label
+            Fields:</div>
           <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.78rem;">
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldFacility" checked onchange="updateCdStickerPreview()">
-              <span>Nama Fasiliti</span>
+              <span>Facility Name</span>
             </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldNama" checked onchange="updateCdStickerPreview()">
-              <span>Nama Pesakit</span>
+              <span>Patient Name</span>
             </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldIc" checked onchange="updateCdStickerPreview()">
-              <span>No. IC / Pasport / RN</span>
+              <span>IC / Passport / RN No.</span>
             </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldExam" checked onchange="updateCdStickerPreview()">
-              <span>Pemeriksaan</span>
+              <span>Examination</span>
             </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldDate" checked onchange="updateCdStickerPreview()">
-              <span>Tarikh Pemeriksaan</span>
+              <span>Examination Date</span>
             </label>
             <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
               <input type="checkbox" id="cdFieldXray" checked onchange="updateCdStickerPreview()">
-              <span>No. X-Ray</span>
+              <span>X-Ray No.</span>
             </label>
           </div>
         </div>
@@ -1280,15 +1302,15 @@
     <!-- Modal Footer -->
     <div
       style="padding: 1rem 1.25rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; background: var(--bg-subtle);">
-      <button type="button" class="btn btn-secondary" onclick="closeCdLabelModal()">Batal</button>
-      <button type="button" class="btn btn-primary" onclick="printCdLabelSticker()"
+      <button type="button" class="btn btn-secondary" onclick="closeCdLabelModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btnPrintThermalLabel" onclick="printCdLabelStickerApi()"
         style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
         <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2;">
           <polyline points="6 9 6 2 18 2 18 9" />
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <rect x="6" y="14" width="12" height="8" />
         </svg>
-        <span>Print Thermal Label</span>
+        <span id="btnPrintThermalLabelText">Print via Selected Printer</span>
       </button>
     </div>
 
@@ -1982,6 +2004,124 @@
 
     modal.style.display = 'flex';
     updateCdStickerPreview();
+    loadLabelConfigAndPrinters();
+  }
+
+  // --- PRINTER + CONFIG LOADING (Backend Driven) ---
+
+  function updateCdPrinterStatus() {
+    const sel = document.getElementById('cdPrinterSelect');
+    const status = document.getElementById('cdPrinterStatus');
+    if (!sel || !status) return;
+    if (!sel.value) {
+      const p = sel.options.length - 1;
+      status.textContent = (p > 0 ? (p + ' printer(s) available') : 'No printer is installed.');
+      if (p <= 0) status.style.color = '#dc2626';
+      else status.style.color = 'var(--text-muted)';
+    } else {
+      status.textContent = 'Printer selected: ' + sel.value;
+      status.style.color = '#047857';
+    }
+  }
+
+  function loadLabelConfigAndPrinters() {
+    refreshLabelPrinters(false);
+    // Load the saved configuration (size, fields) from config.json
+    fetch('/api/label/config')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return;
+        const lc = data.label_config || {};
+        if (lc.preset && document.getElementById('cdLabelPresetSelect')) {
+          const sel = document.getElementById('cdLabelPresetSelect');
+          // Look for the preset or fall back to CUSTOM
+          let found = false;
+          for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === lc.preset) { sel.value = lc.preset; found = true; break; }
+          }
+          sel.value = found ? lc.preset : 'CUSTOM';
+          applyCdLabelPreset(sel.value);
+        }
+        if (lc.width_mm && document.getElementById('cdStickerWidth')) {
+          document.getElementById('cdStickerWidth').value = lc.width_mm;
+        }
+        if (lc.height_mm && document.getElementById('cdStickerHeight')) {
+          document.getElementById('cdStickerHeight').value = lc.height_mm;
+        }
+        if (lc.font_size && document.getElementById('cdFontSizeSelect')) {
+          const fs = document.getElementById('cdFontSizeSelect');
+          let ff = false;
+          for (let i = 0; i < fs.options.length; i++) { if (fs.options[i].value === lc.font_size) { fs.value = lc.font_size; ff = true; break; } }
+          if (!ff) fs.value = '11px';
+        }
+        const fieldMap = {
+          show_facility: 'cdFieldFacility', show_nama: 'cdFieldNama', show_ic: 'cdFieldIc',
+          show_exam: 'cdFieldExam', show_date: 'cdFieldDate', show_xray: 'cdFieldXray'
+        };
+        for (const key in fieldMap) {
+          const cb = document.getElementById(fieldMap[key]);
+          if (cb && lc[key] !== undefined && lc[key] !== null) cb.checked = !!lc[key];
+        }
+        updateCdStickerPreview();
+      })
+      .catch(() => { });
+  }
+
+  function refreshLabelPrinters(autoSelectDefault = true) {
+    const sel = document.getElementById('cdPrinterSelect');
+    const status = document.getElementById('cdPrinterStatus');
+    if (!sel) return;
+
+    // macOS / Linux: printing is handled by the OS built-in WebKit — no printer selection required
+    if (!isWindowsPlatform()) {
+      sel.innerHTML = '<option value="">WebKit (no printer selection required)</option>';
+      if (status) { status.textContent = 'Printing is handled by the macOS built-in WebKit — select the printer in the OS print dialog.'; status.style.color = 'var(--text-muted)'; }
+      return;
+    }
+
+    sel.innerHTML = '<option value="">Loading printer list...</option>';
+    if (status) { status.textContent = 'Checking available printers...'; status.style.color = 'var(--text-muted)'; }
+
+    fetch('/api/label/printers')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          sel.innerHTML = '<option value="">No printer detected</option>';
+          if (status) { status.textContent = (data.message || 'No printer') + ' — please install a thermal printer first.'; status.style.color = '#dc2626'; }
+          return;
+        }
+        const printers = data.printers || [];
+        if (printers.length === 0) {
+          sel.innerHTML = '<option value="">No printer installed</option>';
+          if (status) { status.textContent = 'No printer detected on Windows. Please install a thermal printer first.'; status.style.color = '#dc2626'; }
+          return;
+        }
+        let html = '<option value="">— Select Printer —</option>';
+        printers.forEach(name => {
+          html += '<option value="' + name.replace(/"/g, '&quot;') + '">' + name + '</option>';
+        });
+        sel.innerHTML = html;
+
+        // Auto-select the saved / default printer
+        let chosen = '';
+        fetch('/api/label/config')
+          .then(r => r.json())
+          .then(cfg => { if (cfg.success) chosen = (cfg.label_config || {}).printer_name; })
+          .catch(() => {})
+          .finally(() => {
+            if (!chosen) chosen = data.default_printer || '';
+            if (chosen) {
+              for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === chosen) { sel.value = chosen; break; }
+              }
+            }
+            updateCdPrinterStatus();
+          });
+      })
+      .catch(() => {
+        sel.innerHTML = '<option value="">Failed to load printers</option>';
+        if (status) { status.textContent = 'Error connecting to the printer backend.'; status.style.color = '#dc2626'; }
+      });
   }
 
   function loadCdPatientFromSelect(valStr) {
@@ -2082,7 +2222,7 @@
 
     // Use active patient, or show sample data
     const pt = activeCdPatient || {
-      nama: "NAMA PESAKIT (SAMPLE)",
+      nama: "PATIENT NAME (SAMPLE)",
       ic_pasport: "900101-14-5555",
       tarikh: new Date().toISOString().split('T')[0],
       examinations: [{ nombor_xray: "1234", bahagian_pemeriksaan: "CHEST PA" }, { nombor_xray: "1235", bahagian_pemeriksaan: "C-SPINE" }]
@@ -2125,63 +2265,66 @@
     container.innerHTML = html;
   }
 
-  function printCdLabelSticker() {
-    const w = parseFloat(document.getElementById('cdStickerWidth').value) || 50;
-    const h = parseFloat(document.getElementById('cdStickerHeight').value) || 30;
-    const fontSize = document.getElementById('cdFontSizeSelect').value || '11px';
-    const preset = document.getElementById('cdLabelPresetSelect').value;
+  // Print the label.
+  // - Windows: send to the BACKEND (win32print / Qt) because window.print() requires
+  //   a Windows default printer and fails if no printer is installed. The backend sends
+  //   the label image directly to the selected printer.
+  // - macOS/Linux: use window.print() (WebKit built into the OS) via a hidden iframe.
+  function isWindowsPlatform() {
+    if (window.navigator && window.navigator.userAgent) {
+      return /windows/i.test(window.navigator.userAgent);
+    }
+    return true; // default to Windows (primary target application)
+  }
 
-    const showFacility = document.getElementById('cdFieldFacility').checked;
-    const showNama = document.getElementById('cdFieldNama').checked;
-    const showIc = document.getElementById('cdFieldIc').checked;
-    const showExam = document.getElementById('cdFieldExam').checked;
-    const showDate = document.getElementById('cdFieldDate').checked;
-    const showXray = document.getElementById('cdFieldXray').checked;
+  function labelFieldsPayload() {
+    return {
+      show_facility: document.getElementById('cdFieldFacility').checked,
+      show_nama: document.getElementById('cdFieldNama').checked,
+      show_ic: document.getElementById('cdFieldIc').checked,
+      show_exam: document.getElementById('cdFieldExam').checked,
+      show_date: document.getElementById('cdFieldDate').checked,
+      show_xray: document.getElementById('cdFieldXray').checked
+    };
+  }
 
-    const facilityName = ({{ (config.klinik_asal or 'KLINIK KESIHATAN')|tojson }}) || "KLINIK KESIHATAN";
-    const pt = activeCdPatient || { nama: "-", ic_pasport: "-", tarikh: "-", examinations: [] };
-    const xrayLabel = cdGetXrayLabel(pt);
-    const examLabel = cdGetExamLabel(pt);
-
-    const bodyStyle = 'width:' + w + 'mm;height:' + h + 'mm;box-sizing:border-box;margin:0;padding:1.5mm;font-family:Arial,sans-serif;font-size:' + fontSize + ';color:#000;line-height:1.25;overflow:hidden;background:#fff;';
-
-    let contentHtml = '';
-    if (preset === 'CIRCLE_RING') {
-      contentHtml = '<div style="width:100%;height:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:2mm;">'
-        + (showFacility ? '<div style="font-weight:800;font-size:0.85em;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1px;margin-bottom:2px;">' + facilityName + '</div>' : '')
-        + (showDate ? '<div style="font-size:0.8em;">TARIKH: ' + (pt.tarikh || '-') + '</div>' : '')
-        + (showIc ? '<div style="font-size:0.85em;font-family:monospace;">ID: ' + (pt.ic_pasport || '-') + '</div>' : '')
-        + (showNama ? '<div style="font-weight:700;text-transform:uppercase;font-size:0.95em;">' + (pt.nama || '-') + '</div>' : '')
-        + (showXray ? '<div style="font-weight:900;font-size:1.1em;margin-top:1px;">NO. X-RAY: ' + xrayLabel + '</div>' : '')
-        + (showExam ? '<div style="font-weight:700;font-size:0.85em;margin-top:1px;">EXAM: ' + examLabel + '</div>' : '')
-        + '</div>';
-    } else {
-      contentHtml = '<div style="width:100%;height:100%;border:1px solid #000;box-sizing:border-box;padding:1.5mm;display:flex;flex-direction:column;justify-content:space-between;">'
+  function buildLabelContentHtml(fields, pt, xrayLabel, examLabel, facilityName, fontSize, preset) {
+    const contentHtml = (preset === 'CIRCLE_RING')
+      ? '<div style="width:100%;height:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:2mm;">'
+        + (fields.show_facility ? '<div style="font-weight:800;font-size:0.85em;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1px;margin-bottom:2px;">' + facilityName + '</div>' : '')
+        + (fields.show_date ? '<div style="font-size:0.8em;">TARIKH: ' + (pt.tarikh || '-') + '</div>' : '')
+        + (fields.show_ic ? '<div style="font-size:0.85em;font-family:monospace;">ID: ' + (pt.ic_pasport || '-') + '</div>' : '')
+        + (fields.show_nama ? '<div style="font-weight:700;text-transform:uppercase;font-size:0.95em;">' + (pt.nama || '-') + '</div>' : '')
+        + (fields.show_xray ? '<div style="font-weight:900;font-size:1.1em;margin-top:1px;">NO. X-RAY: ' + xrayLabel + '</div>' : '')
+        + (fields.show_exam ? '<div style="font-weight:700;font-size:0.85em;margin-top:1px;">EXAM: ' + examLabel + '</div>' : '')
+        + '</div>'
+      : '<div style="width:100%;height:100%;border:1px solid #000;box-sizing:border-box;padding:1.5mm;display:flex;flex-direction:column;justify-content:space-between;">'
         + '<div>'
-        + (showFacility ? '<div style="font-weight:800;font-size:0.85em;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1px;margin-bottom:2px;text-align:center;">' + facilityName + '</div>' : '')
-        + (showDate ? '<div style="font-size:0.82em;font-weight:600;">TARIKH: ' + (pt.tarikh || '-') + '</div>' : '')
-        + (showIc ? '<div style="font-size:0.82em;font-family:monospace;">ID: ' + (pt.ic_pasport || '-') + '</div>' : '')
-        + (showNama ? '<div style="font-weight:800;text-transform:uppercase;font-size:0.95em;margin-top:1px;">' + (pt.nama || '-') + '</div>' : '')
+        + (fields.show_facility ? '<div style="font-weight:800;font-size:0.85em;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:1px;margin-bottom:2px;text-align:center;">' + facilityName + '</div>' : '')
+        + (fields.show_date ? '<div style="font-size:0.82em;font-weight:600;">TARIKH: ' + (pt.tarikh || '-') + '</div>' : '')
+        + (fields.show_ic ? '<div style="font-size:0.82em;font-family:monospace;">ID: ' + (pt.ic_pasport || '-') + '</div>' : '')
+        + (fields.show_nama ? '<div style="font-weight:800;text-transform:uppercase;font-size:0.95em;margin-top:1px;">' + (pt.nama || '-') + '</div>' : '')
         + '</div>'
         + '<div>'
-        + (showXray ? '<div style="font-weight:900;font-size:1.05em;border-top:1px dashed #000;padding-top:1px;margin-top:2px;">NO. X-RAY: ' + xrayLabel + '</div>' : '')
-        + (showExam ? '<div style="font-weight:700;font-size:0.85em;margin-top:1px;">EXAM: ' + examLabel + '</div>' : '')
+        + (fields.show_xray ? '<div style="font-weight:900;font-size:1.05em;border-top:1px dashed #000;padding-top:1px;margin-top:2px;">NO. X-RAY: ' + xrayLabel + '</div>' : '')
+        + (fields.show_exam ? '<div style="font-weight:700;font-size:0.85em;margin-top:1px;">EXAM: ' + examLabel + '</div>' : '')
         + '</div></div>';
-    }
+    return contentHtml;
+  }
 
-    // Always use iframe approach — most reliable for macOS WKWebView & Windows WebView2
-    // (avoids popup blockers and window.open() restrictions in embedded WebViews)
-    let iframe = document.getElementById('_cdPrintFrame');
-    if (iframe) {
-      // Remove stale iframe to get a fresh document each time
-      iframe.parentNode.removeChild(iframe);
-    }
+  // Print via WebKit (macOS/Linux) — window.print() on a hidden iframe at the physical size.
+  function printViaWebKit(fontSize, pt, xrayLabel, examLabel, facilityName, preset) {
+    const w = parseFloat(document.getElementById('cdStickerWidth').value) || 50;
+    const h = parseFloat(document.getElementById('cdStickerHeight').value) || 30;
+    const fields = labelFieldsPayload();
+    const contentHtml = buildLabelContentHtml(fields, pt, xrayLabel, examLabel, facilityName, fontSize, preset);
+    const bodyStyle = 'width:' + w + 'mm;height:' + h + 'mm;box-sizing:border-box;margin:0;padding:1.5mm;font-family:Arial,sans-serif;font-size:' + fontSize + ';color:#000;line-height:1.25;overflow:hidden;background:#fff;';
+
+    let iframe = document.getElementById('_cdPrintFrameMac');
+    if (iframe) iframe.parentNode.removeChild(iframe);
     iframe = document.createElement('iframe');
-    iframe.id = '_cdPrintFrame';
-    // IMPORTANT: keep the frame rendered at a real size (NOT 1px / NOT visibility:hidden).
-    // Some embedded WebViews will not open the OS print dialog for a 1px or hidden frame.
-    // We position it off-screen (left:-10000px) but give it real layout dimensions.
-    iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:420px;height:300px;border:none;background:#fff;z-index:-1;';
+    iframe.id = '_cdPrintFrameMac';
+    iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:420px;height:300px;border:none;background:#fff;';
     document.body.appendChild(iframe);
 
     const iDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -2191,37 +2334,108 @@
       + '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
       + 'body{' + bodyStyle + '}'
       + '@media print{body{margin:0;}}'
-      + '</style></head><body>'
-      + contentHtml
-      + '</body></html>');
+      + '</style></head><body>' + contentHtml + '</body></html>');
     iDoc.close();
 
-    // Print exactly once (guard against the double-trigger below opening the dialog twice).
     let didPrint = false;
-    function triggerIframePrint() {
+    function triggerPrint() {
       if (didPrint) return;
       didPrint = true;
       try {
-        const win = iframe.contentWindow;
-        win.focus();
-        win.print();
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
       } catch (err) {
-        // Last resort fallback
         try { window.focus(); window.print(); } catch (e) {}
       }
     }
+    iframe.onload = triggerPrint;
+    setTimeout(triggerPrint, 250);
+    setTimeout(function () { let fr = document.getElementById('_cdPrintFrameMac'); if (fr) fr.parentNode.removeChild(fr); }, 3000);
+  }
 
-    iframe.onload = triggerIframePrint;
+  // Entry point for the print button.
+  function printCdLabelStickerApi() {
+    const w = parseFloat(document.getElementById('cdStickerWidth').value) || 50;
+    const h = parseFloat(document.getElementById('cdStickerHeight').value) || 30;
+    const fontSize = document.getElementById('cdFontSizeSelect').value || '11px';
+    const preset = document.getElementById('cdLabelPresetSelect').value;
+    const printerName = (document.getElementById('cdPrinterSelect') || {}).value || '';
 
-    // Safari/WKWebView sometimes doesn't fire onload for document.write; use a timeout
-    // as a backup. The `didPrint` guard ensures we still end up with a single dialog.
-    setTimeout(triggerIframePrint, 250);
+    const facilityName = ({{ (config.klinik_asal or 'KLINIK KESIHATAN')|tojson }}) || "KLINIK KESIHATAN";
+    const pt = activeCdPatient || { nama: "-", ic_pasport: "-", tarikh: "-", examinations: [] };
+    const xrayLabel = cdGetXrayLabel(pt);
+    const examLabel = cdGetExamLabel(pt);
+    const fields = labelFieldsPayload();
 
-    // Clean-up: remove the frame after printing so it doesn't accumulate in the DOM.
-    setTimeout(function () {
-      let fr = document.getElementById('_cdPrintFrame');
-      if (fr) fr.parentNode.removeChild(fr);
-    }, 3000);
+    const btn = document.getElementById('btnPrintThermalLabel');
+    const btnText = document.getElementById('btnPrintThermalLabelText');
+
+    // macOS / Linux: print directly via the OS built-in WebKit (no printer backend needed)
+    if (!isWindowsPlatform()) {
+      printViaWebKit(fontSize, pt, xrayLabel, examLabel, facilityName, preset);
+      return;
+    }
+
+    // Windows: a printer must be selected first for the win32print backend
+    if (!printerName) {
+      showToast('Please select a Windows printer first.', 'error');
+      return;
+    }
+
+    // Save the current preferences to config.json for future use
+    fetch('/api/label/save-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        printer_name: printerName,
+        width_mm: w,
+        height_mm: h,
+        preset: preset,
+        font_size: fontSize,
+        show_facility: fields.show_facility, show_nama: fields.show_nama, show_ic: fields.show_ic,
+        show_exam: fields.show_exam, show_date: fields.show_date, show_xray: fields.show_xray
+      })
+    }).catch(() => {});
+
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Printing...';
+
+    fetch('/api/label/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        printer_name: printerName,
+        width_mm: w,
+        height_mm: h,
+        font_px: 34,
+        circle: (preset === 'CIRCLE_RING'),
+        facility: facilityName,
+        nama: pt.nama || '',
+        ic_pasport: pt.ic_pasport || '',
+        tarikh: pt.tarikh || '',
+        xray: xrayLabel,
+        exam: examLabel,
+        show_facility: fields.show_facility, show_nama: fields.show_nama, show_ic: fields.show_ic,
+        show_exam: fields.show_exam, show_date: fields.show_date, show_xray: fields.show_xray
+      })
+    })
+      .then(res => {
+        return res.json().then(data => ({ ok: res.ok, data: data }));
+      })
+      .then(({ ok, data }) => {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = 'Print via Selected Printer';
+        if (data.success) {
+          showToast(data.message || 'Label sent to printer.');
+        } else {
+          showToast(data.message || 'Failed to print label.', 'error');
+        }
+      })
+      .catch(err => {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = 'Print via Selected Printer';
+        showToast('Error connecting to the printer backend: ' + err, 'error');
+      });
   }
 </script>
 {% endblock %}

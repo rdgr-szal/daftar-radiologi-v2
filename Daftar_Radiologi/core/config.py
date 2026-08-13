@@ -208,6 +208,20 @@ def get_unconfigured_default():
         ],
         "consumables": ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"],
         "custom_starting_xray_no": 0,
+        # Konfigurasi Pencetakan Label CD / DVD Thermal (Dicetak via Windows Driver / Qt Printer)
+        "label_config": {
+            "printer_name": "",
+            "width_mm": 50,
+            "height_mm": 30,
+            "preset": "RECT_50x30",
+            "font_size": "11px",
+            "show_facility": True,
+            "show_nama": True,
+            "show_ic": True,
+            "show_exam": True,
+            "show_date": True,
+            "show_xray": True
+        },
         # Konfigurasi Pangkalan Data Pilihan (Offline-First Hybrid Sync)
         "db_config": {
             "enabled": False,
@@ -271,6 +285,30 @@ def load_config():
                 data["consumables"] = ["-", "CD [1]", "CD [2]", "FILEM 14X17 [1]", "FILEM 10X12 [1]"]
             if "custom_starting_xray_no" not in data:
                 data["custom_starting_xray_no"] = 0
+            if "label_config" not in data or not isinstance(data.get("label_config"), dict):
+                data["label_config"] = {
+                    "printer_name": "",
+                    "width_mm": 50,
+                    "height_mm": 30,
+                    "preset": "RECT_50x30",
+                    "font_size": "11px",
+                    "show_facility": True,
+                    "show_nama": True,
+                    "show_ic": True,
+                    "show_exam": True,
+                    "show_date": True,
+                    "show_xray": True
+                }
+            else:
+                _lc = data["label_config"]
+                _lc.setdefault("printer_name", "")
+                _lc.setdefault("width_mm", 50)
+                _lc.setdefault("height_mm", 30)
+                _lc.setdefault("preset", "RECT_50x30")
+                _lc.setdefault("font_size", "11px")
+                for _k in ("show_facility", "show_nama", "show_ic", "show_exam", "show_date", "show_xray"):
+                    _lc.setdefault(_k, True)
+                data["label_config"] = _lc
             if "db_config" not in data:
                 data["db_config"] = {
                     "enabled": False,
