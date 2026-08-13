@@ -78,6 +78,40 @@ def ensure_windows_webview2():
     except Exception as err:
         print(f"[WebView2 AutoInstall Warning] Gagal memasang WebView2 secara automatik: {err}")
 
+def apply_pending_updates():
+    """
+    Memeriksa dan menggantikan fail .new yang dicipta semasa kemas kini aplikasi
+    (disebabkan Windows file locking pada fail .exe / .dll semasa aplikasi sedang berjalan).
+    """
+    try:
+        from core.config import BASE_DIR
+        for root, dirs, files in os.walk(BASE_DIR):
+            for file in files:
+                if file.endswith('.new'):
+                    new_file_path = os.path.join(root, file)
+                    target_file_path = os.path.join(root, file[:-4])
+                    try:
+                        if os.path.exists(target_file_path):
+                            os.remove(target_file_path)
+                        os.rename(new_file_path, target_file_path)
+                        print(f"[Pending Update Applied] {file} -> {os.path.basename(target_file_path)}")
+                    except Exception as e_rename:
+                        print(f"[Pending Update Warning] Gagal menggantikan {file}: {e_rename}")
+    except Exception as e:
+        print(f"[Pending Update System Warning] {e}")
+
+def find_available_port(preferred_port=5005):
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(('127.0.0.1', preferred_port)) != 0:
+                return preferred_port
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('127.0.0.1', 0))
+            return s.getsockname()[1]
+    except Exception:
+        return preferred_port
+
 def main():
     # 0. Semak jika dijalankan terus dari fail ZIP (Temp Directory Guard)
     exec_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(__file__)
@@ -97,6 +131,9 @@ def main():
             pass
         sys.exit(1)
 
+    # 0.5 Terapkan kemas kini fail .new tergendala akibat Windows File Lock
+    apply_pending_updates()
+
     # Semakan & Cipta Backup Harian Automatik MyGovUC
     try:
         from core.backup_engine import auto_daily_backup_check
@@ -111,7 +148,7 @@ def main():
     except Exception as e:
         print(f"[Main DICOM Server Warning] {e}")
 
-    port = 5005
+    port = find_available_port(5005)
     url = f"http://127.0.0.1:{port}"
 
     # Mulakan pelayan Flask di thread latar belakang

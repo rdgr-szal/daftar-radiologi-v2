@@ -31,11 +31,17 @@ def create_zip_backup(custom_dest_dir=None):
     try:
         with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(PENDAFTARAN_DIR):
-                # Elakkan menyalin folder backups itu sendiri
-                if "backups" in root:
+                # Elakkan menyalin folder backups dan folder temp
+                root_lower = root.lower()
+                if "backups" in root_lower or "temp_" in root_lower or "temp" in root_lower:
                     continue
                 for file in files:
-                    if file.endswith(".tmp") or file.startswith("~$"):
+                    file_lower = file.lower()
+                    if (file_lower.endswith(".tmp") or 
+                        file_lower.endswith(".zip") or 
+                        file_lower.endswith(".dmg") or 
+                        file_lower.startswith("~$") or 
+                        file_lower.startswith("temp_")):
                         continue
                     abs_file_path = os.path.join(root, file)
                     rel_path = os.path.relpath(abs_file_path, PENDAFTARAN_DIR)

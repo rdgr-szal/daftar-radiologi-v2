@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 # Dynamic Versioning Info
-APP_VERSION = "2.1.5"
+APP_VERSION = "2.1.6"
 GITHUB_REPO = "rdgr-szal/daftar-radiologi-v2" # Format: username/repo
 
 # Tangani lokasi fail asas mengikut mod PyInstaller vs Dev

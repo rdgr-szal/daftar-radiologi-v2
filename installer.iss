@@ -3,7 +3,7 @@
 
 #define MyAppName "Daftar Radiologi"
 #ifndef MyAppVersion
-  #define MyAppVersion "2.1.5"
+  #define MyAppVersion "2.1.6"
 #endif
 #define MyAppPublisher "Jabatan Radiologi"
 #define MyAppExeName "DaftarRadiologi.exe"

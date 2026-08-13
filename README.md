@@ -129,12 +129,30 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 
 ## 5. Release History & Version Notes
 
+### 🚀 Version 2.1.6 (Bug Fix, CD Label Refactor & Platform Optimization Release)
+- **Per-Patient CD Thermal Sticker Label Refactor**:
+  - Consolidated CD thermal sticker label printing so 1 patient visit generates 1 unified CD label merging all X-Ray numbers (e.g. `NO. X-RAY: 0001 – 0005`) and all examination parts (e.g. `EXAM: CHEST PA + C-SPINE`).
+  - Updated visual hierarchy order on stickers: `TARIKH` → `ID` → `NAMA` (top section) and `NO. X-RAY` → `EXAM` (bottom section).
+  - Replaced popup-blocked `window.open()` logic with an invisible iframe injection method for instant, reliable thermal printing on both macOS WKWebView and Windows WebView2.
+- **Patient List Date Picker & Event Handler Fixes**:
+  - Fixed JavaScript syntax crash caused by escaped backticks in template literal print code, restoring full button clickability (`Week/Month/Year` tabs, `Print CD Label`, `Print / PDF`).
+  - Enforced native `showPicker()` popover trigger across date input fields (`#dayDateInput`, `#edit_lmp`, and print modal fields) with explicit pointer cursors.
+  - Synchronized JavaScript date variables (`selectedDateStr`, `wpYear`, `wpMonth`) during AJAX table switching so the custom Week Picker stays accurately updated.
+- **Windows System Freeze & Legacy Import Fix**:
+  - Moved temporary file uploads (patch zip files, backup restores, and legacy Excel/CSV imports) to the OS temporary directory (`tempfile.gettempdir()`).
+  - Enhanced `create_zip_backup()` to filter out `.zip`, `.tmp`, and `temp_*` directories during traversal to eliminate recursive zip loops and system freezes on Windows.
+- **Built-in Auto-Update & Extraction Resolution**:
+  - Added automatic top-level ZIP root directory stripping (`get_clean_zip_member_path()`) to ensure release update packages (e.g. `DaftarRadiologi-v2-win10.zip`) extract directly into `BASE_DIR` instead of creating nested subfolders.
+  - Corrected Windows file lock fallback target pathing bug in `routes/settings.py`.
+  - Added `apply_pending_updates()` startup routine in `DaftarRadiologi.py` to automatically rename `.new` binary files when the application starts up.
+
 ### 🚀 Version 2.1.5 (Interactive Onboarding Wizard, Inno Setup Smart Installer & Legacy Data Migration)
 - **Custom Starting X-Ray Sequence Number**: Added custom sequence number configuration under **Settings > Modalities** allowing facilities to set custom sequence counters per modality room or start from a specific index.
 - **Legacy Data Migration Tool**: Added legacy record migration engine under **Settings > System > Backup** for importing historical Excel records directly into V2 archives with duplicate checking.
 - **Interactive Onboarding Wizard**: Redesigned initial setup into an interactive 3-Step Wizard in full English for easy onboarding.
 - **Smart Windows Setup Installer (Inno Setup)**: Built native Windows `Setup.exe` installer with automatic Desktop Shortcuts and smart *Upgrade*, *Repair*, or *Uninstall* options protecting patient records (`Pendaftaran/`).
-- **New Mascot Branding & Minor Fixes**: Updated logo to new bee mascot, fixed sidebar branding text layout, refined System Updates badge placement, and styled DICOM Worklist "Clear Queue" button.
+- **Klinik Kesihatan Preset & Thermal CD Sticker Labels**: Enforced single General X-Ray (`GENERAL RADIOGRAPHY`) selection for KK preset, added drag & drop upload guards for WebView2, and added initial thermal CD sticker label print feature.
+- **New Mascot Branding & Emoji Replacement**: Updated logo to new bee mascot, generated multi-size `.ico` bundles (`16x16` up to `256x256`), and replaced all UI emojis with clean inline SVG icons.
 
 ### 🚀 Version 2.1.4 (Online & Manual Updates Fix, Dashboard Date Pickers & New Logo Branding)
 - **Fix Manual Patch Update & Background Extraction**:
@@ -145,23 +163,8 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
   - Background downloading with live animated progress bar tracking and auto-deletion of downloaded ZIP files upon update completion.
 - **Dynamic Date Picker Controls on Dashboard**:
   - Unified date range pickers on Dashboard to dynamically toggle input controls (*Date picker*, *Week picker calendar*, *Month & Year dropdowns*) seamlessly across *Day*, *Week*, *Month*, and *Year* modes via AJAX.
-- **Updated Brand Identity & Multi-Resolution App Icons**:
-  - Integrated new mascot logo across web interface, header, and system templates.
-  - Generated high-resolution multi-size icon bundles (`daftarradiologi.ico`, `daftarradiologi.icns`, and `favicon.ico`) for native Windows & macOS executable packaging.
 - **Custom Date Range Printing for Buku Daftar**:
   - Added flexible date range selector modal for printing patient registers (*Daily*, *Weekly*, *Monthly*, *Full Year*, and *Custom Date Range*) with clean printable layout.
-
-### 🚀 Version 2.1.5 (Maintenance & Feature Release)
-- **Klinik Kesihatan (KK) Preset Fix**:
-  - Enforced single General X-Ray (`GENERAL RADIOGRAPHY`) selection when choosing KK facility profile or KK preset, unchecking non-KK modalities automatically.
-- **Drag & Drop Upload Guard**:
-  - Resolved WebView2 / PyWebView window freeze during drag-and-drop file uploads on Windows. Added global drag prevention and enhanced file drag-and-drop handlers for legacy data import and manual patch zip uploads.
-- **Enlarged Native App Icon**:
-  - Trimmed transparent margins and re-generated full-bleed multi-resolution icon bundles (`daftarradiologi.ico` and `favicon.ico`) with sizes `16x16` up to `256x256`, matching native Windows application icon proportions.
-- **CD Sticker Label Thermal Printing**:
-  - Added dedicated CD / DVD thermal sticker label print feature in `patient_list.html` featuring customizable roll sticker dimensions (e.g. 50x30mm, 60x40mm, circular CD ring), live interactive preview, font scaling, and direct thermal printer CSS support.
-- **Emoji Replacement**:
-  - Replaced all application emoji icons with clean inline SVG icons for a consistent healthcare system interface.
 
 ### 🚀 Version 2.1.3 (DICOM MPPS SCP & Logs Tab Upgrade)
 - **Modality Performed Procedure Step (MPPS) SCP Server**:

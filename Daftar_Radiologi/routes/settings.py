@@ -432,11 +432,40 @@ def api_shutdown():
     threading.Timer(0.5, shutdown_server).start()
     return jsonify({"success": True, "message": "Aplikasi ditutup secara selamat."})
 
+def get_clean_zip_member_path(member, zip_namelist):
+    """
+    Mengambil jalur relatif fail dalam arkib zip dengan membuang folder utama paling atas jika wujud
+    (contoh: 'DaftarRadiologi-v2-win10/templates/patient_list.html' -> 'templates/patient_list.html').
+    """
+    norm_member = member.replace('\\', '/').strip('/')
+    if not norm_member:
+        return ""
+
+    all_items = [m.replace('\\', '/').strip('/') for m in zip_namelist if m.replace('\\', '/').strip('/')]
+    prefix_candidate = None
+    if all_items:
+        first_item = all_items[0]
+        parts = first_item.split('/')
+        if len(parts) > 1:
+            candidate = parts[0]
+            if candidate.lower() not in ['templates', 'static', 'core', 'routes', 'pendaftaran']:
+                if all(item.startswith(candidate + '/') or item == candidate for item in all_items):
+                    prefix_candidate = candidate + '/'
+
+    if prefix_candidate and norm_member.startswith(prefix_candidate.rstrip('/')):
+        if norm_member == prefix_candidate.rstrip('/'):
+            return ""
+        rel_member = norm_member[len(prefix_candidate):]
+    else:
+        rel_member = norm_member
+
+    return rel_member
+
 @settings_bp.route('/api/update/apply-patch', methods=['POST'])
 def api_apply_update_patch():
     """
     Kemas kini Aplikasi via Patch File (.zip):
-    1. Simpan fail zip tempatan.
+    1. Simpan fail zip tempatan dalam folder temp sistem.
     2. Semak dan auto-kesan sekiranya terdapat fail manifest.json (is_major: true) atau perubahan skema database major.
     3. Jika dikesan major update atau is_major = True: jalankan Auto Backup dahulu.
     4. Ekstrak fail zip ke BASE_DIR dan BUNDLE_DIR (melindungi folder Pendaftaran/ dan fail yang dikunci Windows).
@@ -453,8 +482,9 @@ def api_apply_update_patch():
     
     from core.config import BASE_DIR, BUNDLE_DIR, PENDAFTARAN_DIR, load_config
     import zipfile
+    import tempfile
     
-    temp_zip = os.path.join(PENDAFTARAN_DIR, "temp_update_patch.zip")
+    temp_zip = os.path.join(tempfile.gettempdir(), f"temp_update_patch_{int(datetime.datetime.now().timestamp())}.zip")
     try:
         file.save(temp_zip)
     except Exception as e:
@@ -508,7 +538,11 @@ def api_apply_update_patch():
             namelist = zipf.namelist()
 
             for member in namelist:
-                norm_path = os.path.normpath(member)
+                rel_member = get_clean_zip_member_path(member, namelist)
+                if not rel_member:
+                    continue
+
+                norm_path = os.path.normpath(rel_member)
                 path_parts = norm_path.replace('\\', '/').split('/')
 
                 # 🛡️ Perlindungan Pangkalan Data: Jangan sekali-kali ganti folder Pendaftaran/
@@ -516,13 +550,13 @@ def api_apply_update_patch():
                     continue
 
                 for t_dir in target_dirs:
-                    target_file_path = os.path.abspath(os.path.join(t_dir, member))
+                    target_file_path = os.path.abspath(os.path.join(t_dir, rel_member))
                     
                     # 🛡️ Zip-Slip Security Safeguard
                     if not target_file_path.startswith(os.path.abspath(t_dir)):
                         continue
 
-                    if member.endswith('/') or member.endswith('\\'):
+                    if rel_member.endswith('/') or rel_member.endswith('\\'):
                         os.makedirs(target_file_path, exist_ok=True)
                         continue
 
@@ -535,7 +569,7 @@ def api_apply_update_patch():
                         extracted_count += 1
                     except (PermissionError, OSError):
                         # Fail sedang dikunci (cth: fail .exe yang sedang berjalan di Windows)
-                        locked_files.append(os.path.basename(member))
+                        locked_files.append(os.path.basename(rel_member))
                         try:
                             fallback_path = target_file_path + ".new"
                             with zipf.open(member) as source, open(fallback_path, 'wb') as target:
@@ -546,7 +580,8 @@ def api_apply_update_patch():
                         print(f"[Update Extraction File Warning] {member}: {e_extract_single}")
 
         if os.path.exists(temp_zip):
-            os.remove(temp_zip)
+            try: os.remove(temp_zip)
+            except Exception: pass
             
         # 3. Kemas kini DB schema jika major update
         if is_major:
@@ -822,18 +857,22 @@ def api_apply_downloaded_update():
             namelist = zipf.namelist()
 
             for member in namelist:
-                norm_path = os.path.normpath(member)
+                rel_member = get_clean_zip_member_path(member, namelist)
+                if not rel_member:
+                    continue
+
+                norm_path = os.path.normpath(rel_member)
                 path_parts = norm_path.replace('\\', '/').split('/')
 
                 if 'Pendaftaran' in path_parts or 'pendaftaran' in path_parts:
                     continue
 
                 for t_dir in target_dirs:
-                    target_file_path = os.path.abspath(os.path.join(t_dir, member))
+                    target_file_path = os.path.abspath(os.path.join(t_dir, rel_member))
                     if not target_file_path.startswith(os.path.abspath(t_dir)):
                         continue
 
-                    if member.endswith('/') or member.endswith('\\'):
+                    if rel_member.endswith('/') or rel_member.endswith('\\'):
                         os.makedirs(target_file_path, exist_ok=True)
                         continue
 
@@ -844,7 +883,7 @@ def api_apply_downloaded_update():
                             shutil.copyfileobj(source, target)
                         extracted_count += 1
                     except (PermissionError, OSError):
-                        locked_files.append(os.path.basename(member))
+                        locked_files.append(os.path.basename(rel_member))
                         try:
                             fallback_path = target_file_path + ".new"
                             with zipf.open(member) as source, open(fallback_path, 'wb') as target:
@@ -1121,7 +1160,8 @@ def api_import_preview():
     if ext not in ['.xlsx', '.xls', '.csv']:
         return jsonify({"success": False, "message": "Sila muat naik fail Excel (.xlsx/.xls) atau CSV (.csv)."}), 400
 
-    temp_dir = os.path.join(PENDAFTARAN_DIR, "temp_import")
+    import tempfile
+    temp_dir = os.path.join(tempfile.gettempdir(), "temp_import")
     os.makedirs(temp_dir, exist_ok=True)
     temp_path = os.path.join(temp_dir, f"import_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}")
     file.save(temp_path)
