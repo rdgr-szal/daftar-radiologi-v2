@@ -145,6 +145,8 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
   - Added automatic top-level ZIP root directory stripping (`get_clean_zip_member_path()`) to ensure release update packages (e.g. `DaftarRadiologi-v2-win10.zip`) extract directly into `BASE_DIR` instead of creating nested subfolders.
   - Corrected Windows file lock fallback target pathing bug in `routes/settings.py`.
   - Added `apply_pending_updates()` startup routine in `DaftarRadiologi.py` to automatically rename `.new` binary files when the application starts up.
+- **Stop Server UI Button Refinement**:
+  - Refactored DICOM MWL server toggle button styling when active from charcoal grey (`btn-secondary`) to a clean white card outline (`btn-outline`) with red text (`#ef4444`) and subtle border (`#fca5a5`).
 
 ### 🚀 Version 2.1.5 (Interactive Onboarding Wizard, Inno Setup Smart Installer & Legacy Data Migration)
 - **Custom Starting X-Ray Sequence Number**: Added custom sequence number configuration under **Settings > Modalities** allowing facilities to set custom sequence counters per modality room or start from a specific index.

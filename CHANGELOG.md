@@ -19,6 +19,9 @@ All notable changes to the **Buku Daftar Radiologi V2** project are documented i
 - **Temp Directory Traversal Guard**: Moved temporary file handling to OS temp directory (`tempfile.gettempdir()`) and updated `create_zip_backup()` to ignore `.zip` and `.tmp` files to prevent recursion loops and Windows freezing.
 - **In-App Auto-Update Extract Fix**: Added root folder path cleaning for downloaded update zip archives and added startup patch handler `apply_pending_updates()` in `DaftarRadiologi.py`.
 
+#### 4. UI Button Styling Refinement
+- **Stop Server Button UI**: Refactored DICOM MWL server toggle button styling when active from charcoal grey (`btn-secondary`) to a clean white card outline (`btn-outline`) with red text (`#ef4444`) and subtle border (`#fca5a5`).
+
 ---
 
 ## [v2.1.5] - 2026-08-12

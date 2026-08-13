@@ -3458,8 +3458,10 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
           }
           if (btnToggle) {
             btnToggle.textContent = 'Stop Server';
-            btnToggle.className = 'btn btn-secondary';
+            btnToggle.className = 'btn btn-outline';
+            btnToggle.style.background = '#ffffff';
             btnToggle.style.color = '#ef4444';
+            btnToggle.style.borderColor = '#fca5a5';
           }
         } else {
           if (badge) {
@@ -3474,7 +3476,9 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
           if (btnToggle) {
             btnToggle.textContent = 'Start Server';
             btnToggle.className = 'btn btn-primary';
+            btnToggle.style.background = '';
             btnToggle.style.color = 'white';
+            btnToggle.style.borderColor = '';
           }
         }
 
