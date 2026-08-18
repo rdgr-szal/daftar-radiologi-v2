@@ -439,8 +439,9 @@ def get_target_sheet(wb, date_obj):
 
 def get_daily_case_count(date_obj=None):
     """
-    Mengira nombor giliran Bil Kes Harian bagi tarikh tertentu.
-    Memulangkan (jumlah kes pada tarikh tersebut + 1). Reset ke 1 pada hari baharu.
+    Mengira nombor giliran Bil Kes bagi helaian bulanan (Monthly Sheet Row Counter).
+    Mengira secara berterusan (1, 2, 3, ...) dari baris 5 hingga baris terakhir dalam helaian bulan tersebut.
+    Bermula semula dari 1 pada setiap helaian bulan baharu.
     """
     if date_obj is None:
         date_obj = datetime.date.today()
@@ -448,16 +449,14 @@ def get_daily_case_count(date_obj=None):
     if not path or not os.path.exists(path):
         return 1
     try:
-        formatted_date = date_obj.strftime("%d.%m.%Y")
-        formatted_date_slash = date_obj.strftime("%d/%m/%Y")
-        formatted_date_dash = date_obj.strftime("%Y-%m-%d")
         wb = openpyxl.load_workbook(path, data_only=True)
         sheet = get_target_sheet(wb, date_obj)
         count = 0
         for r in range(5, sheet.max_row + 1):
-            val_date = str(sheet.cell(row=r, column=1).value or sheet.cell(row=r, column=2).value or "").strip()
             val_name = str(sheet.cell(row=r, column=6).value or "").strip()
-            if val_name and (val_date in (formatted_date, formatted_date_slash, formatted_date_dash)):
+            val_ic = str(sheet.cell(row=r, column=5).value or "").strip()
+            val_xray = str(sheet.cell(row=r, column=4).value or "").strip()
+            if val_name or val_ic or val_xray:
                 count += 1
         wb.close()
         return count + 1

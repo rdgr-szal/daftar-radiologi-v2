@@ -152,6 +152,7 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
 - **Excel Template & Standard 25-Column Format Realignment**:
   - Realined Excel register structure to strict 25-column order (`TARIKH`, `LMP`, `Bil Kes`, `Nombor X-ray`, ...).
   - Applied `#2F6EBA` (Blue) fill to Title rows 1 & 2 with white text, and `#FFFF00` (Yellow) fill to Header row 4 with black text across all 12 monthly worksheets.
+  - Configured **Bil Kes** (Column C) as a continuous row counter across the monthly sheet (starting from `1, 2, 3...` to the end of the sheet, and resetting back to `1` on each new month), while **Nombor X-ray** (Column D) increments continuously across the year.
   - Added programmatic master template generation (`generate_master_template_file`) with auto-fallback recovery and multi-column date reading compatibility.
 
 ### 🚀 Version 2.1.5 (Interactive Onboarding Wizard, Inno Setup Smart Installer & Legacy Data Migration)
