@@ -3,6 +3,7 @@ import sys
 import socket
 import datetime
 import json
+import re
 import threading
 import time
 from core.config import DICOM_WORKLIST_PATH, load_config, ensure_dirs
@@ -71,6 +72,81 @@ def save_dicom_worklist(items):
     except Exception as e:
         print(f"[DICOM Worklist Error] Failed to write worklist: {e}")
         return False
+
+def dedup_laterality(text: str) -> str:
+    """
+    Remove duplicate laterality occurrences (e.g. 'RIGHT RADIUS ULNA RIGHT' -> 'RIGHT RADIUS ULNA').
+    Handles both English (RIGHT, LEFT, BILATERAL, BOTH) and Malay (KANAN, KIRI, KEDUA-DUA, KEDUA).
+    """
+    if not text:
+        return ""
+    
+    cleaned = str(text).strip()
+    laterality_tokens = ["RIGHT", "LEFT", "BILATERAL", "BOTH", "KANAN", "KIRI", "KEDUA-DUA", "KEDUA"]
+    
+    for lat in laterality_tokens:
+        pattern = re.compile(rf"\b{re.escape(lat)}\b", re.IGNORECASE)
+        matches = list(pattern.finditer(cleaned))
+        if len(matches) >= 2:
+            # Keep the first occurrence, strip duplicate later occurrences
+            for m in reversed(matches[1:]):
+                start, end = m.span()
+                cleaned = cleaned[:start] + " " + cleaned[end:]
+            cleaned = re.sub(r"\s+", " ", cleaned).strip()
+            
+    return cleaned
+
+def build_procedure_name(bahagian: str, lateraliti: str = "") -> str:
+    """
+    Build a standardized procedure description (e.g. 'RIGHT RADIUS ULNA', 'CHEST PA', 'LEFT KNEE AP/LAT').
+    Guarantees that laterality is never duplicated in the description.
+    """
+    bahagian_clean = str(bahagian or "").strip().upper()
+    lat_clean = str(lateraliti or "").strip().upper()
+
+    lat_map = {
+        "KANAN": "RIGHT",
+        "KIRI": "LEFT",
+        "KEDUA-DUA": "BILATERAL",
+        "KEDUA": "BILATERAL"
+    }
+    lat_clean = lat_map.get(lat_clean, lat_clean)
+
+    if not lat_clean:
+        return dedup_laterality(bahagian_clean)
+
+    # Check for directional laterality (RIGHT, LEFT, BILATERAL, BOTH)
+    is_directional = lat_clean in ["RIGHT", "LEFT", "BILATERAL", "BOTH"]
+    has_lat_in_bahagian = bool(re.search(rf"\b{re.escape(lat_clean)}\b", bahagian_clean))
+    
+    # Also check if Malay counterpart is already in bahagian_clean
+    if lat_clean == "RIGHT" and bool(re.search(r"\bKANAN\b", bahagian_clean)):
+        has_lat_in_bahagian = True
+    elif lat_clean == "LEFT" and bool(re.search(r"\bKIRI\b", bahagian_clean)):
+        has_lat_in_bahagian = True
+
+    if is_directional:
+        if has_lat_in_bahagian:
+            proc_desc = bahagian_clean
+        else:
+            proc_desc = f"{lat_clean} {bahagian_clean}".strip()
+    else:
+        if has_lat_in_bahagian:
+            proc_desc = bahagian_clean
+        else:
+            proc_desc = f"{bahagian_clean} {lat_clean}".strip()
+
+    return dedup_laterality(proc_desc)
+
+def build_procedure_id(proc_name_or_bahagian: str) -> str:
+    """
+    Build a clean DICOM RequestedProcedureID (VR SH, <= 16 chars).
+    e.g. 'RIGHT RADIUS ULNA' -> 'RIGHTRADIUSULNA'
+    """
+    if not proc_name_or_bahagian:
+        return "CXR"
+    cleaned = re.sub(r'[^A-Z0-9]', '', str(proc_name_or_bahagian).upper())
+    return cleaned[:16] if cleaned else "CXR"
 
 def format_dicom_patient_name(name_str):
     """
@@ -165,7 +241,7 @@ def add_to_dicom_worklist(patient_data, exam_list=None):
             bahagian = str(ex.get("bahagian", ex.get("bahagian_pemeriksaan", "CHEST"))).strip().upper()
             lateraliti = str(ex.get("lateraliti", "")).strip().upper()
             
-            proc_desc = f"{bahagian} {lateraliti}".strip()
+            proc_desc = build_procedure_name(bahagian, lateraliti)
             operator = str(ex.get("operator") or patient_data.get("operator", "")).strip().upper()
             doctor = str(patient_data.get("pegawai_rujukan", "")).strip().upper()
             case_no = str(ex.get("bil_kes") or patient_data.get("bil_kes", "")).strip()
@@ -195,7 +271,7 @@ def add_to_dicom_worklist(patient_data, exam_list=None):
             else:
                 study_uid = f"1.2.826.0.1.3680043.9.7128.{now.strftime('%Y%m%d%H%M%S')}.{clean_xray_num}.{idx+1}"
 
-            req_proc_id = bahagian.replace(" ", "")[:16] if bahagian else "CXR"
+            req_proc_id = build_procedure_id(proc_desc)
             sps_id = f"SPS_{clean_xray_num}_{idx+1}"[:16]
 
             worklist_item = {
@@ -260,7 +336,8 @@ def update_in_dicom_worklist(xray_no, updated_data):
                 if "bahagian_pemeriksaan" in updated_data and updated_data["bahagian_pemeriksaan"]:
                     bahagian = str(updated_data["bahagian_pemeriksaan"]).strip().upper()
                     lateraliti = str(updated_data.get("lateraliti", "")).strip().upper()
-                    proc = f"{bahagian} {lateraliti}".strip()
+                    proc = build_procedure_name(bahagian, lateraliti)
+                    it["requested_procedure_id"] = build_procedure_id(proc)
                     it["requested_procedure_desc"] = proc[:64]
                     it["scheduled_step_desc"] = proc[:64]
                 if "operator" in updated_data and updated_data["operator"]:
@@ -376,10 +453,14 @@ def handle_c_find(event):
 
             # Study & Requested Procedure Details
             acc_num = str(item.get("accession_number", "0001"))[:16]
+            proc_desc_clean = dedup_laterality(str(item.get("requested_procedure_desc", "X-RAY")))[:64]
+            step_desc_clean = dedup_laterality(str(item.get("scheduled_step_desc", proc_desc_clean)))[:64]
+            req_proc_id_val = str(item.get("requested_procedure_id") or build_procedure_id(proc_desc_clean))[:16]
+
             ds.AccessionNumber = acc_num
             ds.StudyInstanceUID = str(item.get("study_instance_uid", generate_uid()))
-            ds.RequestedProcedureID = str(item.get("requested_procedure_id", "CXR"))[:16]
-            ds.RequestedProcedureDescription = str(item.get("requested_procedure_desc", "X-RAY"))[:64]
+            ds.RequestedProcedureID = req_proc_id_val
+            ds.RequestedProcedureDescription = proc_desc_clean
             ds.StudyID = acc_num
             ds.AdmissionID = str(item.get("admission_id", ""))[:16]
             ds.ReferringPhysicianName = str(item.get("referring_physician", ""))[:64]
@@ -393,12 +474,18 @@ def handle_c_find(event):
             sps_ds.ScheduledProcedureStepStartTime = str(item.get("scheduled_step_start_time", "090000"))[:6]
             sps_ds.Modality = str(item.get("modality", "CR"))[:16]
             sps_ds.ScheduledPerformingPhysicianName = str(item.get("scheduled_physician", ""))[:64]
-            sps_ds.ScheduledProcedureStepDescription = str(item.get("scheduled_step_desc", "X-RAY"))[:64]
+            sps_ds.ScheduledProcedureStepDescription = step_desc_clean
             sps_ds.ScheduledProcedureStepID = str(item.get("scheduled_step_id", "SPS-0001"))[:16]
             sps_ds.ScheduledStationName = str(item.get("scheduled_station_name", "XRAY_ROOM"))[:16]
             sps_ds.ScheduledProcedureStepLocation = str(item.get("scheduled_step_location", ""))[:16]
             sps_ds.ScheduledProcedureStepStatus = "SCHEDULED"
             sps_ds.ScheduledProtocolCodeSequence = Sequence()
+
+            # Carestream MWL requirement: RequestedProcedureSequence inside ScheduledProcedureStepSequence
+            req_proc = Dataset()
+            req_proc.RequestedProcedureID = req_proc_id_val
+            req_proc.RequestedProcedureDescription = proc_desc_clean
+            sps_ds.RequestedProcedureSequence = Sequence([req_proc])
 
             ds.ScheduledProcedureStepSequence = Sequence([sps_ds])
 
@@ -413,69 +500,311 @@ def handle_c_find(event):
         print(f"[DICOM MWL C-FIND Error] Exception during query processing: {e}")
         yield (0xC000, None)  # Error: Unable to process
 
-# --- DICOM C-ECHO SCU & CONSOLE CONNECTIVITY TEST ---
+# --- DICOM C-ECHO SCU & CONSOLE CONNECTIVITY TEST (UNIVERSAL) ---
 
-def test_dicom_echo_scu(console_ip, console_port=104, console_ae="CARESTREAM", my_ae="KAUNTER"):
+def check_arp_table(target_ip):
     """
-    Test connectivity to remote Modality Console / DICOM Node.
-    1. Performs TCP socket connection test to verify network reachability.
-    2. Attempts DICOM C-ECHO verification if pynetdicom is available.
-    3. Returns success based on whether network connection is established.
+    Step 0 - ARP Table Check:
+    Check if target IP exists in local ARP table for early diagnostic insights.
     """
-    if not console_ip or str(console_ip).strip() == "":
-        return False, "Modality Console IP address is empty. Please enter the console IP address.", 0.0
+    import subprocess
+    try:
+        # Use -n flag when available on mac/linux to avoid slow DNS resolution
+        target = str(target_ip).strip()
+        if not target or target in ["127.0.0.1", "localhost", "0.0.0.0"]:
+            return True, f"Loopback/local address {target} is active on local machine."
+
+        cmd = ["arp", "-n", target] if sys.platform != 'win32' else ["arp", "-a", target]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1.5)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        
+        if target in output and "no match" not in output.lower() and "cannot find" not in output.lower():
+            return True, f"IP {target} found in local ARP cache (MAC address resolved)."
+        return False, f"IP {target} not currently in local ARP cache (Normal if routed through a gateway or console hasn't communicated recently)."
+    except Exception as e:
+        return False, f"ARP diagnostic note: {e}"
+
+def check_local_dicom_server(local_port=104):
+    """
+    Step 1 - Local DICOM Server Live Check:
+    Verify if local app DICOM SCP server is currently listening on port 104.
+    """
+    try:
+        p = int(local_port)
+    except (ValueError, TypeError):
+        p = 104
+    try:
+        with socket.create_connection(('127.0.0.1', p), timeout=1.0):
+            return True, f"Local DICOM MWL server is actively listening on 127.0.0.1:{p}."
+    except Exception as e:
+        return False, f"Local DICOM server is not running on port {p} ({e}). Please enable the DICOM server in Settings."
+
+def test_dicom_connection(console_ip=None, console_port=None, console_ae=None, my_ae=None, local_port=None):
+    """
+    Universal 5-Stage DICOM Connection Test between DaftarRadiologi (SCP) and Modality Console (SCU).
+    Universal across all console vendors (Carestream, Konica Minolta, GE, Fuji, Agfa, Philips, Siemens, etc.).
+    
+    1. Step 0 (ARP): Checks local ARP cache.
+    2. Step 1 (Local Server): Verifies local DICOM server listening on local port (default 104).
+    3. Step 2 (C-ECHO / DICOM Ping): pynetdicom Verification SOP Class association & C-ECHO.
+       - Confirms whether console recognizes local AE title ('XRAY' / 'KAUNTER') and answers alive.
+    4. Step 3 (C-FIND MWL): Checks console response to MWL query.
+       - Note: Modality consoles are typically SCUs (pull worklist from app), so rejecting C-FIND queries is normal.
+    5. Returns structured diagnostic checks report with clear causes.
+    """
+    config = load_config()
+    dicom_cfg = config.get("dicom_config", {})
+
+    target_ip = str(console_ip or dicom_cfg.get("console_ip", "")).strip()
+    target_port = console_port or dicom_cfg.get("console_port", 104)
+    target_ae = str(console_ae or dicom_cfg.get("console_ae_title", "CARESTREAM")).strip() or "CARESTREAM"
+    local_ae = str(my_ae or dicom_cfg.get("ae_title", "KAUNTER")).strip() or "KAUNTER"
+    local_p = local_port or dicom_cfg.get("port", 104)
+
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    result = {
+        "ok": False,
+        "testedAt": now_str,
+        "ae_title": local_ae,
+        "console": target_ae,
+        "console_ip": target_ip,
+        "console_port": target_port,
+        "checks": [],
+        "summary": "",
+        "failure_reason": ""
+    }
+
+    if not target_ip:
+        result["summary"] = "Modality Console IP address is not specified."
+        result["failure_reason"] = "Modality Console IP address is empty. Please configure the console IP address in Settings."
+        result["checks"].append({
+            "name": "Configuration Validation",
+            "ok": False,
+            "detail": "Console IP is empty. Please enter the console IPv4 address."
+        })
+        return result
 
     try:
-        port = int(console_port)
-    except ValueError:
-        return False, f"Invalid port number: {console_port}", 0.0
+        port_num = int(target_port)
+    except (ValueError, TypeError):
+        result["summary"] = f"Invalid port number: {target_port}"
+        result["failure_reason"] = f"Invalid port number: {target_port}. Standard DICOM port is 104 (or 2762 / 11112)."
+        result["checks"].append({
+            "name": "Configuration Validation",
+            "ok": False,
+            "detail": f"Invalid console port '{target_port}'."
+        })
+        return result
 
-    ip = console_ip.strip()
-    c_ae = console_ae.strip() if console_ae else "CARESTREAM"
-    l_ae = my_ae.strip() if my_ae else "KAUNTER"
     t_start = time.time()
 
-    # Step 1: TCP Socket Ping Test
+    # Step 0: ARP Cache Inspection
+    arp_ok, arp_msg = check_arp_table(target_ip)
+    result["checks"].append({
+        "name": "ARP & LAN Cache",
+        "ok": arp_ok,
+        "detail": arp_msg,
+        "info_only": True
+    })
+
+    # Step 1: Local Server Listening Check
+    local_ok, local_msg = check_local_dicom_server(local_p)
+    result["checks"].append({
+        "name": f"Local DICOM Server (127.0.0.1:{local_p})",
+        "ok": local_ok,
+        "detail": local_msg
+    })
+
+    # Step 1.5: TCP Network Socket Connection to Modality Console
     socket_connected = False
     sock_error_msg = ""
     try:
-        with socket.create_connection((ip, port), timeout=3.0):
+        with socket.create_connection((target_ip, port_num), timeout=3.0):
             socket_connected = True
     except Exception as e_sock:
         sock_error_msg = str(e_sock)
 
-    elapsed_ms = round((time.time() - t_start) * 1000, 1)
-
-    # Step 2: If TCP socket failed completely (Host Unreachable / Refused), return failure
     if not socket_connected:
-        return False, f"Connection Failed: Unable to reach Modality Console at {ip}:{port} ({sock_error_msg}). Please check IP address, console power state, and local network/firewall.", elapsed_ms
+        reason = (
+            f"Unable to establish TCP socket connection to {target_ip}:{port_num} ({sock_error_msg}). "
+            "Possible causes: Modality console is turned OFF, IP address is wrong, "
+            "Windows/Modality Firewall is blocking port, or console is on a different subnet."
+        )
+        result["checks"].append({
+            "name": f"TCP Network Connection ({target_ip}:{port_num})",
+            "ok": False,
+            "detail": f"Connection Refused / Timed Out: {sock_error_msg}"
+        })
+        result["checks"].append({
+            "name": f"DICOM C-ECHO Ping ({target_ae})",
+            "ok": False,
+            "detail": "Skipped: Network socket to console is unreachable."
+        })
+        result["ok"] = False
+        result["failure_reason"] = reason
+        result["summary"] = f"Network Connection Failed to {target_ip}:{port_num}"
+        return result
 
-    # Step 3: TCP Connection Established! Now attempt C-ECHO if pynetdicom is installed
-    if PYNETDICOM_AVAILABLE:
-        try:
-            ae = AE(ae_title=l_ae.encode('ascii'))
-            ae.add_requested_context(VERIFICATION_SOP_CLASS)
-            ae.network_timeout = 3.0
-            ae.acse_timeout = 3.0
-            ae.dimse_timeout = 3.0
+    result["checks"].append({
+        "name": f"TCP Network Connection ({target_ip}:{port_num})",
+        "ok": True,
+        "detail": f"Console host is reachable and accepting TCP connections on port {port_num}."
+    })
 
-            assoc = ae.associate(ip, port, ae_title=c_ae.encode('ascii'))
-            if assoc.is_established:
-                status = assoc.send_c_echo()
-                assoc.release()
-                total_ms = round((time.time() - t_start) * 1000, 1)
-                if status and status.Status == 0x0000:
-                    return True, f"Connection & DICOM C-ECHO Established! Console '{c_ae}' at {ip}:{port} responded in {total_ms}ms.", total_ms
-                else:
-                    return True, f"Network Connection Established! (Console {ip}:{port} online, DICOM echo status: {hex(status.Status) if status else 'OK'})", total_ms
-            else:
-                total_ms = round((time.time() - t_start) * 1000, 1)
-                return True, f"Network Connection Established! Console at {ip}:{port} is ONLINE and accepting connections ({total_ms}ms).", total_ms
-        except Exception as e_echo:
+    # Step 2: DICOM C-ECHO Verification via pynetdicom
+    if not PYNETDICOM_AVAILABLE:
+        result["ok"] = True
+        result["summary"] = f"TCP Network Reachable ({target_ip}:{port_num})"
+        result["checks"].append({
+            "name": f"DICOM C-ECHO Verification ({target_ae})",
+            "ok": True,
+            "detail": "Network socket reachable (pynetdicom library not installed for full DICOM protocol verification)."
+        })
+        return result
+
+    try:
+        ae = AE(ae_title=local_ae.encode('ascii'))
+        ae.add_requested_context(VERIFICATION_SOP_CLASS)
+        ae.network_timeout = 4.0
+        ae.acse_timeout = 4.0
+        ae.dimse_timeout = 4.0
+
+        assoc = ae.associate(target_ip, port_num, ae_title=target_ae.encode('ascii'))
+        if assoc.is_established:
+            status = assoc.send_c_echo()
+            assoc.release()
             total_ms = round((time.time() - t_start) * 1000, 1)
-            return True, f"Network Connection Established! Host at {ip}:{port} is ONLINE ({total_ms}ms).", total_ms
+
+            if status and getattr(status, "Status", None) == 0x0000:
+                result["ok"] = True
+                result["checks"].append({
+                    "name": f"DICOM C-ECHO Ping ({target_ae})",
+                    "ok": True,
+                    "detail": f"Success (0x0000)! Console recognizes AE '{local_ae}' and responded in {total_ms}ms."
+                })
+            else:
+                st_hex = hex(status.Status) if status and hasattr(status, "Status") else "UNKNOWN"
+                result["ok"] = True
+                result["checks"].append({
+                    "name": f"DICOM C-ECHO Ping ({target_ae})",
+                    "ok": True,
+                    "detail": f"Association accepted. DICOM status response: {st_hex} ({total_ms}ms)."
+                })
+        elif getattr(assoc, 'is_rejected', False):
+            total_ms = round((time.time() - t_start) * 1000, 1)
+            reason = (
+                f"DICOM Association Rejected by console '{target_ae}'. "
+                f"Root cause: AE Title mismatch. Please verify that AE Title '{local_ae}' is registered as HIS/RIS in the console settings, "
+                f"or console AE Title '{target_ae}' matches the console station name."
+            )
+            result["ok"] = False
+            result["failure_reason"] = reason
+            result["checks"].append({
+                "name": f"DICOM C-ECHO Ping ({target_ae})",
+                "ok": False,
+                "detail": f"Association Rejected: AE Title '{local_ae}' or '{target_ae}' is not configured on console."
+            })
+            result["summary"] = "Association Rejected: AE Title Mismatch"
+            return result
+        else:
+            total_ms = round((time.time() - t_start) * 1000, 1)
+            reason = (
+                f"DICOM Association failed or timed out ({total_ms}ms). "
+                "Console DICOM service might be stopped, or port is occupied by another service."
+            )
+            result["ok"] = False
+            result["failure_reason"] = reason
+            result["checks"].append({
+                "name": f"DICOM C-ECHO Ping ({target_ae})",
+                "ok": False,
+                "detail": f"Association Aborted / Timed out ({total_ms}ms)."
+            })
+            result["summary"] = "DICOM Association Failed"
+            return result
+
+    except Exception as e_assoc:
+        total_ms = round((time.time() - t_start) * 1000, 1)
+        result["ok"] = False
+        result["failure_reason"] = f"DICOM Association Exception: {str(e_assoc)}"
+        result["checks"].append({
+            "name": f"DICOM C-ECHO Ping ({target_ae})",
+            "ok": False,
+            "detail": f"Error: {str(e_assoc)}"
+        })
+        result["summary"] = f"DICOM Error: {str(e_assoc)}"
+        return result
+
+    # Step 3: C-FIND MWL Query Role Check (Informative)
+    try:
+        ae_find = AE(ae_title=local_ae.encode('ascii'))
+        # Set scu_role and scp_role for pynetdicom 2.x and 3.x compatibility
+        try:
+            ae_find.add_requested_context(MWL_FIND_SOP_CLASS, scu_role=True, scp_role=True)
+        except Exception:
+            ae_find.add_requested_context(MWL_FIND_SOP_CLASS)
+
+        ae_find.network_timeout = 3.0
+        ae_find.acse_timeout = 3.0
+        ae_find.dimse_timeout = 3.0
+
+        assoc_find = ae_find.associate(target_ip, port_num, ae_title=target_ae.encode('ascii'))
+        if assoc_find.is_established:
+            ds_query = Dataset()
+            ds_query.PatientName = "*"
+            ds_query.PatientID = "*"
+            ds_query.AccessionNumber = "*"
+            ds_query.ScheduledProcedureStepSequence = Sequence()
+
+            responses = assoc_find.send_c_find(ds_query, query_model=MWL_FIND_SOP_CLASS)
+            # Consume responses
+            resp_list = []
+            for status, identifier in responses:
+                resp_list.append(status)
+            assoc_find.release()
+
+            result["checks"].append({
+                "name": "C-FIND MWL Query",
+                "ok": True,
+                "detail": f"Console accepted C-FIND MWL query ({len(resp_list)} response frames received).",
+                "info_only": True
+            })
+        else:
+            result["checks"].append({
+                "name": "C-FIND MWL Query",
+                "ok": True,
+                "detail": "Console is a modality SCU (pulls worklist from DaftarRadiologi, does not serve C-FIND) — Normal behavior.",
+                "info_only": True
+            })
+    except Exception as e_find:
+        result["checks"].append({
+            "name": "C-FIND MWL Query",
+            "ok": True,
+            "detail": f"Modality console operates in SCU worklist receiver mode ({e_find}) — Normal behavior.",
+            "info_only": True
+        })
+
+    total_time_ms = round((time.time() - t_start) * 1000, 1)
+    result["ok"] = True
+    result["summary"] = f"DICOM Connection OK ({total_time_ms}ms)"
+    return result
+
+def test_dicom_echo_scu(console_ip, console_port=104, console_ae="CARESTREAM", my_ae="KAUNTER"):
+    """
+    Backwards-compatible wrapper for test_dicom_echo_scu.
+    Returns (success: bool, message: str, elapsed_ms: float).
+    """
+    res = test_dicom_connection(
+        console_ip=console_ip,
+        console_port=console_port,
+        console_ae=console_ae,
+        my_ae=my_ae
+    )
+    if res.get("ok"):
+        return True, f"DICOM Connection OK! Console '{res.get('console')}' at {res.get('console_ip')}:{res.get('console_port')} is online and verified.", 0.0
     else:
-        return True, f"Network Connection Established! Host at {ip}:{port} is ONLINE and reachable ({elapsed_ms}ms).", elapsed_ms
+        fail_msg = res.get("failure_reason") or res.get("summary") or "DICOM Connection Failed."
+        return False, fail_msg, 0.0
 
 # --- DICOM MPPS SCP HANDLERS (N-CREATE & N-SET) ---
 

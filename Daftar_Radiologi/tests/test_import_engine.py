@@ -1,8 +1,15 @@
 import unittest
 import os
+import sys
 import shutil
 import tempfile
 import openpyxl
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ROOT = os.path.dirname(CURRENT_DIR)
+if APP_ROOT not in sys.path:
+    sys.path.insert(0, APP_ROOT)
+
 from core.import_engine import parse_excel_file, auto_suggest_mapping, process_data_migration
 
 class TestImportEngine(unittest.TestCase):

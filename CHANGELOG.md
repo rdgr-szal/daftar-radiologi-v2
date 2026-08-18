@@ -19,8 +19,20 @@ All notable changes to the **Buku Daftar Radiologi V2** project are documented i
 - **Temp Directory Traversal Guard**: Moved temporary file handling to OS temp directory (`tempfile.gettempdir()`) and updated `create_zip_backup()` to ignore `.zip` and `.tmp` files to prevent recursion loops and Windows freezing.
 - **In-App Auto-Update Extract Fix**: Added root folder path cleaning for downloaded update zip archives and added startup patch handler `apply_pending_updates()` in `DaftarRadiologi.py`.
 
-#### 4. UI Button Styling Refinement
-- **Stop Server Button UI**: Refactored DICOM MWL server toggle button styling when active from charcoal grey (`btn-secondary`) to a clean white card outline (`btn-outline`) with red text (`#ef4444`) and subtle border (`#fca5a5`).
+#### 4. Universal 5-Stage DICOM Connection Test Engine
+- **Universal Modality Verification**: Implemented a comprehensive 5-stage diagnostic test (`test_dicom_connection`) in `core/dicom_engine.py` compatible with all modality console vendors (*Carestream, Konica Minolta, GE, Fuji, Agfa, Philips, Siemens*, etc.).
+- **Multi-Layer Connectivity Inspection**:
+  1. *ARP & LAN Cache*: Quick inspection to confirm physical LAN/gateway reachability.
+  2. *Local Server Listener*: Verifies local DICOM MWL server is active on port `104` (or configured port).
+  3. *TCP Network Connection*: Validates socket reachability to Console IP and Port.
+  4. *DICOM C-ECHO Verification*: Association ping testing AE Title recognition (`0x0000`).
+  5. *C-FIND MWL Inquiry*: Accurately distinguishes console SCU worklist receiver mode from SCP worklist provider mode.
+- **Diagnostics UI & Dedicated Endpoint**: Added `POST /api/dicom/test-connection` endpoint and a structured diagnostic card in **Settings > Integration** detailing status checks with root-cause troubleshooting guidance.
+
+#### 5. Excel Template & Standard 25-Column Format Realignment
+- **25 Standard Columns Order**: Realigned Excel register output to match explicit sequence (`TARIKH`, `LMP`, `Bil Kes`, `Nombor X-ray`, ...).
+- **KKM Styling**: Applied `#2F6EBA` (Blue) header fill to Rows 1 & 2 with white text, and `#FFFF00` (Yellow) fill to Row 4 headers with bold text.
+- **Programmatic Generator & Backward Compatibility**: Added `generate_master_template_file()` for instant template generation with fallback support when reading legacy register files.
 
 ---
 

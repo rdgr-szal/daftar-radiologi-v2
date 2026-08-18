@@ -114,22 +114,203 @@ def get_excel_path(date_obj):
     except Exception:
         pass
 
+MASTER_TEMPLATE_HEADERS = [
+    'TARIKH', 'LMP', 'Bil Kes', 'Nombor X-ray', 'Nombor Kad Pengenalan /Pasport',
+    'Nama', 'UMUR', 'JANTINA', 'W/NEGARA', 'KAKITANGAN KERAJAAN', 'BANGSA',
+    'ALAMAT', 'JENIS', 'BAHAGIAN', 'LATERALLY', 'KLINIK', 'KATEGORI', 'CD/FILEM',
+    'TOTAL EXPOSE', 'TOTAL REJECT', 'FILEM / CD', 'REFERENCE', 'PERSON TAKEN', 'COMMENT', 'DATE'
+]
+
+HEADER_COL_WIDTHS = {
+    1: 14.0,  # TARIKH
+    2: 12.0,  # LMP
+    3: 9.0,   # Bil Kes
+    4: 15.0,  # Nombor X-ray
+    5: 20.0,  # Nombor Kad Pengenalan /Pasport
+    6: 38.0,  # Nama
+    7: 10.0,  # UMUR
+    8: 10.0,  # JANTINA
+    9: 12.0,  # W/NEGARA
+    10: 16.0, # KAKITANGAN KERAJAAN
+    11: 16.0, # BANGSA
+    12: 32.0, # ALAMAT
+    13: 20.0, # JENIS
+    14: 20.0, # BAHAGIAN
+    15: 13.0, # LATERALLY
+    16: 26.0, # KLINIK
+    17: 16.0, # KATEGORI
+    18: 15.0, # CD/FILEM
+    19: 13.0, # TOTAL EXPOSE
+    20: 13.0, # TOTAL REJECT
+    21: 15.0, # FILEM / CD
+    22: 22.0, # REFERENCE
+    23: 22.0, # PERSON TAKEN
+    24: 26.0, # COMMENT
+    25: 18.0  # DATE
+}
+
+def generate_master_template_file(template_path=None, config=None):
+    """
+    Menjana templat induk Excel (template.xlsx) 12-bulan rasmi KKM secara programmatic:
+    - Baris 1 & 2: Background Biru (#2F6EBA) dengan teks Putih
+    - Baris 4 (Header): Background Kuning (#FFFF00) dengan teks Hitam Bold
+    - 25 Kolum Piawai berdimensi kemas
+    """
+    if template_path is None:
+        template_path = APP_TEMPLATE_XLSX
+    if config is None:
+        config = load_config()
+
+    os.makedirs(os.path.dirname(template_path), exist_ok=True)
+    singkatan = str(config.get("singkatan_klinik", "")).strip().upper()
+    facility_name = str(config.get("klinik_asal", "")).strip().upper()
+    header_title = f"BUKU DAFTAR RADIOLOGI {singkatan or facility_name or 'KKM'}"
+
+    wb = openpyxl.Workbook()
+    # Buang sheet lalai asal
+    default_sheet = wb.active
+
+    # Row 1 & 2 Styles (Blue Background #2F6EBA with White text)
+    title_fill = PatternFill(start_color='2F6EBA', end_color='2F6EBA', fill_type='solid')
+    title_font = Font(name='Arial', size=13, bold=True, color='FFFFFF')
+    subtitle_font = Font(name='Arial', size=10, bold=True, color='FFFFFF')
+    title_border = Border(
+        left=Side(style='thin', color='204E85'),
+        right=Side(style='thin', color='204E85'),
+        top=Side(style='thin', color='204E85'),
+        bottom=Side(style='thin', color='204E85')
+    )
+    title_align = Alignment(horizontal='left', vertical='center')
+
+    # Row 4 Styles (Header Yellow Background #FFFF00 with Black bold text)
+    header_font = Font(name='Arial', size=9, bold=True, color='000000')
+    header_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
+    )
+    header_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    month_names = ["JAN", "FEB", "MAC", "APR", "MEI", "JUN", "JUL", "OGOS", "SEPT", "OKT", "NOV", "DIS"]
+
+    for m_name in month_names:
+        sheet = wb.create_sheet(title=m_name)
+        sheet.row_dimensions[1].height = 24
+        sheet.row_dimensions[2].height = 20
+        sheet.row_dimensions[3].height = 6
+        sheet.row_dimensions[4].height = 28
+
+        # Baris 1: Background #2F6EBA merentasi Kolum 1 - 25
+        for col_idx in range(1, len(MASTER_TEMPLATE_HEADERS) + 1):
+            c1 = sheet.cell(row=1, column=col_idx)
+            c1.fill = title_fill
+            c1.border = title_border
+        cell_title = sheet.cell(row=1, column=1)
+        cell_title.value = header_title
+        cell_title.font = title_font
+        cell_title.alignment = title_align
+        
+        # Baris 2: Background #2F6EBA merentasi Kolum 1 - 25
+        for col_idx in range(1, len(MASTER_TEMPLATE_HEADERS) + 1):
+            c2 = sheet.cell(row=2, column=col_idx)
+            c2.fill = title_fill
+            c2.border = title_border
+        cell_sub = sheet.cell(row=2, column=1)
+        cell_sub.value = "KEMENTERIAN KESIHATAN MALAYSIA — REKOD PENDAFTARAN PESAKIT (PER.SS-RA 101)"
+        cell_sub.font = subtitle_font
+        cell_sub.alignment = title_align
+
+        # Baris 4: Header 25 Kolum Piawai (#FFFF00)
+        for col_idx, h_name in enumerate(MASTER_TEMPLATE_HEADERS, 1):
+            cell = sheet.cell(row=4, column=col_idx)
+            cell.value = h_name
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = thin_border
+            cell.alignment = header_align
+            
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            w = HEADER_COL_WIDTHS.get(col_idx, 15.0)
+            sheet.column_dimensions[col_letter].width = w
+
+    # Padamkan default sheet
+    if default_sheet in wb.worksheets:
+        wb.remove(default_sheet)
+
+    wb.save(template_path)
+    wb.close()
+    print(f"[ExcelEngine] Templat Excel induk berjaya dijana di: {template_path}")
+    return template_path
+
+def get_excel_path(date_obj):
+    """
+    Mengambil atau membina jalan fail (.xlsx) pendaftaran setahun.
+    Mencari fail sedia ada secara fleksibel atau menyalin dari templat master.
+    """
+    if isinstance(date_obj, int):
+        year = date_obj
+    else:
+        year = date_obj.year
+    
+    config = load_config()
+    singkatan = str(config.get("singkatan_klinik", "")).strip().upper()
+    facility_type = str(config.get("facility_type", "KK")).strip().upper()
+    
+    os.makedirs(PENDAFTARAN_DIR, exist_ok=True)
+    year_dir = os.path.join(PENDAFTARAN_DIR, str(year))
+    os.makedirs(year_dir, exist_ok=True)
+    
+    primary_filename = get_excel_filename_pattern(config, year)
+    
+    # 1. Senarai calon fail berkeutamaan
+    candidates = [
+        os.path.join(PENDAFTARAN_DIR, primary_filename),
+        os.path.join(year_dir, primary_filename),
+        os.path.join(PENDAFTARAN_DIR, f"DAFTAR XRAY {singkatan} {year}.xlsx") if singkatan else None,
+        os.path.join(year_dir, f"DAFTAR XRAY {singkatan} {year}.xlsx") if singkatan else None,
+        os.path.join(PENDAFTARAN_DIR, f"BUKU DAFTAR XRAY {year}.xlsx"),
+        os.path.join(year_dir, f"BUKU DAFTAR XRAY {year}.xlsx"),
+        os.path.join(PENDAFTARAN_DIR, f"BUKU DAFTAR XRAY {year} {singkatan}.xlsx") if singkatan else None,
+        os.path.join(year_dir, f"BUKU DAFTAR XRAY {year} {singkatan}.xlsx") if singkatan else None
+    ]
+    candidates = [c for c in candidates if c is not None]
+    
+    for cand in candidates:
+        if os.path.exists(cand):
+            return cand
+
+    # 2. Semak sebarang fail pendaftaran sedia ada bagi tahun tersebut
+    try:
+        for root in [PENDAFTARAN_DIR, year_dir]:
+            if os.path.exists(root):
+                for f in os.listdir(root):
+                    if str(year) in f and ("DAFTAR" in f.upper() or "BUKU" in f.upper() or "PER.SS" in f.upper()) and f.endswith(".xlsx") and not f.startswith("~$"):
+                        return os.path.join(root, f)
+    except Exception:
+        pass
+
     # 3. Jika fail belum wujud, bina fail baharu daripada templat master
     target_path = candidates[0]
-    if os.path.exists(APP_TEMPLATE_XLSX):
-        try:
-            shutil.copy(APP_TEMPLATE_XLSX, target_path)
-            print(f"[ExcelEngine] Fail Pendaftaran {year} dicipta daripada templat: {target_path}")
-            sync_single_excel_file(target_path, config, year)
-            return target_path
-        except Exception as e:
-            print(f"[ExcelEngine] Ralat menyalin templat ke {target_path}: {e}")
+    if not os.path.exists(APP_TEMPLATE_XLSX):
+        generate_master_template_file(APP_TEMPLATE_XLSX, config)
+
+    try:
+        shutil.copy(APP_TEMPLATE_XLSX, target_path)
+        print(f"[ExcelEngine] Fail Pendaftaran {year} dicipta daripada templat: {target_path}")
+        sync_single_excel_file(target_path, config, year)
+        return target_path
+    except Exception as e:
+        print(f"[ExcelEngine] Ralat menyalin templat ke {target_path}: {e}")
             
     return target_path
 
 def sync_single_excel_file(filepath, config, year=None):
     """
-    Pelarasan tajuk BUKU DAFTAR RADIOLOGI pada fail Excel 12 Bulan.
+    Pelarasan tajuk & styling BUKU DAFTAR RADIOLOGI pada fail Excel 12 Bulan.
+    - Baris 1 & 2: Background #2F6EBA (Teks Putih)
+    - Baris 4: Background #FFFF00 (Teks Hitam Bold)
     """
     if not os.path.exists(filepath):
         return
@@ -144,11 +325,32 @@ def sync_single_excel_file(filepath, config, year=None):
         wb = openpyxl.load_workbook(filepath)
         
         row4_headers = [
-            'BIL KES', 'TARIKH', 'LMP', 'Nombor X-ray', 'Nombor Kad Pengenalan /Pasport',
+            'TARIKH', 'LMP', 'Bil Kes', 'Nombor X-ray', 'Nombor Kad Pengenalan /Pasport',
             'Nama', 'UMUR', 'JANTINA', 'W/NEGARA', 'KAKITANGAN KERAJAAN', 'BANGSA',
-            'ALAMAT', 'JENIS', 'BAHAGIAN', 'LATERALITI', 'KLINIK', 'KATEGORI', 'CD/FILEM',
-            'TOTAL EXPOSE', 'TOTAL REJECT', 'REFERENCE', 'PERSON TAKEN', 'COMMENT', 'DATE'
+            'ALAMAT', 'JENIS', 'BAHAGIAN', 'LATERALLY', 'KLINIK', 'KATEGORI', 'CD/FILEM',
+            'TOTAL EXPOSE', 'TOTAL REJECT', 'FILEM / CD', 'REFERENCE', 'PERSON TAKEN', 'COMMENT', 'DATE'
         ]
+
+        title_fill = PatternFill(start_color='2F6EBA', end_color='2F6EBA', fill_type='solid')
+        title_font = Font(name='Arial', size=13, bold=True, color='FFFFFF')
+        subtitle_font = Font(name='Arial', size=10, bold=True, color='FFFFFF')
+        title_border = Border(
+            left=Side(style='thin', color='204E85'),
+            right=Side(style='thin', color='204E85'),
+            top=Side(style='thin', color='204E85'),
+            bottom=Side(style='thin', color='204E85')
+        )
+        title_align = Alignment(horizontal='left', vertical='center')
+
+        header_font = Font(name='Arial', size=9, bold=True, color='000000')
+        header_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
+        thin_border = Border(
+            left=Side(style='thin', color='CCCCCC'),
+            right=Side(style='thin', color='CCCCCC'),
+            top=Side(style='thin', color='CCCCCC'),
+            bottom=Side(style='thin', color='CCCCCC')
+        )
+        header_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
         # Rename placeholder sheets (e.g. 'JAN {YEAR}' -> 'JAN')
         for i, sname in enumerate(wb.sheetnames):
@@ -157,13 +359,39 @@ def sync_single_excel_file(filepath, config, year=None):
             if "{YEAR}" in sname or sname.startswith("SEP") or sname.startswith("JAN"):
                 wb[sname].title = std_code
                 
-        # Update Title row A1:Y1 & Row 4 Headers
+        # Update Title row A1:Y1, A2:Y2 & Row 4 Headers
         for sname in wb.sheetnames:
             sheet = wb[sname]
-            c1 = sheet.cell(row=1, column=1)
-            c1.value = header_title
+            sheet.row_dimensions[1].height = 24
+            sheet.row_dimensions[2].height = 20
+            sheet.row_dimensions[4].height = 28
+
+            for col_idx in range(1, len(row4_headers) + 1):
+                c1 = sheet.cell(row=1, column=col_idx)
+                c1.fill = title_fill
+                c1.border = title_border
+
+                c2 = sheet.cell(row=2, column=col_idx)
+                c2.fill = title_fill
+                c2.border = title_border
+
+            cell_title = sheet.cell(row=1, column=1)
+            cell_title.value = header_title
+            cell_title.font = title_font
+            cell_title.alignment = title_align
+
+            cell_sub = sheet.cell(row=2, column=1)
+            cell_sub.value = "KEMENTERIAN KESIHATAN MALAYSIA — REKOD PENDAFTARAN PESAKIT (PER.SS-RA 101)"
+            cell_sub.font = subtitle_font
+            cell_sub.alignment = title_align
+
             for col_i, h_val in enumerate(row4_headers, 1):
-                sheet.cell(row=4, column=col_i).value = h_val
+                c4 = sheet.cell(row=4, column=col_i)
+                c4.value = h_val
+                c4.font = header_font
+                c4.fill = header_fill
+                c4.border = thin_border
+                c4.alignment = header_align
 
         wb.save(filepath)
         wb.close()
@@ -221,13 +449,15 @@ def get_daily_case_count(date_obj=None):
         return 1
     try:
         formatted_date = date_obj.strftime("%d.%m.%Y")
+        formatted_date_slash = date_obj.strftime("%d/%m/%Y")
+        formatted_date_dash = date_obj.strftime("%Y-%m-%d")
         wb = openpyxl.load_workbook(path, data_only=True)
         sheet = get_target_sheet(wb, date_obj)
         count = 0
         for r in range(5, sheet.max_row + 1):
-            val_date = str(sheet.cell(row=r, column=2).value or sheet.cell(row=r, column=1).value or "").strip()
+            val_date = str(sheet.cell(row=r, column=1).value or sheet.cell(row=r, column=2).value or "").strip()
             val_name = str(sheet.cell(row=r, column=6).value or "").strip()
-            if val_name and (val_date == formatted_date or val_date == date_obj.strftime("%Y-%m-%d")):
+            if val_name and (val_date in (formatted_date, formatted_date_slash, formatted_date_dash)):
                 count += 1
         wb.close()
         return count + 1
@@ -349,7 +579,7 @@ def add_patient_record(patient_data):
         cell_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
         align_center = Alignment(horizontal='center', vertical='center')
         align_left = Alignment(horizontal='left', vertical='center')
-        left_cols = {6, 12, 13, 14, 16, 21, 22, 23}
+        left_cols = {6, 12, 13, 14, 16, 22, 23, 24}
 
         generated_xray_list = []
         synced_exam_records = []
@@ -442,13 +672,14 @@ def add_patient_record(patient_data):
                 exam_catatan = sub.get("catatan") or sub.get("comment") or ""
                 bahagian_val = sub.get("bahagian") or sub.get("bahagian_pemeriksaan") or ""
                 lateraliti_val = sub.get("lateraliti") or sub.get("laterally") or ""
+                filem_cd_val = sub.get("filem_cd") or sub.get("cd_filem") or "CD [1]"
 
                 row_values = [
-                    str(sub["bil_kes"]),                                         # 1 (A): BIL KES
-                    formatted_date,                                              # 2 (B): TARIKH
-                    patient_data.get("lmp", ""),                                # 3 (C): LMP
+                    formatted_date,                                              # 1 (A): TARIKH
+                    patient_data.get("lmp", ""),                                # 2 (B): LMP
+                    str(sub["bil_kes"]),                                         # 3 (C): Bil Kes
                     str(sub["xray_no"]),                                         # 4 (D): Nombor X-ray
-                    str(ic_no),                                                  # 5 (E): No IC/Pasport
+                    str(ic_no),                                                  # 5 (E): Nombor Kad Pengenalan /Pasport
                     patient_data.get("nama", "").upper(),                        # 6 (F): Nama
                     int(umur) if str(umur).isdigit() else umur,                  # 7 (G): UMUR
                     jantina,                                                     # 8 (H): JANTINA
@@ -458,16 +689,17 @@ def add_patient_record(patient_data):
                     patient_data.get("alamat", "").upper(),                      # 12 (L): ALAMAT
                     sub.get("jenis_pemeriksaan", "CHEST").upper(),               # 13 (M): JENIS
                     str(bahagian_val).upper(),                                   # 14 (N): BAHAGIAN
-                    str(lateraliti_val).upper(),                                 # 15 (O): LATERALITI
+                    str(lateraliti_val).upper(),                                 # 15 (O): LATERALLY
                     patient_data.get("klinik_rujukan", klinik_asal).upper(),     # 16 (P): KLINIK
                     patient_data.get("kategori", "PESAKIT LUAR").upper(),        # 17 (Q): KATEGORI
                     sub.get("cd_filem", "CD [1]").upper(),                       # 18 (R): CD/FILEM
                     patient_data.get("total_expose", 1),                         # 19 (S): TOTAL EXPOSE
                     patient_data.get("total_reject", 0),                         # 20 (T): TOTAL REJECT
-                    patient_data.get("pegawai_rujukan", "").upper(),              # 21 (U): REFERENCE
-                    patient_data.get("operator", "").upper(),                     # 22 (V): PERSON TAKEN
-                    str(exam_catatan).upper(),                                   # 23 (W): COMMENT
-                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M")           # 24 (X): TIMESTAMP
+                    str(filem_cd_val).upper(),                                   # 21 (U): FILEM / CD
+                    patient_data.get("pegawai_rujukan", "").upper(),              # 22 (V): REFERENCE
+                    patient_data.get("operator", "").upper(),                     # 23 (W): PERSON TAKEN
+                    str(exam_catatan).upper(),                                   # 24 (X): COMMENT
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M")           # 25 (Y): DATE
                 ]
 
                 row_fill = PatternFill(start_color='F8FAFC', end_color='F8FAFC', fill_type='solid') if (target_row % 2 == 0) else PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
@@ -536,9 +768,11 @@ def edit_patient_record(tarikh_str, xray_no, updated_data):
             wb.close()
             return False, f"Rekod dengan No. X-ray {xray_no} tidak dijumpai dalam fail Excel."
             
-        # Kemaskini medan-medan pembetulan ralat pendaftaran:
+        # Kemaskini medan-medan pembetulan ralat pendaftaran (25 Kolum Piawai):
+        if "tarikh" in updated_data and updated_data["tarikh"]:
+            sheet.cell(row=target_row, column=1).value = format_date_ddmmyyyy(updated_data["tarikh"])
         if "lmp" in updated_data:
-            sheet.cell(row=target_row, column=3).value = str(updated_data["lmp"]).strip()
+            sheet.cell(row=target_row, column=2).value = str(updated_data["lmp"]).strip()
         if "ic_pasport" in updated_data:
             sheet.cell(row=target_row, column=5).value = str(updated_data["ic_pasport"]).strip()
         if "nama" in updated_data and updated_data["nama"]:
@@ -567,12 +801,18 @@ def edit_patient_record(tarikh_str, xray_no, updated_data):
             sheet.cell(row=target_row, column=17).value = str(updated_data["kategori"]).strip().upper()
         if "cd_filem" in updated_data:
             sheet.cell(row=target_row, column=18).value = str(updated_data["cd_filem"]).strip()
+        if "total_expose" in updated_data:
+            sheet.cell(row=target_row, column=19).value = updated_data["total_expose"]
+        if "total_reject" in updated_data:
+            sheet.cell(row=target_row, column=20).value = updated_data["total_reject"]
+        if "filem_cd" in updated_data:
+            sheet.cell(row=target_row, column=21).value = str(updated_data["filem_cd"]).strip().upper()
         if "pegawai_rujukan" in updated_data:
-            sheet.cell(row=target_row, column=21).value = str(updated_data["pegawai_rujukan"]).strip().upper()
+            sheet.cell(row=target_row, column=22).value = str(updated_data["pegawai_rujukan"]).strip().upper()
         if "operator" in updated_data and updated_data["operator"]:
-            sheet.cell(row=target_row, column=22).value = str(updated_data["operator"]).strip().upper()
+            sheet.cell(row=target_row, column=23).value = str(updated_data["operator"]).strip().upper()
         if "catatan" in updated_data:
-            sheet.cell(row=target_row, column=23).value = str(updated_data["catatan"]).strip().upper()
+            sheet.cell(row=target_row, column=24).value = str(updated_data["catatan"]).strip().upper()
             
         wb.save(filepath)
         wb.close()
@@ -630,16 +870,16 @@ def cancel_patient_record(tarikh_str, xray_no, reason, staff_name):
             wb.close()
             return False, f"Rekod dengan No. X-ray {xray_no} tidak dijumpai."
             
-        # 1. Kemaskini ruangan COMMENT (Col 23 / W) dengan status BATAL
-        curr_comment = str(sheet.cell(row=target_row, column=23).value or "").strip()
+        # 1. Kemaskini ruangan COMMENT (Col 24 / X) dengan status BATAL
+        curr_comment = str(sheet.cell(row=target_row, column=24).value or "").strip()
         audit_tag = f"[BATAL: {reason.strip().upper()} OLEH {staff_name.strip().upper()}]"
         new_comment = f"{audit_tag} {curr_comment}".strip()
-        sheet.cell(row=target_row, column=23).value = new_comment
+        sheet.cell(row=target_row, column=24).value = new_comment
         
         # 2. Format visual baris yang dibatalkan
         strike_font = Font(name="Arial", size=9, strike=True, color="6B7280")
         cancel_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
-        for col_idx in range(1, 24):
+        for col_idx in range(1, 26):
             c = sheet.cell(row=target_row, column=col_idx)
             c.font = strike_font
             c.fill = cancel_fill
@@ -773,12 +1013,22 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
                 if not nama and not ic and not xray_no:
                     continue
 
-                cell_date_raw = sheet.cell(row=r, column=2).value  # Col B (TARIKH)
+                # Col 1 (A) is TARIKH in new layout; Col 2 (B) in legacy layout
+                cell_date_raw = sheet.cell(row=r, column=1).value
                 parsed_d = parse_date_val(cell_date_raw)
                 if not parsed_d:
-                    parsed_d = parse_date_val(sheet.cell(row=r, column=1).value)
+                    parsed_d = parse_date_val(sheet.cell(row=r, column=2).value)
                     if parsed_d:
-                        cell_date_raw = sheet.cell(row=r, column=1).value
+                        cell_date_raw = sheet.cell(row=r, column=2).value
+                        # Legacy fallback: Col 1 is Bil Kes, Col 3 is LMP
+                        bil_kes_val = str(sheet.cell(row=r, column=1).value or "")
+                        lmp_val = sheet.cell(row=r, column=3).value
+                    else:
+                        bil_kes_val = str(sheet.cell(row=r, column=3).value or "")
+                        lmp_val = sheet.cell(row=r, column=2).value
+                else:
+                    bil_kes_val = str(sheet.cell(row=r, column=3).value or "")
+                    lmp_val = sheet.cell(row=r, column=2).value
 
                 # Penapisan julat masa
                 if period == "day":
@@ -791,16 +1041,21 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
                     if not parsed_d or not (custom_start_date <= parsed_d <= custom_end_date):
                         continue
                         
-                catatan_val = str(sheet.cell(row=r, column=23).value or "")
+                # Col 24 (X) in new layout; Col 23 (W) in legacy layout
+                catatan_val = str(sheet.cell(row=r, column=24).value or sheet.cell(row=r, column=23).value or "")
                 is_cancelled = "[BATAL" in catatan_val.upper()
                 status = "BATAL" if is_cancelled else "AKTIF"
                 
+                # Check for 25-col new layout: Col 22=Ref, Col 23=Operator; or legacy Col 21=Ref, Col 22=Operator
+                ref_val = str(sheet.cell(row=r, column=22).value or sheet.cell(row=r, column=21).value or "")
+                operator_val = str(sheet.cell(row=r, column=23).value or sheet.cell(row=r, column=22).value or "")
+
                 record = {
                     "sheet_name": sheet.title,
                     "row_index": r,
-                    "bil_kes": str(sheet.cell(row=r, column=1).value or ""),
+                    "bil_kes": bil_kes_val,
                     "tarikh": format_date_ddmmyyyy(cell_date_raw),
-                    "lmp": format_date_ddmmyyyy(sheet.cell(row=r, column=3).value),
+                    "lmp": format_date_ddmmyyyy(lmp_val),
                     "nombor_xray": str(xray_no or ""),
                     "ic_pasport": str(ic or ""),
                     "nama": str(nama or "").upper(),
@@ -819,8 +1074,9 @@ def get_patients_list(year=None, month=None, search_query=None, period="month", 
                     "cd_filem": str(sheet.cell(row=r, column=18).value or ""),
                     "total_expose": sheet.cell(row=r, column=19).value or 1,
                     "total_reject": sheet.cell(row=r, column=20).value or 0,
-                    "pegawai_rujukan": str(sheet.cell(row=r, column=21).value or ""),
-                    "operator": str(sheet.cell(row=r, column=22).value or ""),
+                    "filem_cd": str(sheet.cell(row=r, column=21).value or ""),
+                    "pegawai_rujukan": ref_val,
+                    "operator": operator_val,
                     "catatan": catatan_val,
                     "status": status,
                     "is_cancelled": is_cancelled
@@ -1093,7 +1349,7 @@ def repair_excel_file(year=None):
     # Step 4: Re-create fresh Excel file from template.xlsx
     ensure_dirs()
     if not os.path.exists(APP_TEMPLATE_XLSX):
-        return False, f"Templat asas '{APP_TEMPLATE_XLSX}' tidak ditemui.", 0
+        generate_master_template_file(APP_TEMPLATE_XLSX, config)
 
     try:
         shutil.copy2(APP_TEMPLATE_XLSX, target_path)

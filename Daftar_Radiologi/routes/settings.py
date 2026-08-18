@@ -1251,42 +1251,61 @@ def api_dicom_toggle():
     except Exception as e:
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
-@settings_bp.route('/api/dicom/test-echo', methods=['POST'])
-def api_dicom_test_echo():
-    """Test DICOM C-ECHO connectivity to the Modality Console."""
+@settings_bp.route('/api/dicom/test-connection', methods=['POST'])
+def api_dicom_test_connection():
+    """
+    Universal DICOM Connection Test Endpoint.
+    Tests full 5-stage connectivity: local server, ARP/network, C-ECHO (DICOM Ping), and C-FIND MWL inquiry.
+    """
     try:
         data = request.get_json() or {}
-        console_ip = data.get('console_ip', '').strip()
-        console_port = data.get('console_port', 104)
-        console_ae = data.get('console_ae_title', '').strip()
-        my_ae = data.get('ae_title', '').strip() or 'KAUNTER'
-        
-        if not console_ip or not console_ae:
-            config = load_config()
-            dicom_cfg = config.get("dicom_config", {})
-            if not console_ip:
-                console_ip = dicom_cfg.get("console_ip", "").strip()
-            if not console_ae:
-                console_ae = dicom_cfg.get("console_ae_title", "").strip()
-            if not my_ae:
-                my_ae = dicom_cfg.get("ae_title", "KAUNTER").strip() or "KAUNTER"
+        console_ip = data.get('console_ip')
+        console_port = data.get('console_port')
+        console_ae = data.get('console_ae_title')
+        my_ae = data.get('ae_title')
+        local_port = data.get('port')
 
-        if not console_ip:
-            return jsonify({"success": False, "message": "Modality Console IP address is empty. Please enter the console IP address."})
-        if not console_ae:
-            return jsonify({"success": False, "message": "Modality Console AE Title is empty. Please enter the console AE Title."})
-
-        from core.dicom_engine import test_dicom_echo_scu
-        success, message, ms = test_dicom_echo_scu(
+        from core.dicom_engine import test_dicom_connection
+        report = test_dicom_connection(
             console_ip=console_ip,
             console_port=console_port,
             console_ae=console_ae,
-            my_ae=my_ae
+            my_ae=my_ae,
+            local_port=local_port
+        )
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "testedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "summary": "Internal error executing DICOM test.",
+            "failure_reason": str(e),
+            "checks": [{"name": "Diagnostic Execution", "ok": False, "detail": str(e)}]
+        }), 500
+
+@settings_bp.route('/api/dicom/test-echo', methods=['POST'])
+def api_dicom_test_echo():
+    """Test DICOM C-ECHO connectivity to the Modality Console (Backwards-compatible)."""
+    try:
+        data = request.get_json() or {}
+        console_ip = data.get('console_ip')
+        console_port = data.get('console_port')
+        console_ae = data.get('console_ae_title')
+        my_ae = data.get('ae_title')
+        local_port = data.get('port')
+
+        from core.dicom_engine import test_dicom_connection
+        report = test_dicom_connection(
+            console_ip=console_ip,
+            console_port=console_port,
+            console_ae=console_ae,
+            my_ae=my_ae,
+            local_port=local_port
         )
         return jsonify({
-            "success": success,
-            "message": message,
-            "elapsed_ms": ms
+            "success": report.get("ok", False),
+            "message": report.get("summary") or report.get("failure_reason", ""),
+            "report": report
         })
     except Exception as e:
         return jsonify({"success": False, "message": f"DICOM C-ECHO error: {str(e)}"}), 500

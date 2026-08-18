@@ -145,8 +145,14 @@ If Windows SmartScreen displays a protective prompt when starting `DaftarRadiolo
   - Added automatic top-level ZIP root directory stripping (`get_clean_zip_member_path()`) to ensure release update packages (e.g. `DaftarRadiologi-v2-win10.zip`) extract directly into `BASE_DIR` instead of creating nested subfolders.
   - Corrected Windows file lock fallback target pathing bug in `routes/settings.py`.
   - Added `apply_pending_updates()` startup routine in `DaftarRadiologi.py` to automatically rename `.new` binary files when the application starts up.
-- **Stop Server UI Button Refinement**:
-  - Refactored DICOM MWL server toggle button styling when active from charcoal grey (`btn-secondary`) to a clean white card outline (`btn-outline`) with red text (`#ef4444`) and subtle border (`#fca5a5`).
+- **Universal 5-Stage DICOM Connection Test Engine**:
+  - Implemented comprehensive 5-stage connectivity test (`test_dicom_connection`) between DaftarRadiologi (SCP) and any modality console SCU (*Carestream, Konica Minolta, GE, Fuji, Agfa, Philips, Siemens*, etc.).
+  - Layered verification covers: **Local DICOM Server Check** (listening on 104/custom port), **ARP & LAN Cache inspection**, **TCP socket reachability**, **DICOM C-ECHO Ping** verification, and **C-FIND MWL inquiry** with clear SCU receiver mode recognition.
+  - Added dedicated `POST /api/dicom/test-connection` endpoint and responsive UI diagnostic checklist displaying clear pass/fail status and root-cause troubleshooting guidance (AE title mismatch, firewall blocking, console power state).
+- **Excel Template & Standard 25-Column Format Realignment**:
+  - Realined Excel register structure to strict 25-column order (`TARIKH`, `LMP`, `Bil Kes`, `Nombor X-ray`, ...).
+  - Applied `#2F6EBA` (Blue) fill to Title rows 1 & 2 with white text, and `#FFFF00` (Yellow) fill to Header row 4 with black text across all 12 monthly worksheets.
+  - Added programmatic master template generation (`generate_master_template_file`) with auto-fallback recovery and multi-column date reading compatibility.
 
 ### 🚀 Version 2.1.5 (Interactive Onboarding Wizard, Inno Setup Smart Installer & Legacy Data Migration)
 - **Custom Starting X-Ray Sequence Number**: Added custom sequence number configuration under **Settings > Modalities** allowing facilities to set custom sequence counters per modality room or start from a specific index.

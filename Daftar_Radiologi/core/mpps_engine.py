@@ -214,6 +214,9 @@ def save_mpps_create_record(dataset, sop_instance_uid, sop_class_uid=None, stati
             if not proc_desc:
                 proc_desc = str(getattr(sps, "RequestedProcedureDescription", "") or getattr(sps, "ScheduledProcedureStepDescription", "") or "").strip()
 
+        from core.dicom_engine import dedup_laterality
+        proc_desc = dedup_laterality(proc_desc)
+
         sop_inst = str(sop_instance_uid or getattr(dataset, "SOPInstanceUID", getattr(dataset, "AffectedSOPInstanceUID", "")) or "").strip()
         sop_cls = str(sop_class_uid or getattr(dataset, "SOPClassUID", getattr(dataset, "AffectedSOPClassUID", "1.2.840.10008.3.1.2.3.3")) or "").strip()
 

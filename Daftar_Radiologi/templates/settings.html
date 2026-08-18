@@ -3547,6 +3547,7 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     const consolePort = document.getElementById('dicom_console_port').value.trim();
     const consoleAe = document.getElementById('dicom_console_ae').value.trim();
     const myAe = document.getElementById('dicom_ae_title').value.trim() || 'KAUNTER';
+    const localPort = document.getElementById('dicom_port') ? document.getElementById('dicom_port').value.trim() : 104;
 
     // Validation for empty fields
     if (!consoleIp) {
@@ -3571,32 +3572,89 @@ GRANT ALL PRIVILEGES ON radiologi_db.* TO 'rad_user'@'%';</pre>
     }
 
     btn.disabled = true;
-    fb.innerHTML = `<em>Sending DICOM C-ECHO verification ping to ${consoleAe}@${consoleIp}:${consolePort}...</em>`;
-    fb.style.color = 'var(--text-muted)';
+    fb.innerHTML = `
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem; text-align: left;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">
+          <div class="loading-spinner" style="width: 14px; height: 14px; border: 2px solid var(--border-subtle); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <span>Testing 5-stage DICOM connection to <strong>${consoleAe}</strong> @ <strong>${consoleIp}:${consolePort}</strong>...</span>
+        </div>
+      </div>`;
 
-    fetch('/api/dicom/test-echo', {
+    fetch('/api/dicom/test-connection', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         console_ip: consoleIp,
         console_port: consolePort,
         console_ae_title: consoleAe,
-        ae_title: myAe
+        ae_title: myAe,
+        port: localPort
       })
     })
       .then(res => res.json())
-      .then(res => {
+      .then(report => {
         btn.disabled = false;
-        if (res.success) {
-          fb.innerHTML = `<strong style="color: #10b981;">[SUCCESS]</strong> ${res.message}`;
-          showToast(`DICOM C-ECHO Succeeded! (${res.elapsed_ms}ms)`);
+        const isOk = report.ok;
+        let checksHtml = '';
+
+        if (Array.isArray(report.checks)) {
+          report.checks.forEach(chk => {
+            let icon = '<span style="color: #10b981; font-weight: 700; margin-right: 4px;">✔</span>';
+            let statusStyle = 'color: var(--text-main);';
+            if (chk.info_only) {
+              icon = '<span style="color: #3b82f6; font-weight: 700; margin-right: 4px;">ℹ</span>';
+              statusStyle = 'color: var(--text-muted);';
+            } else if (!chk.ok) {
+              icon = '<span style="color: #ef4444; font-weight: 700; margin-right: 4px;">✘</span>';
+              statusStyle = 'color: #ef4444; font-weight: 600;';
+            }
+
+            checksHtml += `
+              <div style="display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.75rem; margin-bottom: 0.35rem; line-height: 1.35;">
+                <div style="flex-shrink: 0;">${icon}</div>
+                <div style="flex: 1;">
+                  <strong style="color: var(--text-main);">${chk.name}:</strong> 
+                  <span style="${statusStyle}">${chk.detail}</span>
+                </div>
+              </div>`;
+          });
+        }
+
+        const bannerBg = isOk ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)';
+        const bannerBorder = isOk ? '#10b981' : '#ef4444';
+        const titleColor = isOk ? '#10b981' : '#ef4444';
+        const titleText = isOk ? '✔ DICOM Connection OK' : '✘ DICOM Connection Failed';
+
+        let causeSection = '';
+        if (!isOk && report.failure_reason) {
+          causeSection = `
+            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-subtle); font-size: 0.75rem; color: #ef4444;">
+              <strong>Root Cause:</strong> ${report.failure_reason}
+            </div>`;
+        }
+
+        fb.innerHTML = `
+          <div style="background: ${bannerBg}; border: 1px solid ${bannerBorder}; border-radius: 6px; padding: 0.75rem; text-align: left; margin-top: 0.4rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+              <strong style="color: ${titleColor}; font-size: 0.85rem;">${titleText}</strong>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">${report.testedAt || ''}</span>
+            </div>
+            <div style="margin-bottom: 0.25rem;">
+              ${checksHtml}
+            </div>
+            ${causeSection}
+          </div>`;
+
+        if (isOk) {
+          showToast(`DICOM Connection OK! (${consoleAe})`);
         } else {
-          fb.innerHTML = `<strong style="color: #ef4444;">[FAILED]</strong> ${res.message}`;
+          showToast(`DICOM Connection Failed (${consoleAe})`, 'error');
         }
       })
       .catch(err => {
         btn.disabled = false;
-        fb.innerHTML = `<strong style="color: #ef4444;">[ERROR]</strong> Failed to reach local backend server.`;
+        fb.innerHTML = `<div style="color: #ef4444; font-size: 0.8rem; padding: 0.5rem; text-align: left;"><strong>[ERROR]</strong> Failed to communicate with local backend: ${err.message}</div>`;
+        showToast('Error executing connection test.', 'error');
       });
   }
 
